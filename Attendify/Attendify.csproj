@@ -1,0 +1,71 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Fonts\Montserrat-Black.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-BlackItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Bold.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-BoldItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-ExtraBold.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-ExtraBoldItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-ExtraLight.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-ExtraLightItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Italic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Light.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-LightItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Medium.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-MediumItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Regular.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-SemiBold.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-Thin.ttf" />
+    <None Remove="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <None Remove="Assets\Images\Attendifysplah.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Commands\" />
+    <Folder Include="ViewModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Fonts\Montserrat-Black.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-BlackItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Bold.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-BoldItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-ExtraBold.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-ExtraBoldItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-ExtraLight.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-ExtraLightItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Italic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Light.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-LightItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Medium.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-MediumItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Regular.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-SemiBold.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-Thin.ttf" />
+    <Resource Include="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <Resource Include="Assets\Images\Attendifysplah.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+</Project>

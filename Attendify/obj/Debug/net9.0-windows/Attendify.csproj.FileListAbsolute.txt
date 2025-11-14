@@ -1,0 +1,7 @@
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify.csproj.AssemblyReference.cache
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\MainWindow.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\SplashScreen.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\App.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify_Content.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify_MarkupCompile.cache
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify_MarkupCompile.lref
