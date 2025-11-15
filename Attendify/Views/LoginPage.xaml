@@ -1,0 +1,156 @@
+﻿<Window x:Class="Attendify.LoginPage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Login"
+        WindowStartupLocation="CenterScreen"
+        Width="1200" Height="700"
+        ResizeMode="NoResize"
+        WindowStyle="None">
+    <Window.Resources>
+        <BlurEffect x:Key="blurEffect" Radius="12"/>
+    </Window.Resources>
+
+
+    <Grid>
+
+      
+
+        <!-- Background Image -->
+        <Image Source="/Assets/Images/login.png" Stretch="Fill"/>
+
+        <!-- Logo -->
+        <StackPanel Orientation="Horizontal" Margin="40,25,0,0" VerticalAlignment="Top">
+            <TextBlock Text="Attendify"
+                 VerticalAlignment="Center"
+                 Margin="10,0,0,0"
+                 FontSize="26"
+                       FontFamily="Montserrat"
+                 FontWeight="Bold"
+                 Foreground="#00A6FB"/>
+        </StackPanel>
+
+        <!-- CENTER CARD -->
+        <Grid HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Width="350">
+
+            <!-- BLUR LAYER ONLY -->
+            <Border CornerRadius="35"
+                    Background="#20FFFFFF"
+                    Effect="{StaticResource blurEffect}"/>
+
+            <!-- CONTENT LAYER (CLEAR) -->
+            <Border CornerRadius="35"
+                    Padding="40"
+                    Background="#20FFFFFF">
+
+                <StackPanel>
+
+                    <TextBlock Text="Welcome back!"
+                               FontSize="32"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               Margin="0 0 0 35"/>
+
+                    <!-- USERNAME -->
+                    <Border Background="#90FFFFFF"
+                            CornerRadius="12"
+                            Height="40"
+                            Margin="0 0 0 15">
+                        <Grid>
+                            <TextBox x:Name="UsernameBox"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="Black"
+                                     FontSize="14"
+                                     Padding="7,8"
+                                     TextChanged="UsernameBox_TextChanged"/>
+
+                            <TextBlock x:Name="UserPlaceholder"
+                                       Text="Username"
+                                       Foreground="#555"
+                                       Margin="10,10,0,0"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- PASSWORD -->
+                    <Border Background="#90FFFFFF"
+                            CornerRadius="12"
+                            Height="40"
+                            Margin="0 0 0 25">
+                        <Grid>
+                            <PasswordBox x:Name="PasswordBox"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         FontSize="14"
+                                         Padding="7,8"
+                                         PasswordChanged="PasswordBox_PasswordChanged"/>
+
+                            <TextBlock x:Name="PassPlaceholder"
+                                       Text="Password"
+                                       Foreground="#555"
+                                       Margin="10,10,0,0"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="LoginButton"
+        Background="#0C2B38"
+        CornerRadius="15"
+        Height="40"
+                            Width="150"
+        Cursor="Hand"
+        Margin="0 0 0 20"
+        MouseEnter="LoginButton_MouseEnter"
+        MouseLeave="LoginButton_MouseLeave"
+        MouseDown="Login_Click">
+
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+
+                        <TextBlock Text="Log in"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Center"
+               Foreground="White"
+               FontSize="18"
+               FontWeight="SemiBold"/>
+                    </Border>
+
+
+                    <!-- FORGOT PASSWORD BUTTON -->
+                    <Button Content="Forgot password?"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#64C466"
+                            FontSize="14"
+                            Click="ForgotPassword_Click"
+                            Cursor="Hand"
+                            HorizontalAlignment="Center"/>
+
+                    <!-- ADMIN LINK -->
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Margin="0,10,0,0">
+
+                        <TextBlock Text="Don't have an account? Contact the "
+                                   Foreground="#E0E0E0"/>
+
+                        <Button Content="Admin"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#64C466"
+                                FontSize="14"
+                                Click="Admin_Click"
+                                Cursor="Hand"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+        </Grid>
+
+    </Grid>
+</Window>

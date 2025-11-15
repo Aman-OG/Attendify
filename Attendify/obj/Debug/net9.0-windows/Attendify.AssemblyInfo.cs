@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Attendify")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37f544208f70d09f675b6e4bb050b538ca3ddca5")]
 [assembly: System.Reflection.AssemblyProductAttribute("Attendify")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Attendify")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

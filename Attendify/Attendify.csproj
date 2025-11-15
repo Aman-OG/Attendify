@@ -27,7 +27,12 @@
     <None Remove="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
     <None Remove="Assets\Fonts\Montserrat-Thin.ttf" />
     <None Remove="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <None Remove="Assets\Images\ask-question.png" />
+    <None Remove="Assets\Images\attendance.png" />
     <None Remove="Assets\Images\Attendifysplah.png" />
+    <None Remove="Assets\Images\login.png" />
+    <None Remove="Assets\Images\logo.png" />
+    <None Remove="Assets\Images\stats.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,9 +68,14 @@
     <Resource Include="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
     <Resource Include="Assets\Fonts\Montserrat-Thin.ttf" />
     <Resource Include="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <Resource Include="Assets\Images\ask-question.png" />
+    <Resource Include="Assets\Images\attendance.png" />
     <Resource Include="Assets\Images\Attendifysplah.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Assets\Images\login.png" />
+    <Resource Include="Assets\Images\logo.png" />
+    <Resource Include="Assets\Images\stats.png" />
   </ItemGroup>
 
 </Project>
