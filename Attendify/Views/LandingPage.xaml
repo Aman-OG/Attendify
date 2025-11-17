@@ -1,10 +1,10 @@
-﻿﻿<Window x:Class="Attendify.Views.LandingPage"
+﻿<Window x:Class="Attendify.Views.LandingPage"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        
-        Width="1200" Height="850"
+        WindowStyle="None"
+        Width="1200" Height="800"
         Background="#FFF9F5"
         AllowsTransparency="False">
 
@@ -14,22 +14,24 @@
                       ShadowDepth="2"
                       BlurRadius="8"
                       Opacity="0.3"/>
+
+        <!-- Hover underline style -->
+        <Style TargetType="TextBlock" x:Key="HoverLink">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#2979FF"/>
+            <Setter Property="TextDecorations" Value="None"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="TextDecorations" Value="Underline"/>
+                    <Setter Property="Foreground" Value="#5CA5FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-
-    <Grid Margin="40">
-
-        <!-- Fade-in animation -->
-        <Grid.Triggers>
-            <EventTrigger RoutedEvent="Loaded">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                         From="0" To="1" Duration="0:0:1.2"/>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Grid.Triggers>
+    <Grid>
+        <!-- Background Image -->
+        <Image Source="/Assets/Images/landing.jpg" Stretch="Fill"/>
 
         <!-- MAIN LAYOUT -->
         <Grid>
@@ -38,65 +40,68 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP AREA (Responsive Logo + Title + Login Button) -->
+            <!-- TOP AREA (Logo + Login + Close Button) -->
             <Grid Margin="30" Height="80">
-
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- LEFT SIDE (Logo + Title) -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="/Assets/Images/logo.png"
-               Width="85" Height="85"
-               RenderOptions.BitmapScalingMode="HighQuality"
-               Stretch="Uniform"/>
-
+                <!-- LOGO LEFT -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
                     <TextBlock Text="Attendify"
-                   Margin="15,0,0,0"
-                   FontFamily="Montserrat"
-                   FontWeight="Bold"
-                   FontSize="40"
-                   VerticalAlignment="Center"
-                   Foreground="#2979FF"/>
+                               Margin="15,0,0,0"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               FontSize="40"
+                               VerticalAlignment="Center"
+                               Foreground="#2979FF"/>
                 </StackPanel>
 
-                <!-- LOGIN BUTTON (Animated) -->
-                <Border Grid.Column="1"
-            x:Name="LoginButton"
-            Background="#2979FF"
-            CornerRadius="25"
-            Padding="25,10"
-            VerticalAlignment="Center"
-            Cursor="Hand"
-            Effect="{DynamicResource ButtonShadow}"
-            MouseEnter="LoginButton_MouseEnter"
-            MouseLeave="LoginButton_MouseLeave"
-            MouseDown="Login_Click">
+                <!-- LOGIN BUTTON RIGHT -->
+                <Border x:Name="LoginButton" 
+                    Background="#2979FF"
+                        CornerRadius="25"
+                        Padding="25,10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right"
+                        Cursor="Hand"
+                        Effect="{DynamicResource ButtonShadow}"
+                        MouseEnter="LoginButton_MouseEnter"
+                        MouseLeave="LoginButton_MouseLeave"
+                        MouseDown="Login_Click">
                     <Border.RenderTransform>
                         <ScaleTransform ScaleX="1" ScaleY="1"/>
                     </Border.RenderTransform>
-
                     <TextBlock Text="Log in"
-                   FontFamily="Montserrat"
-                   FontSize="18"
-                   FontWeight="SemiBold"
-                   Foreground="White"
-                   HorizontalAlignment="Center"/>
+                               FontFamily="Montserrat"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
                 </Border>
-            </Grid>
 
+                <!-- CLOSE BUTTON TOP-RIGHT -->
+                <Button Content="✕"
+                        Width="35" Height="35"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Background="#20FFFFFF"
+                        Foreground="White"
+                        Margin="0,-30,-30,0"
+                        BorderThickness="0"
+                        FontSize="16"
+                        Cursor="Hand"
+                        Click="Close_Click">
+                    <Button.Effect>
+                        <DropShadowEffect BlurRadius="7" Opacity="0.8"/>
+                    </Button.Effect>
+                </Button>
+            </Grid>
 
             <!-- MAIN CONTENT -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-
                 <StackPanel HorizontalAlignment="Center">
-
                     <!-- WELCOME -->
-                    <TextBlock Text="👋 Welcome"
+                    <TextBlock Text="👋  Welcome"
                                FontFamily="Montserrat"
                                FontSize="36"
+                               Foreground="AliceBlue"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
                                Margin="0,40,0,0"/>
@@ -104,6 +109,7 @@
                     <TextBlock Text="Attendify — your all-in-one attendance and leave management app designed to simplify tracking, approvals, and employee scheduling with ease."
                                FontFamily="Montserrat"
                                FontSize="18"
+                               Foreground="AliceBlue"
                                TextWrapping="Wrap"
                                Width="900"
                                TextAlignment="Center"
@@ -117,7 +123,7 @@
                         <!-- CARD STYLE -->
                         <StackPanel.Resources>
                             <Style TargetType="Border" x:Key="CardStyle">
-                                <Setter Property="Background" Value="#D8EEFF"/>
+                                <Setter Property="Background" Value="#48cae4"/>
                                 <Setter Property="CornerRadius" Value="20"/>
                                 <Setter Property="Width" Value="250"/>
                                 <Setter Property="Height" Value="220"/>
@@ -129,14 +135,11 @@
                                     </Setter.Value>
                                 </Setter>
                                 <Setter Property="Cursor" Value="Hand"/>
-
-                                <!-- Hover animation -->
                                 <Setter Property="RenderTransform">
                                     <Setter.Value>
                                         <ScaleTransform ScaleX="1" ScaleY="1"/>
                                     </Setter.Value>
                                 </Setter>
-
                                 <Style.Triggers>
                                     <EventTrigger RoutedEvent="MouseEnter">
                                         <BeginStoryboard>
@@ -148,7 +151,6 @@
                                             </Storyboard>
                                         </BeginStoryboard>
                                     </EventTrigger>
-
                                     <EventTrigger RoutedEvent="MouseLeave">
                                         <BeginStoryboard>
                                             <Storyboard>
@@ -201,23 +203,28 @@
                                            TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-
                     </StackPanel>
 
                     <!-- LEARN MORE -->
                     <TextBlock Text="Learn More About Attendify"
-                               FontFamily="Montserrat"
-                               FontSize="16"
-                               Foreground="#2979FF"
+                               Style="{StaticResource HoverLink}"
                                Margin="0,40,0,0"
-                               TextDecorations="Underline"
-                               Cursor="Hand"
                                MouseDown="LearnMore_Click"/>
                 </StackPanel>
-
             </ScrollViewer>
 
-        </Grid>
+            <!-- Fade-in animation -->
+            <Grid.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                             From="0" To="1" Duration="0:0:1.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Grid.Triggers>
 
+        </Grid>
     </Grid>
 </Window>

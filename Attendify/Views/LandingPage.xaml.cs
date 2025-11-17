@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 using System.Windows.Media.Animation;
+using System;
+
 
 namespace Attendify.Views
 {
@@ -24,47 +26,52 @@ namespace Attendify.Views
             InitializeComponent();
         }
 
-        // Hover In Animation
-        private void LoginButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        // --- Login Button Hover In ---
+        private void LoginButton_MouseEnter(object sender, MouseEventArgs e)
         {
             var anim = new DoubleAnimation
             {
                 To = 1.1,
                 Duration = TimeSpan.FromMilliseconds(150),
-                AccelerationRatio = 0.3,
+                AccelerationRatio = 0.3
             };
 
-            LoginButton.RenderTransform = new ScaleTransform(1, 1);
-            LoginButton.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
-            LoginButton.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+            LoginButton.RenderTransform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, anim);
+            LoginButton.RenderTransform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, anim);
         }
 
-        // Hover Out Animation
-        private void LoginButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        // --- Login Button Hover Out ---
+        private void LoginButton_MouseLeave(object sender, MouseEventArgs e)
         {
             var anim = new DoubleAnimation
             {
                 To = 1,
                 Duration = TimeSpan.FromMilliseconds(150),
-                DecelerationRatio = 0.3,
+                DecelerationRatio = 0.3
             };
 
-            LoginButton.RenderTransform = new ScaleTransform(1, 1);
-            LoginButton.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
-            LoginButton.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+            LoginButton.RenderTransform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, anim);
+            LoginButton.RenderTransform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, anim);
         }
 
-        // Click -> Go to login page
-        private void Login_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        // --- Go to Login Page ---
+        private void Login_Click(object sender, MouseButtonEventArgs e)
         {
             LoginPage login = new LoginPage();
             login.Show();
             this.Close();
         }
 
-        private void LearnMore_Click(object sender, RoutedEventArgs e)
+        // --- Learn More Click ---
+        private void LearnMore_Click(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show("More info page coming soon!");
+            MessageBox.Show("More features coming soon!");
+        }
+
+        // --- Custom Close Button ---
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }
