@@ -27,6 +27,7 @@
     <None Remove="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
     <None Remove="Assets\Fonts\Montserrat-Thin.ttf" />
     <None Remove="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <None Remove="Assets\Images\adminbackground.png" />
     <None Remove="Assets\Images\ask-question.png" />
     <None Remove="Assets\Images\attendance.png" />
     <None Remove="Assets\Images\Attendifysplah.png" />
@@ -69,6 +70,7 @@
     <Resource Include="Assets\Fonts\Montserrat-SemiBoldItalic.ttf" />
     <Resource Include="Assets\Fonts\Montserrat-Thin.ttf" />
     <Resource Include="Assets\Fonts\Montserrat-ThinItalic.ttf" />
+    <Resource Include="Assets\Images\adminbackground.png" />
     <Resource Include="Assets\Images\ask-question.png" />
     <Resource Include="Assets\Images\attendance.png" />
     <Resource Include="Assets\Images\Attendifysplah.png">

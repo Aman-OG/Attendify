@@ -1,18 +1,20 @@
-﻿using System;
+﻿using Attendify.Views;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.Windows;
-using System.Windows.Media.Animation;
 
 
 namespace Attendify
@@ -73,8 +75,20 @@ namespace Attendify
         }
 
 
+
         private void Login_Click(object sender, RoutedEventArgs e)
         {
+            // --- ADDED LOGIN CHECK ---
+            if (UsernameBox.Text == "admin" && PasswordBox.Password == "1234")
+            {
+                AdminDashboard dashboard = new AdminDashboard();
+                dashboard.Show();
+
+                this.Close();
+                return;
+            }
+            // -------------------------
+
             MessageBox.Show("Login pressed!");
         }
 
