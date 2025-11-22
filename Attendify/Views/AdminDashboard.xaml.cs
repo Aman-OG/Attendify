@@ -13,6 +13,7 @@ namespace Attendify.Views
     {
         private DispatcherTimer _timer;
         private ObservableCollection<EmployeeRow> _rows = new ObservableCollection<EmployeeRow>();
+        private Button _currentSelectedButton;
 
         public AdminDashboard()
         {
@@ -36,8 +37,8 @@ namespace Attendify.Views
 
         private void AdminDashboard_Loaded(object sender, RoutedEventArgs e)
         {
-            // position indicator next to first button
-            MoveIndicatorToButton(BtnAttendance);
+            // position indicator next to first button and set it as selected
+            SetSelectedButton(BtnAttendance);
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -50,6 +51,37 @@ namespace Attendify.Views
             if (h >= 6 && h < 14) ShiftText.Text = "Morning Shift";
             else if (h >= 14 && h < 22) ShiftText.Text = "Afternoon Shift";
             else ShiftText.Text = "Night Shift";
+        }
+
+        // Set a button as selected (bold + background + larger font)
+        private void SetSelectedButton(Button btn)
+        {
+            if (btn == null) return;
+
+            // Clear previous selection
+            ClearSidebarButtonHighlights();
+
+            // Set new selection
+            _currentSelectedButton = btn;
+            btn.Background = new SolidColorBrush(Color.FromArgb(0x22, 0x00, 0xA6, 0xFB));
+            btn.FontWeight = FontWeights.Bold;
+
+            // Find the TextBlock inside the button and increase font size
+            if (btn.Content is StackPanel stackPanel)
+            {
+                foreach (var child in stackPanel.Children)
+                {
+                    if (child is TextBlock textBlock)
+                    {
+                        textBlock.FontSize = 22; // Increased from 20 to 22
+                        textBlock.FontWeight = FontWeights.Bold;
+
+                    }
+                }
+            }
+
+            // Move indicator
+            MoveIndicatorToButton(btn);
         }
 
         // move indicator animation to clicked button
@@ -69,47 +101,60 @@ namespace Attendify.Views
             };
 
             IndicatorTransform.BeginAnimation(TranslateTransform.YProperty, anim);
-
-            // highlight clicked button (clear others)
-            ClearSidebarButtonHighlights();
-            btn.Background = new SolidColorBrush(Color.FromArgb(0x22, 0x00, 0xA6, 0xFB));
         }
 
         private void ClearSidebarButtonHighlights()
         {
             foreach (var c in SidebarButtonsPanel.Children)
             {
-                if (c is Button b) b.Background = Brushes.Transparent;
+                if (c is Button b)
+                {
+                    b.Background = Brushes.Transparent;
+                    b.FontWeight = FontWeights.Normal;
+
+                    // Reset the TextBlock font size and weight inside the button
+                    if (b.Content is StackPanel stackPanel)
+                    {
+                        foreach (var child in stackPanel.Children)
+                        {
+                            if (child is TextBlock textBlock)
+                            {
+                                textBlock.FontSize = 20; // Reset to normal size
+                                textBlock.FontWeight = FontWeights.Normal;
+                            }
+                        }
+                    }
+                }
             }
         }
 
         private void BtnAttendance_Click(object sender, RoutedEventArgs e)
         {
-            MoveIndicatorToButton(BtnAttendance);
+            SetSelectedButton(BtnAttendance);
             ShowPanel("attendance");
         }
 
         private void BtnLeave_Click(object sender, RoutedEventArgs e)
         {
-            MoveIndicatorToButton(BtnLeave);
+            SetSelectedButton(BtnLeave);
             ShowPanel("leave");
         }
 
         private void BtnEmployees_Click(object sender, RoutedEventArgs e)
         {
-            MoveIndicatorToButton(BtnEmployees);
+            SetSelectedButton(BtnEmployees);
             ShowPanel("employees");
         }
 
         private void BtnReports_Click(object sender, RoutedEventArgs e)
         {
-            MoveIndicatorToButton(BtnReports);
+            SetSelectedButton(BtnReports);
             ShowPanel("reports");
         }
 
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            MoveIndicatorToButton(BtnSettings);
+            SetSelectedButton(BtnSettings);
             ShowPanel("settings");
         }
 
@@ -164,6 +209,9 @@ namespace Attendify.Views
             public string Status { get; set; }
         }
 
-  
+        private void StatusCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

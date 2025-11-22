@@ -5,7 +5,7 @@
         WindowStartupLocation="CenterScreen"
         Width="1200" Height="780"
         ResizeMode="CanResize"
-        Background="#010D2A"
+        Background="blue"
         MinWidth="1000" MinHeight="650">
 
     <Window.Resources>
@@ -19,8 +19,7 @@
         <SolidColorBrush x:Key="AccentBlue" Color="#00A6FB"/>
         <SolidColorBrush x:Key="LightText" Color="#FFFFFF"/>
 
-        <!-- Glass container style: blurred background effect is simulated by semi-transparent gradient + shadow.
-             IMPORTANT: we do NOT use BlurEffect on the container's content, so text/icons stay sharp. -->
+        <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
             <Grid>
                 <!-- simulated frosted background -->
@@ -44,7 +43,7 @@
             </Grid>
         </ControlTemplate>
 
-        <!-- Sidebar button style -->
+        <!-- Updated Sidebar button style with glass effect -->
         <Style x:Key="SidebarButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#D9EAFE"/>
@@ -56,62 +55,196 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid>
-                            <Border x:Name="Bg" CornerRadius="8" Background="Transparent" />
-                            <ContentPresenter Margin="8,0,6,0" VerticalAlignment="Center"/>
+                            <!-- Glass liquid background -->
+                            <Border x:Name="GlassBg" CornerRadius="8" >
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#15FFFFFF" Offset="0"/>
+                                        <GradientStop Color="#08FFFFFF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.BorderBrush>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                        <GradientStop Color="#20FFFFFF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                                <Border.BorderThickness>1</Border.BorderThickness>
+                            </Border>
+
+                            <!-- Content container that moves when pressed -->
+                            <Border x:Name="ContentContainer" Margin="0,0,0,0">
+                                <ContentPresenter Margin="8,0,6,0" VerticalAlignment="Center"/>
+                            </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#11296B" />
+                                <Setter TargetName="GlassBg" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#25FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#15FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#1A2B4F" />
+                                <Setter TargetName="GlassBg" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#35FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#25FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <!-- Move content to the right when pressed -->
+                                <Setter TargetName="ContentContainer" Property="Margin" Value="4,0,0,0"/>
+                                <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        
-        <!-- GLASS EFFECT COMBOBOX -->
-<Style x:Key="GlassComboBox" TargetType="ComboBox">
-    <Setter Property="SnapsToDevicePixels" Value="True"/>
-    <Setter Property="Foreground" Value="White"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Padding" Value="8,4"/>
-    <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="Template">
-        <Setter.Value>
-            <ControlTemplate TargetType="ComboBox">
 
-                <Grid>
-                    <!-- Frosted background -->
-                    <Border CornerRadius="10"
-                            Background="#20FFFFFF"
-                            BorderBrush="#40FFFFFF"
-                            BorderThickness="1"/>
+        <!-- Admin profile button style -->
+        <Style x:Key="AdminProfileButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#A6C6F5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="4" Padding="4,2">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#2000A6FB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- SIMPLE WORKING COMBOBOX STYLE -->
+        <Style x:Key="GlassComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <!-- Main border with rounded corners -->
+                            <Border x:Name="MainBorder"
+                            CornerRadius="10"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
 
-                    <!-- Main toggle area -->
-                    <Grid Margin="6,2,30,2">
-                        <ContentPresenter VerticalAlignment="Center" />
-                    </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="30"/>
+                                    </Grid.ColumnDefinitions>
 
-                    <!-- Dropdown arrow -->
-                    <Path Fill="White" Data="M 0 0 L 8 0 L 4 4 Z"
-                          HorizontalAlignment="Right"
-                          Margin="0,0,12,0"
-                          VerticalAlignment="Center"/>
-                </Grid>
+                                    <!-- Content -->
+                                    <ContentPresenter Grid.Column="0"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="12,0,0,0"
+                                              Content="{TemplateBinding SelectionBoxItem}"/>
 
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Opacity" Value="0.85"/>
-                    </Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
-        </Setter.Value>
-    </Setter>
-</Style>
+                                    <!-- Arrow -->
+                                    <Path x:Name="ArrowPath"
+                                  Grid.Column="1"
+                                  Fill="White"
+                                  Data="M 0 0 L 4 4 L 8 0 Z"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Width="8" Height="6"/>
+                                </Grid>
+                            </Border>
 
+                            <!-- Toggle Button - Make it NOT cover the entire area -->
+                            <ToggleButton x:Name="ToggleButton"
+                                  Background="Transparent"
+                                  BorderBrush="Transparent"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Stretch"
+                                  Width="40"
+                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+
+                            <!-- Dropdown Popup -->
+                            <Popup x:Name="PART_Popup"
+                           Placement="Bottom"
+                           IsOpen="{TemplateBinding IsDropDownOpen}"
+                           AllowsTransparency="True"
+                           PopupAnimation="Slide">
+                                <Border CornerRadius="10"
+                                Background="#70FFFFFF"
+                                BorderBrush="#40FFFFFF"
+                                BorderThickness="1"
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="200">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="MainBorder" Property="Background" Value="#4000A6FB"/>
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#6000A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF00A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="MainBorder" Property="Background" Value="#5000A6FB"/>
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF00A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                                <Setter TargetName="ArrowPath" Property="Data" Value="M 0 4 L 4 0 L 8 4 Z"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBoxItem Style -->
+        <Style x:Key="GlassComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bg" 
+                                Background="{TemplateBinding Background}" 
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="6">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#30FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#40FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -147,7 +280,7 @@
                     </StackPanel>
 
                     <!-- Buttons area with sliding indicator -->
-                    <Grid Grid.Row="1" Margin="8,12,8,12">
+                    <Grid Grid.Row="1" Margin="8,8,8,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="8"/>
                             <!-- indicator column -->
@@ -156,44 +289,44 @@
 
                         <!-- indicator -->
                         <Border x:Name="SideIndicator" Grid.Column="0" Background="{StaticResource AccentBlue}"
-                                CornerRadius="4" Width="8" Height="26" VerticalAlignment="Top" Margin="7,2,0,0" Grid.ColumnSpan="2" HorizontalAlignment="Left">
+                                 Width="8" Height="40" VerticalAlignment="Top" Margin="3,2,0,0" Grid.ColumnSpan="2" HorizontalAlignment="Left">
                             <Border.RenderTransform>
                                 <TranslateTransform x:Name="IndicatorTransform" Y="0" />
                             </Border.RenderTransform>
                         </Border>
 
-                        <StackPanel Grid.Column="1" x:Name="SidebarButtonsPanel">
-                            <Button x:Name="BtnAttendance" Style="{StaticResource SidebarButton}" Click="BtnAttendance_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="📅" FontSize="20" Margin="0,0,10,0"/>
+                        <StackPanel Grid.Column="1" x:Name="SidebarButtonsPanel" >
+                            <Button x:Name="BtnAttendance" Style="{StaticResource SidebarButton}" Click="BtnAttendance_Click" Height="40">
+                                <StackPanel Orientation="Horizontal" >
+                                    <TextBlock Text="📅" FontSize="20" Margin="0,0,8,0"/>
                                     <TextBlock Text="Attendance" FontSize="20"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnLeave" Style="{StaticResource SidebarButton}" Click="BtnLeave_Click">
+                            <Button x:Name="BtnLeave" Style="{StaticResource SidebarButton}" Click="BtnLeave_Click" Height="40">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⏱" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="⏱" FontSize="20" Margin="0,0,8,0"/>
                                     <TextBlock Text="Leave Requests" FontSize="20"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnEmployees" Style="{StaticResource SidebarButton}" Click="BtnEmployees_Click">
+                            <Button x:Name="BtnEmployees" Style="{StaticResource SidebarButton}" Click="BtnEmployees_Click" Height="40" >
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="👥" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="👥" FontSize="20" Margin="0,0,8,0"/>
                                     <TextBlock Text="Employees" FontSize="20"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnReports" Style="{StaticResource SidebarButton}" Click="BtnReports_Click">
+                            <Button x:Name="BtnReports" Style="{StaticResource SidebarButton}" Click="BtnReports_Click" Height="40" >
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="📊" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="📊" FontSize="20" Margin="0,0,8,0"/>
                                     <TextBlock Text="Reports" FontSize="20"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnSettings" Style="{StaticResource SidebarButton}" Click="BtnSettings_Click">
+                            <Button x:Name="BtnSettings" Style="{StaticResource SidebarButton}" Click="BtnSettings_Click" Height="40" >
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⚙" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="⚙" FontSize="20" Margin="0,0,8,0"/>
                                     <TextBlock Text="Settings" FontSize="20"/>
                                 </StackPanel>
                             </Button>
@@ -204,12 +337,12 @@
                     <Border Grid.Row="2" Padding="14" Background="Transparent">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                             <Border Width="44" Height="44" CornerRadius="22" Background="#D93A3A" VerticalAlignment="Center">
-                                <TextBlock x:Name="ProfileInitial" Text="A" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="ProfileInitial" Text="A" Foreground="White" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
                             <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock x:Name="ProfileName" Text="Aman" Foreground="White" FontWeight="Bold"/>
-                                <Button x:Name="AccountBtn" Content="Admin ▾" Background="Transparent" BorderThickness="0" Foreground="#A6C6F5" Click="AccountBtn_Click"/>
+                                <Button x:Name="AccountBtn" Content="Admin ▾" Style="{StaticResource AdminProfileButton}" Click="AccountBtn_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -220,7 +353,6 @@
             <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="#01243A" ShowsPreview="True"/>
 
             <!-- MAIN AREA -->
-            <!-- MAIN AREA -->
             <Border Grid.Column="2" Padding="20">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -230,48 +362,98 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" VerticalAlignment="Center" Margin="6">
-                        <TextBlock Text="Admin dashboard" FontSize="26" FontWeight="Bold" Foreground="White" Margin="0,0,24,0"/>
-                        <TextBlock x:Name="AttendanceTitle" Text="Employee Attendance - Day" FontSize="20" Foreground="White" VerticalAlignment="Center" Margin="0,2,6,0"/>
-                        <TextBlock x:Name="DateText" Text="--" Foreground="{StaticResource AccentBlue}" FontSize="20" FontWeight="Bold" Margin="8,0,12,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="ShiftText" Text="Morning Shift" Foreground="White" FontSize="20" FontWeight="Bold" Margin="6,0,12,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="ClockText" Text="00 : 00 : 00" Foreground="#64FF33" FontSize="20" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <Grid Grid.Row="0" Margin="6">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <!-- Filters (glass container) -->
+                        <!-- First line: Admin dashboard centered at top -->
+                        <TextBlock Grid.Row="0" 
+                                   Text="Admin dashboard" 
+                                   FontSize="26" 
+                                   FontWeight="Bold" 
+                                   Foreground="White" 
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+
+                        <!-- Second line: Other text elements -->
+                        <StackPanel Grid.Row="1" 
+                                    Orientation="Horizontal" 
+                                    VerticalAlignment="Center" 
+                                    HorizontalAlignment="Center"
+                                    Margin="0,12,0,0">
+                            <TextBlock x:Name="AttendanceTitle" 
+                                       Text="Employee Attendance - Day" 
+                                       FontSize="20" 
+                                       Foreground="White" 
+                                       VerticalAlignment="Center" 
+                                       Margin="0,2,6,0"/>
+                            <TextBlock x:Name="DateText" 
+                                       Text="--" 
+                                       Foreground="{StaticResource AccentBlue}" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Margin="6,0,12,0" 
+                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ShiftText" 
+                                       Text="Morning Shift" 
+                                       Foreground="White" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Margin="6,0,12,0" 
+                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ClockText" 
+                                       Text="00 : 00 : 00" 
+                                       Foreground="#64FF33" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Margin="6,0,0,0" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
                     <!-- Filters (glass container) -->
                     <ContentControl Grid.Row="1"
-                Margin="0,12,0,12"
-                Template="{StaticResource GlassContainerTemplate}">
-
+                                    Margin="0,12,0,12"
+                                    Template="{StaticResource GlassContainerTemplate}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Height="64">
-
                             <!-- SEARCH BOX -->
                             <Grid Width="360" Height="40" Margin="8" VerticalAlignment="Center">
                                 <Border CornerRadius="10"
-                    Background="#20FFFFFF"
-                    BorderBrush="#40FFFFFF"
-                    BorderThickness="1"/>
+                                        Background="#20FFFFFF"
+                                        BorderBrush="#40FFFFFF"
+                                        BorderThickness="1"/>
                                 <TextBox x:Name="SearchBox"
-                     Margin="10,0,0,0"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     VerticalContentAlignment="Center"
-                     Foreground="White"
-                     TextChanged="SearchBox_TextChanged"/>
+                                         Margin="10,0,0,0"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         FontSize="17"
+                                         VerticalContentAlignment="Center"
+                                         Foreground="White"
+                                         TextChanged="SearchBox_TextChanged"/>
                                 <TextBlock x:Name="SearchPlaceholder"
-                       Text="Search Employees"
-                       Foreground="#B0CFF7"
-                       Margin="18,0,0,0"
-                       VerticalAlignment="Center"
-                       IsHitTestVisible="False"/>
+                                           Text="🔍 Search Employees"
+                                           Foreground="#B0CFFF"
+                                           Margin="18,0,0,0"
+                                           FontSize="17"
+                                           FontWeight="DemiBold"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
                             </Grid>
 
                             <!-- STATUS COMBOBOX (GLASS) -->
                             <ComboBox x:Name="StatusCombo"
-                  Width="180" Height="40"
-                  Margin="8"
-                  Style="{StaticResource GlassComboBox}" SelectedIndex="0" >
+                                      Width="180" 
+                                      Foreground="Black"
+                                      FontSize="17"
+                                      FontWeight="Bold"
+                                      Margin="8"
+                                      Style="{StaticResource GlassComboBox}" 
+                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                                      SelectedIndex="0" >
+                                
+                                <ComboBoxItem>Status</ComboBoxItem>
                                 <ComboBoxItem>All</ComboBoxItem>
                                 <ComboBoxItem>Attended</ComboBoxItem>
                                 <ComboBoxItem>Late</ComboBoxItem>
@@ -280,44 +462,50 @@
 
                             <!-- DEPARTMENT COMBOBOX (GLASS) -->
                             <ComboBox x:Name="DeptCombo"
-                  Width="180" Height="40"
-                  Margin="8"
-                  Style="{StaticResource GlassComboBox}" SelectedIndex="0" >
+                                      Foreground="Black"
+                                      FontWeight="Bold"
+                                      FontSize="17"
+                                      Width="180" 
+                                      Margin="8"
+                                      Style="{StaticResource GlassComboBox}" 
+                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                                      SelectedIndex="0">
+                                <ComboBoxItem>Department</ComboBoxItem>
                                 <ComboBoxItem>All</ComboBoxItem>
                                 <ComboBoxItem>Software</ComboBoxItem>
                                 <ComboBoxItem>Electrical</ComboBoxItem>
                                 <ComboBoxItem>Chemical</ComboBoxItem>
                             </ComboBox>
-
                         </StackPanel>
                     </ContentControl>
-
 
                     <!-- Table: glass container holding DataGrid -->
                     <ContentControl Grid.Row="2" Template="{StaticResource GlassContainerTemplate}">
                         <Grid>
                             <DataGrid x:Name="EmployeesGrid"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          IsReadOnly="True"
-                          Background="Transparent"
-                          RowBackground="#40FFFFFF"
-                          AlternatingRowBackground="#30FFFFFF"
-                          GridLinesVisibility="None"
-                          HorizontalGridLinesBrush="#25FFFFFF"
-                          VerticalGridLinesBrush="#25FFFFFF"
-                          Foreground="#022"
-                          BorderThickness="0" >
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      IsReadOnly="True"
+                                      Background="Transparent"
+                                      RowBackground="#40FFFFFF"
+                                      AlternatingRowBackground="#30FFFFFF"
+                                      GridLinesVisibility="None"
+                                      HorizontalGridLinesBrush="#25FFFFFF"
+                                      VerticalGridLinesBrush="#25FFFFFF"
+                                      Foreground="#022"
+                                      BorderThickness="0"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="No." Binding="{Binding No}" Width="60"/>
-                                    <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpID}" Width="120"/>
-                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="140"/>
-                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="140"/>
-                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                    <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="120"/>
-                                    <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="120"/>
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                                    <DataGridTextColumn Header="No." Binding="{Binding No}" Width="*" MinWidth="60"/>
+                                    <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpID}" Width="*" MinWidth="120"/>
+                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*" MinWidth="140"/>
+                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*" MinWidth="140"/>
+                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" MinWidth="200"/>
+                                    <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="*" MinWidth="120"/>
+                                    <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="*" MinWidth="120"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" MinWidth="100"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
