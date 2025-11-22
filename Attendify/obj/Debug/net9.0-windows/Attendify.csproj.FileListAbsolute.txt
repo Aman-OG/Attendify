@@ -43,11 +43,9 @@ C:\Users\DBU\Desktop\Attendify\Attendify\bin\Debug\net9.0-windows\runtimes\win-a
 C:\Users\DBU\Desktop\Attendify\Attendify\bin\Debug\net9.0-windows\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\DBU\Desktop\Attendify\Attendify\bin\Debug\net9.0-windows\runtimes\win-x86\native\e_sqlite3.dll
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify.csproj.AssemblyReference.cache
-C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\AdminDashboard.baml
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\LandingPage.baml
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\LoginPage.baml
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\MainWindow.g.cs
-C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\AdminDashboard.g.cs
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\LandingPage.g.cs
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\LoginPage.g.cs
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\SplashScreen.g.cs
@@ -70,3 +68,15 @@ C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\refint\Attendi
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify.pdb
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Attendify.genruntimeconfig.cache
 C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\ref\Attendify.dll
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminAttendanceView.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminDashboard.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminEmployeeView.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminLeaveRequestView.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminReportView.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminSettingsView.baml
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminAttendanceView.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminDashboard.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminEmployeeView.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminLeaveRequestView.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminReportView.g.cs
+C:\Users\DBU\Desktop\Attendify\Attendify\obj\Debug\net9.0-windows\Views\Admin\AdminSettingsView.g.cs

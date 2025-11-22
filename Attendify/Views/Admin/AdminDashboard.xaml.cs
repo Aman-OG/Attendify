@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using Attendify.ViewModels;
+using Attendify.Views.Admin;
+
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -12,22 +13,21 @@ namespace Attendify.Views
     public partial class AdminDashboard : Window
     {
         private DispatcherTimer _timer;
-        private ObservableCollection<EmployeeRow> _rows = new ObservableCollection<EmployeeRow>();
         private Button _currentSelectedButton;
+        private AdminDashboardViewModel _viewModel;
 
         public AdminDashboard()
         {
             InitializeComponent();
 
-            // sample rows
-            _rows.Add(new EmployeeRow { No = "01", EmpID = "emp10002", FirstName = "Aman", LastName = "Baye", Email = "am@gmail.com", Department = "HR", Position = "Manager", Status = "Active" });
-            _rows.Add(new EmployeeRow { No = "02", EmpID = "emp10003", FirstName = "Teddy", LastName = "K", Email = "teddy@g.com", Department = "Software", Position = "Dev", Status = "Attended" });
+            // Initialize ViewModel
+            _viewModel = new AdminDashboardViewModel();
+            DataContext = _viewModel;
 
-            EmployeesGrid.ItemsSource = _rows;
-
+            // Set profile initial
             ProfileInitial.Text = (ProfileName.Text.Length > 0) ? ProfileName.Text.Substring(0, 1).ToUpper() : "A";
 
-            // timer for clock & shift
+            // Initialize timer for clock & shift
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += Timer_Tick;
             _timer.Start();
@@ -37,23 +37,23 @@ namespace Attendify.Views
 
         private void AdminDashboard_Loaded(object sender, RoutedEventArgs e)
         {
-            // position indicator next to first button and set it as selected
+            // Position indicator next to first button and set it as selected
             SetSelectedButton(BtnAttendance);
+            ShowAttendanceView();
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
             var now = DateTime.Now;
-            DateText.Text = now.ToString("dd-MM-yyyy");
-            ClockText.Text = now.ToString("HH : mm : ss");
+            _viewModel.CurrentDate = now.ToString("dd-MM-yyyy");
+            _viewModel.CurrentTime = now.ToString("HH : mm : ss");
 
             int h = now.Hour;
-            if (h >= 6 && h < 14) ShiftText.Text = "Morning Shift";
-            else if (h >= 14 && h < 22) ShiftText.Text = "Afternoon Shift";
-            else ShiftText.Text = "Night Shift";
+            if (h >= 6 && h < 14) _viewModel.CurrentShift = "Morning Shift";
+            else if (h >= 14 && h < 22) _viewModel.CurrentShift = "Afternoon Shift";
+            else _viewModel.CurrentShift = "Night Shift";
         }
 
-        // Set a button as selected (bold + background + larger font)
         private void SetSelectedButton(Button btn)
         {
             if (btn == null) return;
@@ -73,9 +73,8 @@ namespace Attendify.Views
                 {
                     if (child is TextBlock textBlock)
                     {
-                        textBlock.FontSize = 22; // Increased from 20 to 22
+                        textBlock.FontSize = 22;
                         textBlock.FontWeight = FontWeights.Bold;
-
                     }
                 }
             }
@@ -84,7 +83,6 @@ namespace Attendify.Views
             MoveIndicatorToButton(btn);
         }
 
-        // move indicator animation to clicked button
         private void MoveIndicatorToButton(Button btn)
         {
             if (btn == null) return;
@@ -112,14 +110,13 @@ namespace Attendify.Views
                     b.Background = Brushes.Transparent;
                     b.FontWeight = FontWeights.Normal;
 
-                    // Reset the TextBlock font size and weight inside the button
                     if (b.Content is StackPanel stackPanel)
                     {
                         foreach (var child in stackPanel.Children)
                         {
                             if (child is TextBlock textBlock)
                             {
-                                textBlock.FontSize = 20; // Reset to normal size
+                                textBlock.FontSize = 20;
                                 textBlock.FontWeight = FontWeights.Normal;
                             }
                         }
@@ -128,55 +125,82 @@ namespace Attendify.Views
             }
         }
 
+        // Navigation Methods
         private void BtnAttendance_Click(object sender, RoutedEventArgs e)
         {
             SetSelectedButton(BtnAttendance);
-            ShowPanel("attendance");
+            ShowAttendanceView();
         }
 
         private void BtnLeave_Click(object sender, RoutedEventArgs e)
         {
             SetSelectedButton(BtnLeave);
-            ShowPanel("leave");
+            ShowLeaveRequestsView();
         }
 
         private void BtnEmployees_Click(object sender, RoutedEventArgs e)
         {
             SetSelectedButton(BtnEmployees);
-            ShowPanel("employees");
+            ShowEmployeesView();
         }
 
         private void BtnReports_Click(object sender, RoutedEventArgs e)
         {
             SetSelectedButton(BtnReports);
-            ShowPanel("reports");
+            ShowReportsView();
         }
 
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
             SetSelectedButton(BtnSettings);
-            ShowPanel("settings");
+            ShowSettingsView();
         }
 
-        // stub panel switcher for now (changes header only)
-        private void ShowPanel(string name)
+        // View Switching Methods
+        private void ShowAttendanceView()
         {
-            AttendanceTitle.Text = name switch
-            {
-                "attendance" => "Employee Attendance - Day",
-                "leave" => "Leave Requests",
-                "employees" => "Employees",
-                "reports" => "Reports",
-                "settings" => "Settings",
-                _ => "Employee Attendance - Day"
-            };
+            _viewModel.CurrentPageTitle = "Employee Attendance - Day";
+            MainContentControl.Content = new AttendanceView();
+            FiltersContainer.Visibility = Visibility.Visible;
+        }
+
+        private void ShowLeaveRequestsView()
+        {
+            _viewModel.CurrentPageTitle = "Leave Requests";
+            MainContentControl.Content = new LeaveRequestsView();
+            FiltersContainer.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowEmployeesView()
+        {
+            _viewModel.CurrentPageTitle = "Employees";
+            MainContentControl.Content = new EmployeesView();
+            FiltersContainer.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowReportsView()
+        {
+            _viewModel.CurrentPageTitle = "Reports";
+            MainContentControl.Content = new ReportsView();
+            FiltersContainer.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowSettingsView()
+        {
+            _viewModel.CurrentPageTitle = "Settings";
+            MainContentControl.Content = new SettingsView();
+            FiltersContainer.Visibility = Visibility.Collapsed;
         }
 
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
         {
             var menu = new ContextMenu();
             var miSettings = new MenuItem { Header = "Settings" };
-            miSettings.Click += (s, ev) => MessageBox.Show("Open settings");
+            miSettings.Click += (s, ev) =>
+            {
+                SetSelectedButton(BtnSettings);
+                ShowSettingsView();
+            };
             var miLogout = new MenuItem { Header = "Log out" };
             miLogout.Click += (s, ev) => Application.Current.Shutdown();
             menu.Items.Add(miSettings);
@@ -185,33 +209,19 @@ namespace Attendify.Views
             menu.IsOpen = true;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
-        // search placeholder control
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-            // you can add filtering logic here to filter _rows and refresh EmployeesGrid.ItemsSource
-        }
-
-        private class EmployeeRow
-        {
-            public string No { get; set; }
-            public string EmpID { get; set; }
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-            public string Email { get; set; }
-            public string Department { get; set; }
-            public string Position { get; set; }
-            public string Status { get; set; }
         }
 
         private void StatusCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Filter logic for status
+        }
 
+        private void DeptCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Filter logic for department
         }
     }
 }

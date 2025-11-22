@@ -248,11 +248,15 @@
     </Window.Resources>
 
     <Grid>
+        <ContentControl x:Name="MainContent"
+                Content="{Binding CurrentView}"
+                Margin="20"/>
+
         <!-- background radial -->
         <Border Background="{StaticResource MainRadial}" />
 
         <!-- decorative uploaded background, low opacity -->
-        <Image Source="/Assets/Images/adminbackground.png"
+        <Image Source="/Assets/Images/bb2.png"
                Opacity="0.10"
                Stretch="UniformToFill"
                IsHitTestVisible="False" />
@@ -262,7 +266,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="260" x:Name="SidebarColumn"/>
                 <ColumnDefinition Width="6"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="875*"/>
+                <ColumnDefinition Width="59*"/>
             </Grid.ColumnDefinitions>
 
             <!-- SIDEBAR -->
@@ -351,9 +356,8 @@
 
             <!-- GridSplitter to allow user-moving sidebar -->
             <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="#01243A" ShowsPreview="True"/>
-
             <!-- MAIN AREA -->
-            <Border Grid.Column="2" Padding="20">
+            <Border Grid.Column="2" Padding="20" Grid.ColumnSpan="2">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -370,89 +374,91 @@
 
                         <!-- First line: Admin dashboard centered at top -->
                         <TextBlock Grid.Row="0" 
-                                   Text="Admin dashboard" 
-                                   FontSize="26" 
-                                   FontWeight="Bold" 
-                                   Foreground="White" 
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
+                       Text="Admin dashboard" 
+                       FontSize="26" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
 
                         <!-- Second line: Other text elements -->
                         <StackPanel Grid.Row="1" 
-                                    Orientation="Horizontal" 
-                                    VerticalAlignment="Center" 
-                                    HorizontalAlignment="Center"
-                                    Margin="0,12,0,0">
+                        Orientation="Horizontal" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Center"
+                        Margin="0,12,0,0">
                             <TextBlock x:Name="AttendanceTitle" 
-                                       Text="Employee Attendance - Day" 
-                                       FontSize="20" 
-                                       Foreground="White" 
-                                       VerticalAlignment="Center" 
-                                       Margin="0,2,6,0"/>
+                           Text="{Binding CurrentPageTitle}" 
+                           FontSize="20" 
+                           Foreground="White" 
+                           VerticalAlignment="Center" 
+                           Margin="0,2,6,0"/>
                             <TextBlock x:Name="DateText" 
-                                       Text="--" 
-                                       Foreground="{StaticResource AccentBlue}" 
-                                       FontSize="20" 
-                                       FontWeight="Bold" 
-                                       Margin="6,0,12,0" 
-                                       VerticalAlignment="Center"/>
+                           Text="{Binding CurrentDate}" 
+                           Foreground="{StaticResource AccentBlue}" 
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Margin="8,2,12,0" 
+                           VerticalAlignment="Center"/>
                             <TextBlock x:Name="ShiftText" 
-                                       Text="Morning Shift" 
-                                       Foreground="White" 
-                                       FontSize="20" 
-                                       FontWeight="Bold" 
-                                       Margin="6,0,12,0" 
-                                       VerticalAlignment="Center"/>
+                           Text="{Binding CurrentShift}" 
+                           Foreground="White" 
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Margin="6,0,12,0" 
+                           VerticalAlignment="Center"/>
                             <TextBlock x:Name="ClockText" 
-                                       Text="00 : 00 : 00" 
-                                       Foreground="#64FF33" 
-                                       FontSize="20" 
-                                       FontWeight="Bold" 
-                                       Margin="6,0,0,0" 
-                                       VerticalAlignment="Center"/>
+                           Text="{Binding CurrentTime}" 
+                           Foreground="#64FF33" 
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Margin="6,0,0,0" 
+                           VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Filters (glass container) -->
-                    <ContentControl Grid.Row="1"
-                                    Margin="0,12,0,12"
-                                    Template="{StaticResource GlassContainerTemplate}">
+                    <!-- Filters (glass container) - Only show for Attendance -->
+                    <ContentControl x:Name="FiltersContainer"
+                        Grid.Row="1"
+                        Margin="0,12,0,12"
+                        Template="{StaticResource GlassContainerTemplate}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Height="64">
                             <!-- SEARCH BOX -->
                             <Grid Width="360" Height="40" Margin="8" VerticalAlignment="Center">
                                 <Border CornerRadius="10"
-                                        Background="#20FFFFFF"
-                                        BorderBrush="#40FFFFFF"
-                                        BorderThickness="1"/>
+                            Background="#20FFFFFF"
+                            BorderBrush="#40FFFFFF"
+                            BorderThickness="1"/>
                                 <TextBox x:Name="SearchBox"
-                                         Margin="10,0,0,0"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         FontSize="17"
-                                         VerticalContentAlignment="Center"
-                                         Foreground="White"
-                                         TextChanged="SearchBox_TextChanged"/>
+                             Margin="10,0,0,0"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             FontSize="17"
+                             VerticalContentAlignment="Center"
+                             Foreground="White"
+                             TextChanged="SearchBox_TextChanged"/>
                                 <TextBlock x:Name="SearchPlaceholder"
-                                           Text="🔍 Search Employees"
-                                           Foreground="#B0CFFF"
-                                           Margin="18,0,0,0"
-                                           FontSize="17"
-                                           FontWeight="DemiBold"
-                                           VerticalAlignment="Center"
-                                           IsHitTestVisible="False"/>
+                               Text="🔍 Search Employees"
+                               Foreground="#B0CFFF"
+                               Margin="18,0,0,0"
+                               FontSize="17"
+                               FontWeight="DemiBold"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"/>
                             </Grid>
 
                             <!-- STATUS COMBOBOX (GLASS) -->
                             <ComboBox x:Name="StatusCombo"
-                                      Width="180" 
-                                      Foreground="Black"
-                                      FontSize="17"
-                                      FontWeight="Bold"
-                                      Margin="8"
-                                      Style="{StaticResource GlassComboBox}" 
-                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                                      SelectedIndex="0" >
-                                
+                          Width="180" 
+                          Foreground="Black"
+                          FontSize="17"
+                          FontWeight="Bold"
+                          Margin="8"
+                          Style="{StaticResource GlassComboBox}" 
+                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                          SelectedIndex="0" 
+                          SelectionChanged="StatusCombo_SelectionChanged">
+
                                 <ComboBoxItem>Status</ComboBoxItem>
                                 <ComboBoxItem>All</ComboBoxItem>
                                 <ComboBoxItem>Attended</ComboBoxItem>
@@ -462,14 +468,15 @@
 
                             <!-- DEPARTMENT COMBOBOX (GLASS) -->
                             <ComboBox x:Name="DeptCombo"
-                                      Foreground="Black"
-                                      FontWeight="Bold"
-                                      FontSize="17"
-                                      Width="180" 
-                                      Margin="8"
-                                      Style="{StaticResource GlassComboBox}" 
-                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                                      SelectedIndex="0">
+                          Foreground="Black"
+                          FontWeight="Bold"
+                          FontSize="17"
+                          Width="180" 
+                          Margin="8"
+                          Style="{StaticResource GlassComboBox}" 
+                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                          SelectedIndex="0"
+                          SelectionChanged="DeptCombo_SelectionChanged">
                                 <ComboBoxItem>Department</ComboBoxItem>
                                 <ComboBoxItem>All</ComboBoxItem>
                                 <ComboBoxItem>Software</ComboBoxItem>
@@ -479,37 +486,10 @@
                         </StackPanel>
                     </ContentControl>
 
-                    <!-- Table: glass container holding DataGrid -->
-                    <ContentControl Grid.Row="2" Template="{StaticResource GlassContainerTemplate}">
-                        <Grid>
-                            <DataGrid x:Name="EmployeesGrid"
-                                      AutoGenerateColumns="False"
-                                      CanUserAddRows="False"
-                                      CanUserDeleteRows="False"
-                                      IsReadOnly="True"
-                                      Background="Transparent"
-                                      RowBackground="#40FFFFFF"
-                                      AlternatingRowBackground="#30FFFFFF"
-                                      GridLinesVisibility="None"
-                                      HorizontalGridLinesBrush="#25FFFFFF"
-                                      VerticalGridLinesBrush="#25FFFFFF"
-                                      Foreground="#022"
-                                      BorderThickness="0"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="No." Binding="{Binding No}" Width="*" MinWidth="60"/>
-                                    <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpID}" Width="*" MinWidth="120"/>
-                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*" MinWidth="140"/>
-                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*" MinWidth="140"/>
-                                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" MinWidth="200"/>
-                                    <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="*" MinWidth="120"/>
-                                    <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="*" MinWidth="120"/>
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" MinWidth="100"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Grid>
-                    </ContentControl>
+                    <!-- Dynamic Content Area -->
+                    <ContentControl x:Name="MainContentControl" 
+                        Grid.Row="2" 
+                        Content="{Binding CurrentView}"/>
                 </Grid>
             </Border>
         </Grid>
