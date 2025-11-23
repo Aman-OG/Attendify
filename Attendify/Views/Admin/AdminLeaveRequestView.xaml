@@ -33,14 +33,17 @@
         <Style x:Key="FilterButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="15,6"/>
+            <Setter Property="MinWidth" Value="70"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" 
-                                CornerRadius="8"
+                                CornerRadius="16"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="#40FFFFFF"
                                 BorderThickness="1">
@@ -60,13 +63,38 @@
             </Setter>
         </Style>
 
+        <!-- Refresh Button Style (no border) -->
+        <Style x:Key="RefreshButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                CornerRadius="16"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2000A6FB"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4000A6FB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Action Button Style using standard Border -->
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#00A6FB"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="FontFamily" Value="Montserat"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -107,6 +135,14 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Height" Value="35"/>
         </Style>
+
+        <!-- DataGrid Text Style -->
+        <Style x:Key="DataGridTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -114,18 +150,18 @@
 
             <!-- Filter Tabs -->
             <Border Style="{StaticResource GlassRoundedBorder}" Margin="0,0,0,15">
-                <StackPanel Orientation="Horizontal" Height="50" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Center">
                     <!-- Filter Buttons with Colors -->
                     <Button x:Name="BtnAll" Content="All" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#4000A6FB" Margin="0,0,10,0" Click="FilterButton_Click" ToolTip="Show all requests"/>
+                            Background="#4000A6FB" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show all requests"/>
                     <Button x:Name="BtnToday" Content="Today" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#A95315" Margin="0,0,10,0" Click="FilterButton_Click" ToolTip="Show today's requests"/>
+                            Background="#A95315" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show today's requests"/>
                     <Button x:Name="BtnApproved" Content="Approved" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#2FBF4C" Margin="0,0,10,0" Click="FilterButton_Click" ToolTip="Show approved requests"/>
+                            Background="#2FBF4C" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show approved requests"/>
                     <Button x:Name="BtnPending" Content="Pending" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#E3C63A" Margin="0,0,10,0"  Click="FilterButton_Click" ToolTip="Show pending requests"/>
+                            Background="#E3C63A" Margin="0,0,8,0"  Click="FilterButton_Click" ToolTip="Show pending requests"/>
                     <Button x:Name="BtnRejected" Content="Rejected" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#D23C3C" Click="FilterButton_Click" ToolTip="Show rejected requests"/>
+                            Background="#D23C3C" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show rejected requests"/>
 
                     <!-- Search Box -->
                     <Border Style="{StaticResource SearchBoxStyle}" 
@@ -142,14 +178,16 @@
 
                     <!-- Refresh Button -->
                     <Button x:Name="BtnRefresh"
-        Content="⟳"
-        Style="{StaticResource FilterButtonStyle}"
-        Background="Transparent"
-        Click="BtnRefresh_Click"
-        ToolTip="Refresh requests"
-        Margin="5,0,0,0"
-        FontSize="20"
-        Width="50"/>
+                            Content="⟳"
+                            Style="{StaticResource RefreshButtonStyle}"
+                            Background="Transparent"
+                            Click="BtnRefresh_Click"
+                            ToolTip="Refresh requests"
+                            Margin="5,0,0,0"
+                            FontSize="16"
+                            Width="36"
+                            Height="36"
+                            Padding="0"/>
                 </StackPanel>
             </Border>
 
@@ -173,41 +211,169 @@
                               BorderThickness="0"
                               HeadersVisibility="Column"
                               SelectionMode="Single"
-                              SelectionChanged="LeaveRequestsGrid_SelectionChanged">
+                              SelectionChanged="LeaveRequestsGrid_SelectionChanged"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="No" Binding="{Binding No}" Width="60"/>
-                            <DataGridTextColumn Header="Employee" Binding="{Binding EmployeeName}" Width="2*" MinWidth="120"/>
-                            <DataGridTextColumn Header="From" Binding="{Binding FromDate, StringFormat=dd/MM/yy}" Width="100"/>
-                            <DataGridTextColumn Header="To" Binding="{Binding ToDate, StringFormat=dd/MM/yy}" Width="100"/>
-                            <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="3*" MinWidth="150"/>
-                            <DataGridTemplateColumn Header="Status" Width="120">
+                            <!-- No Column - Fixed small width -->
+                            <DataGridTextColumn Header="No" Binding="{Binding No}" Width="50" MinWidth="40">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Employee Column - Responsive -->
+                            <DataGridTextColumn Header="Employee" Binding="{Binding EmployeeName}" 
+                        Width="2*" MinWidth="120" MaxWidth="200">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="TextWrapping" Value="NoWrap"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- From Date Column - Fixed medium width -->
+                            <DataGridTextColumn Header="From" Binding="{Binding FromDate}" 
+                        Width="0.8*" MinWidth="80" MaxWidth="100">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- To Date Column - Fixed medium width -->
+                            <DataGridTextColumn Header="To" Binding="{Binding ToDate}" 
+                        Width="0.8*" MinWidth="80" MaxWidth="100">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Reason Column - Most responsive -->
+                            <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" 
+                        Width="3*" MinWidth="150" MaxWidth="300">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Status Column - Fixed width -->
+                            <DataGridTemplateColumn Header="Status" Width="100" MinWidth="90" MaxWidth="120">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#00A6FB"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,10"/>
+                                    </Style>
+                                </DataGridTemplateColumn.HeaderStyle>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource StatusBadgeStyle}" 
-                                                Background="{Binding StatusColor}">
-                                            <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold" 
-                                                      FontSize="12" HorizontalAlignment="Center"/>
+                        Background="{Binding StatusColor}"
+                        Margin="2">
+                                            <TextBlock Text="{Binding Status}" 
+                               Foreground="White" 
+                               FontWeight="SemiBold" 
+                               FontSize="11"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
-
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="Padding" Value="8,6"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="DataGridCell">
-                                            <Border Background="Transparent" Padding="10,8">
+                                            <Border Background="Transparent" Padding="8,6">
                                                 <ContentPresenter VerticalAlignment="Center"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#4000A6FB"/>
+                                        <Setter Property="BorderBrush" Value="#00A6FB"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.CellStyle>
 
@@ -216,11 +382,23 @@
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="Foreground" Value="#00A6FB"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="10,12"/>
+                                <Setter Property="Padding" Value="8,10"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="MinHeight" Value="35"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#3000A6FB"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
                     </DataGrid>
                 </Border>
 
@@ -235,6 +413,7 @@
                                 <!-- Employee Details -->
                                 <Grid>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -300,16 +479,25 @@
                                     <TextBlock Grid.Row="7" Grid.Column="1" x:Name="DetailReason" Foreground="#CCCCCC" 
                                               TextWrapping="Wrap" Margin="0,0,0,8"/>
 
-                                    <!-- Status -->
-                                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Status:" Foreground="White" 
+                                    <!-- Details -->
+                                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Details:" Foreground="White" 
                                               FontWeight="SemiBold" Margin="0,0,10,8"/>
-                                    <Border Grid.Row="8" Grid.Column="1" x:Name="DetailStatusBorder" 
+                                    <TextBlock Grid.Row="8" Grid.Column="1" x:Name="DetailDescription" 
+                                               Foreground="#CCCCCC" 
+                                               TextWrapping="Wrap"
+                                               FontSize="12"
+                                               Margin="0,0,0,8"/>
+
+                                    <!-- Status -->
+                                    <TextBlock Grid.Row="9" Grid.Column="0" Text="Status:" Foreground="White" 
+                                              FontWeight="SemiBold" Margin="0,0,10,8"/>
+                                    <Border Grid.Row="9" Grid.Column="1" x:Name="DetailStatusBorder" 
                                             Style="{StaticResource StatusBadgeStyle}" HorizontalAlignment="Left">
                                         <TextBlock x:Name="DetailStatus" Foreground="White" FontWeight="SemiBold"/>
                                     </Border>
 
                                     <!-- Action Buttons -->
-                                    <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" 
+                                    <StackPanel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" 
                                                 Orientation="Horizontal" Margin="0,15,0,0" HorizontalAlignment="Center">
                                         <Button x:Name="BtnApprove" Content="Approve" Style="{StaticResource ActionButtonStyle}"
                                                 Background="#28A745" Click="BtnApprove_Click" Margin="0,0,10,0"/>

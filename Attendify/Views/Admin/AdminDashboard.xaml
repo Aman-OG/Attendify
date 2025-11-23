@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Admin dashboard"
         WindowStartupLocation="CenterScreen"
-        Width="1200" Height="780"
+        Width="1300" Height="780"
         ResizeMode="CanResize"
         Background="blue"
         MinWidth="1000" MinHeight="650">

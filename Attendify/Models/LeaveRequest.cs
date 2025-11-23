@@ -14,6 +14,7 @@ namespace Attendify.Models
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public string Reason { get; set; }
+        public string Description { get; set; }
         public string Status { get; set; } // Pending / Approved / Rejected
         public string Department { get; set; }
         public string Position { get; set; }

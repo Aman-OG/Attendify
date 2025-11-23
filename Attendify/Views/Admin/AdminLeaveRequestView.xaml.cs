@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-
 namespace Attendify.Views.UserControls
 {
     public partial class LeaveRequestsView : UserControl
@@ -34,8 +33,9 @@ namespace Attendify.Views.UserControls
                     FromDate = "12/05/25",
                     ToDate = "13/05/25",
                     Reason = "Sick leave",
+                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
                     Status = "Approved",
-                    StatusColor = Brushes.Green
+                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"))
                 },
                 new LeaveRequest
                 {
@@ -48,8 +48,9 @@ namespace Attendify.Views.UserControls
                     FromDate = "12/05/25",
                     ToDate = "16/05/25",
                     Reason = "Family Trip",
+                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
                     Status = "Pending",
-                    StatusColor = Brushes.Orange
+                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"))
                 },
                 new LeaveRequest
                 {
@@ -62,8 +63,9 @@ namespace Attendify.Views.UserControls
                     FromDate = "15/05/25",
                     ToDate = "18/05/25",
                     Reason = "Vacation",
+                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
                     Status = "Pending",
-                    StatusColor = Brushes.Orange
+                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"))
                 },
                 new LeaveRequest
                 {
@@ -76,8 +78,9 @@ namespace Attendify.Views.UserControls
                     FromDate = "10/05/25",
                     ToDate = "11/05/25",
                     Reason = "Medical appointment",
+                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
                     Status = "Rejected",
-                    StatusColor = Brushes.Red
+                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"))
                 }
             };
 
@@ -86,15 +89,32 @@ namespace Attendify.Views.UserControls
 
         private void SetActiveFilter(Button activeButton)
         {
-            // Reset all buttons
-            BtnAll.Background = Brushes.Transparent;
-            BtnToday.Background = Brushes.Transparent;
-            BtnApproved.Background = Brushes.Transparent;
-            BtnPending.Background = Brushes.Transparent;
-            BtnRejected.Background = Brushes.Transparent;
+            // Reset all buttons to their original colors
+            BtnAll.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4000A6FB"));
+            BtnToday.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A95315"));
+            BtnApproved.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"));
+            BtnPending.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"));
+            BtnRejected.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"));
 
-            // Set active button
-            activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4000A6FB"));
+            // Highlight the active button with a brighter color
+            switch (activeButton.Name)
+            {
+                case "BtnAll":
+                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6000A6FB"));
+                    break;
+                case "BtnToday":
+                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C9752A"));
+                    break;
+                case "BtnApproved":
+                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CD96C"));
+                    break;
+                case "BtnPending":
+                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F5D755"));
+                    break;
+                case "BtnRejected":
+                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E05A5A"));
+                    break;
+            }
         }
 
         private void FilterButton_Click(object sender, RoutedEventArgs e)
@@ -103,14 +123,12 @@ namespace Attendify.Views.UserControls
             if (button != null)
             {
                 SetActiveFilter(button);
-                // Implement filter logic based on button content
                 ApplyFilter(button.Content.ToString());
             }
         }
 
         private void ApplyFilter(string filter)
         {
-            // Simple filter implementation - you can enhance this
             var collectionView = System.Windows.Data.CollectionViewSource.GetDefaultView(_leaveRequests);
 
             if (filter == "All")
@@ -131,7 +149,6 @@ namespace Attendify.Views.UserControls
         {
             SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
 
-            // Implement search logic
             var searchText = SearchBox.Text.ToLower();
             var collectionView = System.Windows.Data.CollectionViewSource.GetDefaultView(_leaveRequests);
 
@@ -179,6 +196,7 @@ namespace Attendify.Views.UserControls
             DetailFromDate.Text = request.FromDate;
             DetailToDate.Text = request.ToDate;
             DetailReason.Text = request.Reason;
+            DetailDescription.Text = request.Description;
             DetailStatus.Text = request.Status;
             DetailStatusBorder.Background = request.StatusColor;
 
@@ -206,7 +224,7 @@ namespace Attendify.Views.UserControls
             if (_selectedRequest != null)
             {
                 _selectedRequest.Status = "Approved";
-                _selectedRequest.StatusColor = Brushes.Green;
+                _selectedRequest.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"));
 
                 // Refresh the display
                 LeaveRequestsGrid.Items.Refresh();
@@ -217,38 +235,26 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        // Refresh button click handler
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            // Implement refresh logic here
-            RefreshData();
+            // Clear selection
+            LeaveRequestsGrid.SelectedItem = null;
+            HideDetailedView();
 
-            // Optional: Show a brief visual feedback
+            // Visual feedback
             var button = sender as Button;
             if (button != null)
             {
                 button.Content = "⏳";
                 var timer = new System.Windows.Threading.DispatcherTimer();
                 timer.Interval = TimeSpan.FromSeconds(1);
-                timer.Tick += (s, e) =>
+                timer.Tick += (s, args) =>
                 {
-                    button.Content = "🔄";
+                    button.Content = "⟳";
                     timer.Stop();
                 };
                 timer.Start();
             }
-        }
-
-        private void RefreshData()
-        {
-            // Implement your data refresh logic here
-            // For example: reload data from database, update DataGrid, etc.
-
-            // Clear selection
-
-
-            // Show refresh message (optional)
-            // MessageBox.Show("Data refreshed successfully!", "Refresh", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnReject_Click(object sender, RoutedEventArgs e)
@@ -256,7 +262,7 @@ namespace Attendify.Views.UserControls
             if (_selectedRequest != null)
             {
                 _selectedRequest.Status = "Rejected";
-                _selectedRequest.StatusColor = Brushes.Red;
+                _selectedRequest.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"));
 
                 // Refresh the display
                 LeaveRequestsGrid.Items.Refresh();
@@ -279,6 +285,7 @@ namespace Attendify.Views.UserControls
         public string FromDate { get; set; }
         public string ToDate { get; set; }
         public string Reason { get; set; }
+        public string Description { get; set; }
         public string Status { get; set; }
         public Brush StatusColor { get; set; }
     }
