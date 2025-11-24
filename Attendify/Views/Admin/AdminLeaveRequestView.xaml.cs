@@ -10,12 +10,128 @@ namespace Attendify.Views.UserControls
     {
         private ObservableCollection<LeaveRequest> _leaveRequests;
         private LeaveRequest _selectedRequest;
+        private Button _activeFilterButton;
 
         public LeaveRequestsView()
         {
             InitializeComponent();
             LoadSampleData();
+            InitializeRejectionPlaceholder();
+
+            // Set up hover effects for filter buttons
+            SetupFilterButtonHoverEffects();
+
+            // Set All as default active filter
             SetActiveFilter(BtnAll);
+        }
+
+        private void SetupFilterButtonHoverEffects()
+        {
+            // Define hover colors for each button
+            var buttonColors = new Dictionary<Button, string>
+            {
+                { BtnAll, "#6000A6FB" },
+                { BtnToday, "#80A95315" },
+                { BtnApproved, "#802FBF4C" },
+                { BtnPending, "#80E3C63A" },
+                { BtnRejected, "#80D23C3C" }
+            };
+
+            foreach (var button in buttonColors.Keys)
+            {
+                // Store the original glass background
+                var originalBackground = CreateGlassBackground();
+                var hoverColor = buttonColors[button];
+
+                button.MouseEnter += (s, e) =>
+                {
+                    if (button != _activeFilterButton)
+                    {
+                        button.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hoverColor));
+                    }
+                };
+
+                button.MouseLeave += (s, e) =>
+                {
+                    if (button != _activeFilterButton)
+                    {
+                        button.Background = originalBackground;
+                    }
+                };
+            }
+        }
+
+        private LinearGradientBrush CreateGlassBackground()
+        {
+            return new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 1),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop((Color)ColorConverter.ConvertFromString("#20FFFFFF"), 0),
+                    new GradientStop((Color)ColorConverter.ConvertFromString("#10FFFFFF"), 1)
+                }
+            };
+        }
+
+        private void SetActiveFilter(Button activeButton)
+        {
+            // Reset all buttons to glass background
+            var glassBackground = CreateGlassBackground();
+
+            BtnAll.Background = glassBackground;
+            BtnToday.Background = glassBackground;
+            BtnApproved.Background = glassBackground;
+            BtnPending.Background = glassBackground;
+            BtnRejected.Background = glassBackground;
+
+            // Set active button color based on which button it is
+            string activeColor = activeButton.Name switch
+            {
+                "BtnAll" => "#6000A6FB",
+                "BtnToday" => "#80A95315",
+                "BtnApproved" => "#802FBF4C",
+                "BtnPending" => "#80E3C63A",
+                "BtnRejected" => "#80D23C3C",
+                _ => "#6000A6FB"
+            };
+
+            activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(activeColor));
+            _activeFilterButton = activeButton;
+        }
+
+        private void InitializeRejectionPlaceholder()
+        {
+            // Set initial placeholder
+            UpdateRejectionPlaceholder();
+
+            RejectionReasonTextBox.GotFocus += (s, e) =>
+            {
+                RejectionPlaceholder.Visibility = Visibility.Collapsed;
+            };
+
+            RejectionReasonTextBox.LostFocus += (s, e) =>
+            {
+                UpdateRejectionPlaceholder();
+            };
+
+            RejectionReasonTextBox.TextChanged += (s, e) =>
+            {
+                UpdateRejectionPlaceholder();
+            };
+        }
+
+        private void UpdateRejectionPlaceholder()
+        {
+            if (string.IsNullOrEmpty(RejectionReasonTextBox.Text))
+            {
+                RejectionPlaceholder.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                RejectionPlaceholder.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void LoadSampleData()
@@ -87,36 +203,6 @@ namespace Attendify.Views.UserControls
             LeaveRequestsGrid.ItemsSource = _leaveRequests;
         }
 
-        private void SetActiveFilter(Button activeButton)
-        {
-            // Reset all buttons to their original colors
-            BtnAll.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4000A6FB"));
-            BtnToday.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A95315"));
-            BtnApproved.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"));
-            BtnPending.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"));
-            BtnRejected.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"));
-
-            // Highlight the active button with a brighter color
-            switch (activeButton.Name)
-            {
-                case "BtnAll":
-                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6000A6FB"));
-                    break;
-                case "BtnToday":
-                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C9752A"));
-                    break;
-                case "BtnApproved":
-                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CD96C"));
-                    break;
-                case "BtnPending":
-                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F5D755"));
-                    break;
-                case "BtnRejected":
-                    activeButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E05A5A"));
-                    break;
-            }
-        }
-
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
@@ -170,6 +256,9 @@ namespace Attendify.Views.UserControls
 
         private void LeaveRequestsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Reset rejection panel when selection changes
+            ResetRejectionPanel();
+
             _selectedRequest = LeaveRequestsGrid.SelectedItem as LeaveRequest;
 
             if (_selectedRequest != null)
@@ -219,6 +308,14 @@ namespace Attendify.Views.UserControls
             EmptyStateText.Visibility = Visibility.Visible;
         }
 
+        private void ResetRejectionPanel()
+        {
+            RejectionReasonPanel.Visibility = Visibility.Collapsed;
+            RejectionReasonTextBox.Text = string.Empty;
+            BtnReject.Content = "Reject";
+            UpdateRejectionPlaceholder();
+        }
+
         private void BtnApprove_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedRequest != null)
@@ -229,6 +326,7 @@ namespace Attendify.Views.UserControls
                 // Refresh the display
                 LeaveRequestsGrid.Items.Refresh();
                 ShowDetailedView(_selectedRequest);
+                ResetRejectionPanel();
 
                 MessageBox.Show("Leave request approved successfully!", "Success",
                               MessageBoxButton.OK, MessageBoxImage.Information);
@@ -240,6 +338,7 @@ namespace Attendify.Views.UserControls
             // Clear selection
             LeaveRequestsGrid.SelectedItem = null;
             HideDetailedView();
+            ResetRejectionPanel();
 
             // Visual feedback
             var button = sender as Button;
@@ -259,34 +358,68 @@ namespace Attendify.Views.UserControls
 
         private void BtnReject_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedRequest != null)
+            if (_selectedRequest != null && _selectedRequest.Status == "Pending")
+            {
+                // Toggle rejection reason panel visibility
+                if (RejectionReasonPanel.Visibility == Visibility.Visible)
+                {
+                    // If panel is already visible, confirm rejection
+                    ConfirmRejection();
+                }
+                else
+                {
+                    // Show rejection reason input
+                    RejectionReasonPanel.Visibility = Visibility.Visible;
+                    RejectionReasonTextBox.Text = string.Empty;
+                    UpdateRejectionPlaceholder();
+
+                    // Change reject button text to indicate confirmation
+                    BtnReject.Content = "Confirm Reject";
+                }
+            }
+        }
+
+        private void ConfirmRejection()
+        {
+            if (_selectedRequest != null && !string.IsNullOrWhiteSpace(RejectionReasonTextBox.Text))
             {
                 _selectedRequest.Status = "Rejected";
                 _selectedRequest.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"));
+
+                // Store rejection reason
+                string rejectionReason = RejectionReasonTextBox.Text;
 
                 // Refresh the display
                 LeaveRequestsGrid.Items.Refresh();
                 ShowDetailedView(_selectedRequest);
 
-                MessageBox.Show("Leave request rejected.", "Rejected",
+                // Hide rejection panel and reset
+                ResetRejectionPanel();
+
+                MessageBox.Show($"Leave request rejected. Reason: {rejectionReason}", "Rejected",
                               MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            else
+            {
+                MessageBox.Show("Please enter a reason for rejection.", "Reason Required",
+                              MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
-    }
 
-    public class LeaveRequest
-    {
-        public string No { get; set; }
-        public string EmployeeName { get; set; }
-        public string EmpId { get; set; }
-        public string Department { get; set; }
-        public string Position { get; set; }
-        public string Email { get; set; }
-        public string FromDate { get; set; }
-        public string ToDate { get; set; }
-        public string Reason { get; set; }
-        public string Description { get; set; }
-        public string Status { get; set; }
-        public Brush StatusColor { get; set; }
+        public class LeaveRequest
+        {
+            public string No { get; set; }
+            public string EmployeeName { get; set; }
+            public string EmpId { get; set; }
+            public string Department { get; set; }
+            public string Position { get; set; }
+            public string Email { get; set; }
+            public string FromDate { get; set; }
+            public string ToDate { get; set; }
+            public string Reason { get; set; }
+            public string Description { get; set; }
+            public string Status { get; set; }
+            public Brush StatusColor { get; set; }
+        }
     }
 }

@@ -28,9 +28,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <!-- Filter Button Style with Colors using standard Border -->
-        <Style x:Key="FilterButtonStyle" TargetType="Button">
+        <!-- Glass Liquid Filter Button Style - Code-behind colors -->
+        <Style x:Key="GlassFilterButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="15,6"/>
@@ -39,32 +38,32 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#20FFFFFF" Offset="0"/>
+                        <GradientStop Color="#10FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" 
-                                CornerRadius="16"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="#40FFFFFF"
-                                BorderThickness="1">
+                        CornerRadius="16"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="#40FFFFFF"
+                        BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}"/>
+                                      Margin="{TemplateBinding Padding}"/>
                         </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#4000A6FB"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#6000A6FB"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
         <!-- Refresh Button Style (no border) -->
-        <Style x:Key="RefreshButtonStyle" TargetType="Button" BasedOn="{StaticResource FilterButtonStyle}">
+        <Style x:Key="RefreshButtonStyle" TargetType="Button" BasedOn="{StaticResource GlassFilterButtonStyle}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
@@ -135,14 +134,6 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Height" Value="35"/>
         </Style>
-
-        <!-- DataGrid Text Style -->
-        <Style x:Key="DataGridTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -151,17 +142,17 @@
             <!-- Filter Tabs -->
             <Border Style="{StaticResource GlassRoundedBorder}" Margin="0,0,0,15">
                 <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Center">
-                    <!-- Filter Buttons with Colors -->
-                    <Button x:Name="BtnAll" Content="All" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#4000A6FB" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show all requests"/>
-                    <Button x:Name="BtnToday" Content="Today" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#A95315" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show today's requests"/>
-                    <Button x:Name="BtnApproved" Content="Approved" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#2FBF4C" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show approved requests"/>
-                    <Button x:Name="BtnPending" Content="Pending" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#E3C63A" Margin="0,0,8,0"  Click="FilterButton_Click" ToolTip="Show pending requests"/>
-                    <Button x:Name="BtnRejected" Content="Rejected" Style="{StaticResource FilterButtonStyle}" 
-                            Background="#D23C3C" Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show rejected requests"/>
+                    <!-- Filter Buttons with Glass Liquid Background - NO HARDCODED COLORS -->
+                    <Button x:Name="BtnAll" Content="All" Style="{StaticResource GlassFilterButtonStyle}" 
+                Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show all requests"/>
+                    <Button x:Name="BtnToday" Content="Today" Style="{StaticResource GlassFilterButtonStyle}" 
+                Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show today's requests"/>
+                    <Button x:Name="BtnApproved" Content="Approved" Style="{StaticResource GlassFilterButtonStyle}" 
+                Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show approved requests"/>
+                    <Button x:Name="BtnPending" Content="Pending" Style="{StaticResource GlassFilterButtonStyle}" 
+                Margin="0,0,8,0"  Click="FilterButton_Click" ToolTip="Show pending requests"/>
+                    <Button x:Name="BtnRejected" Content="Rejected" Style="{StaticResource GlassFilterButtonStyle}" 
+                Margin="0,0,8,0" Click="FilterButton_Click" ToolTip="Show rejected requests"/>
 
                     <!-- Search Box -->
                     <Border Style="{StaticResource SearchBoxStyle}" 
@@ -225,6 +216,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTextColumn.HeaderStyle>
                                 <DataGridTextColumn.ElementStyle>
@@ -247,6 +239,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTextColumn.HeaderStyle>
                                 <DataGridTextColumn.ElementStyle>
@@ -270,6 +263,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTextColumn.HeaderStyle>
                                 <DataGridTextColumn.ElementStyle>
@@ -292,6 +286,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTextColumn.HeaderStyle>
                                 <DataGridTextColumn.ElementStyle>
@@ -314,6 +309,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTextColumn.HeaderStyle>
                                 <DataGridTextColumn.ElementStyle>
@@ -336,6 +332,7 @@
                                         <Setter Property="Foreground" Value="#00A6FB"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="Padding" Value="8,10"/>
+                                        <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </DataGridTemplateColumn.HeaderStyle>
                                 <DataGridTemplateColumn.CellTemplate>
@@ -424,6 +421,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <Grid.ColumnDefinitions>
@@ -496,8 +494,41 @@
                                         <TextBlock x:Name="DetailStatus" Foreground="White" FontWeight="SemiBold"/>
                                     </Border>
 
+                                    <!-- Rejection Reason Input (Visible only when rejecting) -->
+                                    <StackPanel x:Name="RejectionReasonPanel" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" 
+            Orientation="Vertical" Margin="0,15,0,0" Visibility="Collapsed">
+                                        <TextBlock Text="Rejection Reason:" Foreground="White" 
+               FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                        <Border Background="#20FFFFFF"
+            BorderBrush="#40FFFFFF"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="10,8">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="100">
+                                                <TextBox x:Name="RejectionReasonTextBox"
+                     Background="Transparent"
+                     Foreground="White"
+                     BorderThickness="0"
+                     FontSize="12"
+                     TextWrapping="Wrap"
+                     MinHeight="60"
+                     VerticalAlignment="Top"/>
+                                            </ScrollViewer>
+                                        </Border>
+
+                                        <!-- Placeholder Text -->
+                                        <TextBlock x:Name="RejectionPlaceholder" 
+               Text="Enter reason for rejection..."
+               Foreground="#B0CFFF"
+               FontSize="12"
+               Margin="10,8,0,-30"
+               IsHitTestVisible="False"
+               VerticalAlignment="Top"/>
+                                    </StackPanel>
+
                                     <!-- Action Buttons -->
-                                    <StackPanel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" 
+                                    <StackPanel Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" 
                                                 Orientation="Horizontal" Margin="0,15,0,0" HorizontalAlignment="Center">
                                         <Button x:Name="BtnApprove" Content="Approve" Style="{StaticResource ActionButtonStyle}"
                                                 Background="#28A745" Click="BtnApprove_Click" Margin="0,0,10,0"/>

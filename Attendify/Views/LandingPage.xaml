@@ -190,7 +190,7 @@
                                            FontFamily="Montserrat"
                                            FontSize="14"
                                            
-                                           Foreground="AliceBlue"
+                                           Foreground="white"
                                            TextWrapping="Wrap"
                                            FontWeight="Light"/>
                             </StackPanel>
