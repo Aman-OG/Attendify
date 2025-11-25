@@ -30,7 +30,7 @@ namespace Attendify.Views
             for (int i = 0; i <= 100; i++)
             {
                 LoaderBar.Value = i;
-                await Task.Delay(10); // smooth animation
+                await Task.Delay(50); // smooth animation
             }
 
             // After loading complete → Open Login window
