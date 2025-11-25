@@ -54,25 +54,6 @@
           }
         }
       },
-      "LiveCharts.Core/0.9.8": {
-        "runtime": {
-          "lib/netstandard2.0/LiveCharts.dll": {
-            "assemblyVersion": "0.9.7.0",
-            "fileVersion": "0.9.7.0"
-          }
-        }
-      },
-      "LiveCharts.Wpf.Core/0.9.8": {
-        "dependencies": {
-          "LiveCharts.Core": "0.9.8"
-        },
-        "runtime": {
-          "lib/net5.0-windows7.0/LiveCharts.Wpf.dll": {
-            "assemblyVersion": "0.9.7.0",
-            "fileVersion": "0.9.7.0"
-          }
-        }
-      },
       "LiveChartsCore/2.0.0-rc6.1": {
         "runtime": {
           "lib/net8.0/LiveChartsCore.dll": {
@@ -172,6 +153,37 @@
           }
         }
       },
+      "OxyPlot.Core/2.2.0": {
+        "runtime": {
+          "lib/net8.0/OxyPlot.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "OxyPlot.Wpf/2.2.0": {
+        "dependencies": {
+          "OxyPlot.Core": "2.2.0",
+          "OxyPlot.Wpf.Shared": "2.2.0"
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "OxyPlot.Wpf.Shared/2.2.0": {
+        "dependencies": {
+          "OxyPlot.Core": "2.2.0"
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.Shared.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
       "SkiaSharp/3.119.2-preview.1": {
         "dependencies": {
           "SkiaSharp.NativeAssets.Win32": "3.119.2-preview.1",
@@ -193,65 +205,6 @@
           "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
             "assemblyVersion": "3.119.0.0",
             "fileVersion": "3.119.0.0"
-          }
-        }
-      },
-      "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.2-preview.1": {
-        "runtimeTargets": {
-          "runtimes/linux-arm/native/libSkiaSharp.so": {
-            "rid": "linux-arm",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-arm64/native/libSkiaSharp.so": {
-            "rid": "linux-arm64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-loongarch64/native/libSkiaSharp.so": {
-            "rid": "linux-loongarch64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-musl-arm/native/libSkiaSharp.so": {
-            "rid": "linux-musl-arm",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-musl-arm64/native/libSkiaSharp.so": {
-            "rid": "linux-musl-arm64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-musl-loongarch64/native/libSkiaSharp.so": {
-            "rid": "linux-musl-loongarch64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-musl-riscv64/native/libSkiaSharp.so": {
-            "rid": "linux-musl-riscv64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-musl-x64/native/libSkiaSharp.so": {
-            "rid": "linux-musl-x64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-riscv64/native/libSkiaSharp.so": {
-            "rid": "linux-riscv64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-x64/native/libSkiaSharp.so": {
-            "rid": "linux-x64",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
-          },
-          "runtimes/linux-x86/native/libSkiaSharp.so": {
-            "rid": "linux-x86",
-            "assetType": "native",
-            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -553,20 +506,6 @@
       "path": "harfbuzzsharp.nativeassets.win32/8.3.1.1",
       "hashPath": "harfbuzzsharp.nativeassets.win32.8.3.1.1.nupkg.sha512"
     },
-    "LiveCharts.Core/0.9.8": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-USb2TBOeER19X0ar5Zgki1ezjrSXBOmUoz3IqzTeksDm6hoaLFqs3iW9+wjHFuWNQGy9lLcVh2YIhhxVIg+zNQ==",
-      "path": "livecharts.core/0.9.8",
-      "hashPath": "livecharts.core.0.9.8.nupkg.sha512"
-    },
-    "LiveCharts.Wpf.Core/0.9.8": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-jMBdknuG3EOMKA0NaqqwMjhsZpRAzd0UqP0SlwXIBJ+ZoJg5TF9C4rDdKqInEs+RycYmIwmrZWvmfDxsM5MMJw==",
-      "path": "livecharts.wpf.core/0.9.8",
-      "hashPath": "livecharts.wpf.core.0.9.8.nupkg.sha512"
-    },
     "LiveChartsCore/2.0.0-rc6.1": {
       "type": "package",
       "serviceable": true,
@@ -637,6 +576,27 @@
       "path": "opentk.glwpfcontrol/3.3.0",
       "hashPath": "opentk.glwpfcontrol.3.3.0.nupkg.sha512"
     },
+    "OxyPlot.Core/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QhXNdXR5FPpro/VoLx3BOp6AhQo7YrbfmWEZ9cgY+pnYM7RYORZjnu+aDMA8ka9A1r8hLkX//NbCPZNUv+l8qA==",
+      "path": "oxyplot.core/2.2.0",
+      "hashPath": "oxyplot.core.2.2.0.nupkg.sha512"
+    },
+    "OxyPlot.Wpf/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-69KzgsMWpJSZmeXZt07FwfV7B1D4CM1nl0MWMj4wjrCsb3USBMo32up1+fQIjxp5tHCPdGwX9VWhSxW8nsY7pQ==",
+      "path": "oxyplot.wpf/2.2.0",
+      "hashPath": "oxyplot.wpf.2.2.0.nupkg.sha512"
+    },
+    "OxyPlot.Wpf.Shared/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JoOD/feTOlKFmgXqeTNrl4Ze0i0L6WizPapNw9pXwot+cnI0qhFgYv3tFjlSdu51hZw0EgmcgeRXMtm5bkueYA==",
+      "path": "oxyplot.wpf.shared/2.2.0",
+      "hashPath": "oxyplot.wpf.shared.2.2.0.nupkg.sha512"
+    },
     "SkiaSharp/3.119.2-preview.1": {
       "type": "package",
       "serviceable": true,
@@ -650,13 +610,6 @@
       "sha512": "sha512-5ocGzl+RYEZFnUPUbModshnEFvKTku4hTtOBsLvy5MCK2KAHjq5Nw2+uAVUx79Rjh0z8fTojT6ZVav8MJgW0ug==",
       "path": "skiasharp.harfbuzz/3.119.0",
       "hashPath": "skiasharp.harfbuzz.3.119.0.nupkg.sha512"
-    },
-    "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.2-preview.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-kDwna2V5QZUGYzZva8y9qvl+43i4vgfnhiNyNbY2G6RB5Dqp/vdDQmCJ6mChPwn9ZGF8V/H6vEs35QJDpUWbag==",
-      "path": "skiasharp.nativeassets.linux.nodependencies/3.119.2-preview.1",
-      "hashPath": "skiasharp.nativeassets.linux.nodependencies.3.119.2-preview.1.nupkg.sha512"
     },
     "SkiaSharp.NativeAssets.macOS/3.119.2-preview.1": {
       "type": "package",

@@ -161,35 +161,30 @@ namespace Attendify.Views
         {
             _viewModel.CurrentPageTitle = "Employee Attendance - Day";
             MainContentControl.Content = new AttendanceView();
-            FiltersContainer.Visibility = Visibility.Visible;
         }
 
         private void ShowLeaveRequestsView()
         {
             _viewModel.CurrentPageTitle = "Leave Requests";
             MainContentControl.Content = new LeaveRequestsView();
-            FiltersContainer.Visibility = Visibility.Collapsed;
         }
 
         private void ShowEmployeesView()
         {
             _viewModel.CurrentPageTitle = "Employees";
             MainContentControl.Content = new EmployeesView();
-            FiltersContainer.Visibility = Visibility.Collapsed;
         }
 
         private void ShowReportsView()
         {
             _viewModel.CurrentPageTitle = "Reports";
             MainContentControl.Content = new ReportsView();
-            FiltersContainer.Visibility = Visibility.Collapsed;
         }
 
         private void ShowSettingsView()
         {
             _viewModel.CurrentPageTitle = "Settings";
             MainContentControl.Content = new SettingsView();
-            FiltersContainer.Visibility = Visibility.Collapsed;
         }
 
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
@@ -207,21 +202,6 @@ namespace Attendify.Views
             menu.Items.Add(miLogout);
             menu.PlacementTarget = AccountBtn;
             menu.IsOpen = true;
-        }
-
-        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        private void StatusCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Filter logic for status
-        }
-
-        private void DeptCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Filter logic for department
         }
     }
 }

@@ -50,18 +50,6 @@
               "target": "Package",
               "version": "[8.4.0, )"
             },
-            "LiveCharts.Core": {
-              "target": "Package",
-              "version": "[0.9.8, )"
-            },
-            "LiveCharts.Wpf.Core": {
-              "target": "Package",
-              "version": "[0.9.8, )"
-            },
-            "LiveChartsCore.SkiaSharpView": {
-              "target": "Package",
-              "version": "[2.0.0-rc6.1, )"
-            },
             "LiveChartsCore.SkiaSharpView.WPF": {
               "target": "Package",
               "version": "[2.0.0-rc6.1, )"
@@ -78,15 +66,15 @@
               "target": "Package",
               "version": "[9.0.10, )"
             },
+            "OxyPlot.Wpf": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
             "SQLitePCLRaw.bundle_e_sqlite3": {
               "target": "Package",
               "version": "[3.0.2, )"
             },
             "SkiaSharp": {
-              "target": "Package",
-              "version": "[3.119.2-preview.1, )"
-            },
-            "SkiaSharp.NativeAssets.Linux.NoDependencies": {
               "target": "Package",
               "version": "[3.119.2-preview.1, )"
             }

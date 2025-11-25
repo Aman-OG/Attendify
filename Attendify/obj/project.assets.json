@@ -73,30 +73,6 @@
           }
         }
       },
-      "LiveCharts.Core/0.9.8": {
-        "type": "package",
-        "compile": {
-          "lib/netstandard2.0/LiveCharts.dll": {}
-        },
-        "runtime": {
-          "lib/netstandard2.0/LiveCharts.dll": {}
-        }
-      },
-      "LiveCharts.Wpf.Core/0.9.8": {
-        "type": "package",
-        "dependencies": {
-          "LiveCharts.Core": "0.9.8"
-        },
-        "compile": {
-          "lib/net5.0-windows7.0/LiveCharts.Wpf.dll": {}
-        },
-        "runtime": {
-          "lib/net5.0-windows7.0/LiveCharts.Wpf.dll": {}
-        },
-        "frameworkReferences": [
-          "Microsoft.WindowsDesktop.App.WPF"
-        ]
-      },
       "LiveChartsCore/2.0.0-rc6.1": {
         "type": "package",
         "compile": {
@@ -368,6 +344,58 @@
           }
         }
       },
+      "OxyPlot.Core/2.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/OxyPlot.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/OxyPlot.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "OxyPlot.Wpf/2.2.0": {
+        "type": "package",
+        "dependencies": {
+          "OxyPlot.Core": "2.2.0",
+          "OxyPlot.Wpf.Shared": "2.2.0"
+        },
+        "compile": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
+      },
+      "OxyPlot.Wpf.Shared/2.2.0": {
+        "type": "package",
+        "dependencies": {
+          "OxyPlot.Core": "2.2.0"
+        },
+        "compile": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.Shared.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/OxyPlot.Wpf.Shared.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
+      },
       "SkiaSharp/3.119.2-preview.1": {
         "type": "package",
         "dependencies": {
@@ -397,61 +425,6 @@
         "runtime": {
           "lib/net8.0/SkiaSharp.HarfBuzz.dll": {
             "related": ".pdb"
-          }
-        }
-      },
-      "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.2-preview.1": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/_._": {}
-        },
-        "runtime": {
-          "lib/net8.0/_._": {}
-        },
-        "runtimeTargets": {
-          "runtimes/linux-arm/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-arm"
-          },
-          "runtimes/linux-arm64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-arm64"
-          },
-          "runtimes/linux-loongarch64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-loongarch64"
-          },
-          "runtimes/linux-musl-arm/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-musl-arm"
-          },
-          "runtimes/linux-musl-arm64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-musl-arm64"
-          },
-          "runtimes/linux-musl-loongarch64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-musl-loongarch64"
-          },
-          "runtimes/linux-musl-riscv64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-musl-riscv64"
-          },
-          "runtimes/linux-musl-x64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-musl-x64"
-          },
-          "runtimes/linux-riscv64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-riscv64"
-          },
-          "runtimes/linux-x64/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-x64"
-          },
-          "runtimes/linux-x86/native/libSkiaSharp.so": {
-            "assetType": "native",
-            "rid": "linux-x86"
           }
         }
       },
@@ -864,34 +837,6 @@
         "runtimes/win-x86/native/libHarfBuzzSharp.dll"
       ]
     },
-    "LiveCharts.Core/0.9.8": {
-      "sha512": "USb2TBOeER19X0ar5Zgki1ezjrSXBOmUoz3IqzTeksDm6hoaLFqs3iW9+wjHFuWNQGy9lLcVh2YIhhxVIg+zNQ==",
-      "type": "package",
-      "path": "livecharts.core/0.9.8",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "lib/net40/LiveCharts.dll",
-        "lib/netstandard2.0/LiveCharts.dll",
-        "livecharts.core.0.9.8.nupkg.sha512",
-        "livecharts.core.nuspec"
-      ]
-    },
-    "LiveCharts.Wpf.Core/0.9.8": {
-      "sha512": "jMBdknuG3EOMKA0NaqqwMjhsZpRAzd0UqP0SlwXIBJ+ZoJg5TF9C4rDdKqInEs+RycYmIwmrZWvmfDxsM5MMJw==",
-      "type": "package",
-      "path": "livecharts.wpf.core/0.9.8",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "lib/net40/LiveCharts.Wpf.dll",
-        "lib/net472/LiveCharts.Wpf.dll",
-        "lib/net5.0-windows7.0/LiveCharts.Wpf.dll",
-        "lib/netcoreapp3.1/LiveCharts.Wpf.dll",
-        "livecharts.wpf.core.0.9.8.nupkg.sha512",
-        "livecharts.wpf.core.nuspec"
-      ]
-    },
     "LiveChartsCore/2.0.0-rc6.1": {
       "sha512": "yaeFXCpH7AspjMKzXNdfr1Ikg06Dm+a4XRW/8wBtHAa/TEVJLY8yBsG6pNpjrPk+FpRaSImlNYw7pv298W1XPw==",
       "type": "package",
@@ -1172,6 +1117,67 @@
         "opentk.glwpfcontrol.nuspec"
       ]
     },
+    "OxyPlot.Core/2.2.0": {
+      "sha512": "QhXNdXR5FPpro/VoLx3BOp6AhQo7YrbfmWEZ9cgY+pnYM7RYORZjnu+aDMA8ka9A1r8hLkX//NbCPZNUv+l8qA==",
+      "type": "package",
+      "path": "oxyplot.core/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "OxyPlot_128.png",
+        "README.md",
+        "lib/net462/OxyPlot.dll",
+        "lib/net462/OxyPlot.xml",
+        "lib/net6.0/OxyPlot.dll",
+        "lib/net6.0/OxyPlot.xml",
+        "lib/net8.0/OxyPlot.dll",
+        "lib/net8.0/OxyPlot.xml",
+        "lib/netstandard2.0/OxyPlot.dll",
+        "lib/netstandard2.0/OxyPlot.xml",
+        "oxyplot.core.2.2.0.nupkg.sha512",
+        "oxyplot.core.nuspec"
+      ]
+    },
+    "OxyPlot.Wpf/2.2.0": {
+      "sha512": "69KzgsMWpJSZmeXZt07FwfV7B1D4CM1nl0MWMj4wjrCsb3USBMo32up1+fQIjxp5tHCPdGwX9VWhSxW8nsY7pQ==",
+      "type": "package",
+      "path": "oxyplot.wpf/2.2.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "OxyPlot_128.png",
+        "README.md",
+        "lib/net462/OxyPlot.Wpf.dll",
+        "lib/net462/OxyPlot.Wpf.xml",
+        "lib/net6.0-windows7.0/OxyPlot.Wpf.dll",
+        "lib/net6.0-windows7.0/OxyPlot.Wpf.xml",
+        "lib/net8.0-windows7.0/OxyPlot.Wpf.dll",
+        "lib/net8.0-windows7.0/OxyPlot.Wpf.xml",
+        "oxyplot.wpf.2.2.0.nupkg.sha512",
+        "oxyplot.wpf.nuspec",
+        "tools/VisualStudioToolsManifest.xml"
+      ]
+    },
+    "OxyPlot.Wpf.Shared/2.2.0": {
+      "sha512": "JoOD/feTOlKFmgXqeTNrl4Ze0i0L6WizPapNw9pXwot+cnI0qhFgYv3tFjlSdu51hZw0EgmcgeRXMtm5bkueYA==",
+      "type": "package",
+      "path": "oxyplot.wpf.shared/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "OxyPlot_128.png",
+        "README.md",
+        "lib/net462/OxyPlot.Wpf.Shared.dll",
+        "lib/net462/OxyPlot.Wpf.Shared.xml",
+        "lib/net6.0-windows7.0/OxyPlot.Wpf.Shared.dll",
+        "lib/net6.0-windows7.0/OxyPlot.Wpf.Shared.xml",
+        "lib/net8.0-windows7.0/OxyPlot.Wpf.Shared.dll",
+        "lib/net8.0-windows7.0/OxyPlot.Wpf.Shared.xml",
+        "oxyplot.wpf.shared.2.2.0.nupkg.sha512",
+        "oxyplot.wpf.shared.nuspec"
+      ]
+    },
     "SkiaSharp/3.119.2-preview.1": {
       "sha512": "gW+LU71pFNOM/o1mP4gzAnOgiX6Ffy7GFDAjcnbJMmAes6ogy00xKNwJ7bjxL2TSyBPXiH6CXjRe+gjmZVeqcA==",
       "type": "package",
@@ -1246,39 +1252,6 @@
         "lib/netstandard2.1/SkiaSharp.HarfBuzz.pdb",
         "skiasharp.harfbuzz.3.119.0.nupkg.sha512",
         "skiasharp.harfbuzz.nuspec"
-      ]
-    },
-    "SkiaSharp.NativeAssets.Linux.NoDependencies/3.119.2-preview.1": {
-      "sha512": "kDwna2V5QZUGYzZva8y9qvl+43i4vgfnhiNyNbY2G6RB5Dqp/vdDQmCJ6mChPwn9ZGF8V/H6vEs35QJDpUWbag==",
-      "type": "package",
-      "path": "skiasharp.nativeassets.linux.nodependencies/3.119.2-preview.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "LICENSE.txt",
-        "README.md",
-        "THIRD-PARTY-NOTICES.txt",
-        "build/net462/SkiaSharp.NativeAssets.Linux.NoDependencies.targets",
-        "buildTransitive/net462/SkiaSharp.NativeAssets.Linux.NoDependencies.targets",
-        "icon.png",
-        "lib/net462/_._",
-        "lib/net6.0/_._",
-        "lib/net8.0/_._",
-        "lib/netstandard2.0/_._",
-        "lib/netstandard2.1/_._",
-        "runtimes/linux-arm/native/libSkiaSharp.so",
-        "runtimes/linux-arm64/native/libSkiaSharp.so",
-        "runtimes/linux-loongarch64/native/libSkiaSharp.so",
-        "runtimes/linux-musl-arm/native/libSkiaSharp.so",
-        "runtimes/linux-musl-arm64/native/libSkiaSharp.so",
-        "runtimes/linux-musl-loongarch64/native/libSkiaSharp.so",
-        "runtimes/linux-musl-riscv64/native/libSkiaSharp.so",
-        "runtimes/linux-musl-x64/native/libSkiaSharp.so",
-        "runtimes/linux-riscv64/native/libSkiaSharp.so",
-        "runtimes/linux-x64/native/libSkiaSharp.so",
-        "runtimes/linux-x86/native/libSkiaSharp.so",
-        "skiasharp.nativeassets.linux.nodependencies.3.119.2-preview.1.nupkg.sha512",
-        "skiasharp.nativeassets.linux.nodependencies.nuspec"
       ]
     },
     "SkiaSharp.NativeAssets.macOS/3.119.2-preview.1": {
@@ -1519,16 +1492,13 @@
   "projectFileDependencyGroups": {
     "net9.0-windows7.0": [
       "CommunityToolkit.Mvvm >= 8.4.0",
-      "LiveCharts.Core >= 0.9.8",
-      "LiveCharts.Wpf.Core >= 0.9.8",
-      "LiveChartsCore.SkiaSharpView >= 2.0.0-rc6.1",
       "LiveChartsCore.SkiaSharpView.WPF >= 2.0.0-rc6.1",
       "MaterialDesignColors >= 5.3.0",
       "MaterialDesignThemes >= 5.3.0",
       "Microsoft.Data.Sqlite >= 9.0.10",
+      "OxyPlot.Wpf >= 2.2.0",
       "SQLitePCLRaw.bundle_e_sqlite3 >= 3.0.2",
-      "SkiaSharp >= 3.119.2-preview.1",
-      "SkiaSharp.NativeAssets.Linux.NoDependencies >= 3.119.2-preview.1"
+      "SkiaSharp >= 3.119.2-preview.1"
     ]
   },
   "packageFolders": {
@@ -1580,18 +1550,6 @@
             "target": "Package",
             "version": "[8.4.0, )"
           },
-          "LiveCharts.Core": {
-            "target": "Package",
-            "version": "[0.9.8, )"
-          },
-          "LiveCharts.Wpf.Core": {
-            "target": "Package",
-            "version": "[0.9.8, )"
-          },
-          "LiveChartsCore.SkiaSharpView": {
-            "target": "Package",
-            "version": "[2.0.0-rc6.1, )"
-          },
           "LiveChartsCore.SkiaSharpView.WPF": {
             "target": "Package",
             "version": "[2.0.0-rc6.1, )"
@@ -1608,15 +1566,15 @@
             "target": "Package",
             "version": "[9.0.10, )"
           },
+          "OxyPlot.Wpf": {
+            "target": "Package",
+            "version": "[2.2.0, )"
+          },
           "SQLitePCLRaw.bundle_e_sqlite3": {
             "target": "Package",
             "version": "[3.0.2, )"
           },
           "SkiaSharp": {
-            "target": "Package",
-            "version": "[3.119.2-preview.1, )"
-          },
-          "SkiaSharp.NativeAssets.Linux.NoDependencies": {
             "target": "Package",
             "version": "[3.119.2-preview.1, )"
           }
