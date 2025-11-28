@@ -97,7 +97,7 @@
             </Setter>
         </Style>
 
-        <!-- ComboBox Style -->
+        <!-- SIMPLE WORKING COMBOBOX STYLE -->
         <Style x:Key="GlassComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="#20FFFFFF"/>
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
@@ -106,9 +106,117 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <!-- Main border with rounded corners -->
+                            <Border x:Name="MainBorder"
+                              CornerRadius="10"
+                              Background="{TemplateBinding Background}"
+                              BorderBrush="{TemplateBinding BorderBrush}"
+                              BorderThickness="{TemplateBinding BorderThickness}">
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="30"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Content -->
+                                    <ContentPresenter Grid.Column="0"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="12,0,0,0"
+                                              Content="{TemplateBinding SelectionBoxItem}"/>
+
+                                    <!-- Arrow -->
+                                    <Path x:Name="ArrowPath"
+                                  Grid.Column="1"
+                                  Fill="White"
+                                  Data="M 0 0 L 4 4 L 8 0 Z"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Width="8" Height="6"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Toggle Button - Make it NOT cover the entire area -->
+                            <ToggleButton x:Name="ToggleButton"
+                                  Background="Transparent"
+                                  BorderBrush="Transparent"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Stretch"
+                                  Width="40"
+                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+
+                            <!-- Dropdown Popup -->
+                            <Popup x:Name="PART_Popup"
+                           Placement="Bottom"
+                           IsOpen="{TemplateBinding IsDropDownOpen}"
+                           AllowsTransparency="True"
+                           PopupAnimation="Slide">
+                                <Border CornerRadius="10"
+                                Background="#70FFFFFF"
+                                BorderBrush="#40FFFFFF"
+                                BorderThickness="1"
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="200">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="MainBorder" Property="Background" Value="#4000A6FB"/>
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#6000A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF00A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="MainBorder" Property="Background" Value="#5000A6FB"/>
+                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF00A6FB"/>
+                                <Setter TargetName="ArrowPath" Property="Fill" Value="#E6F5FF"/>
+                                <Setter TargetName="ArrowPath" Property="Data" Value="M 0 4 L 4 0 L 8 4 Z"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- DataGrid Style -->
+        <!-- ComboBoxItem Style -->
+        <Style x:Key="GlassComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bg" 
+                                Background="{TemplateBinding Background}" 
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="6">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#30FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#40FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DataGrid Style with Transparent Headers -->
         <Style x:Key="ModernDataGrid" TargetType="DataGrid">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -124,6 +232,42 @@
             <Setter Property="IsReadOnly" Value="True"/>
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+
+        <!-- DataGrid Column Header Style -->
+        <Style x:Key="GlassColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border x:Name="HeaderBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8,8,0,0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HeaderBorder" Property="Background" Value="#2000A6FB"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="HeaderBorder" Property="Background" Value="#4000A6FB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- DataGridRow Style -->
@@ -262,6 +406,7 @@
                     <DataGrid x:Name="RulesGrid"
                               Style="{StaticResource ModernDataGrid}"
                               RowStyle="{StaticResource DataGridRowStyle}"
+                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
                               AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Day" Binding="{Binding Day}" Width="*"/>
@@ -316,7 +461,8 @@
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,5"/>
                                     <ComboBox x:Name="CmbRuleDay" 
-                                              Style="{StaticResource GlassComboBox}">
+                                              Style="{StaticResource GlassComboBox}"
+                                              ItemContainerStyle="{StaticResource GlassComboBoxItem}">
                                         <ComboBoxItem Content="Monday"/>
                                         <ComboBoxItem Content="Tuesday"/>
                                         <ComboBoxItem Content="Wednesday"/>
@@ -397,6 +543,7 @@
                     <DataGrid x:Name="ShiftsGrid"
                               Style="{StaticResource ModernDataGrid}"
                               RowStyle="{StaticResource DataGridRowStyle}"
+                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
                               AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Shift Name" Binding="{Binding Name}" Width="*"/>
@@ -525,6 +672,7 @@
                     <DataGrid x:Name="MessagesGrid"
                               Style="{StaticResource ModernDataGrid}"
                               RowStyle="{StaticResource DataGridRowStyle}"
+                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
                               AutoGenerateColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
@@ -669,7 +817,8 @@
                             <ComboBox Grid.Column="1" 
                                       x:Name="CmbRequestStatus"
                                       Style="{StaticResource GlassComboBox}"
-                                      Width="120"
+                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                                      Width="140"
                                       Margin="5"
                                       SelectionChanged="RequestFilter_SelectionChanged">
                                 <ComboBoxItem Content="Pending" IsSelected="True"/>
@@ -682,7 +831,8 @@
                             <ComboBox Grid.Column="2" 
                                       x:Name="CmbRequestType"
                                       Style="{StaticResource GlassComboBox}"
-                                      Width="100"
+                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                                      Width="140"
                                       Margin="5"
                                       SelectionChanged="RequestFilter_SelectionChanged">
                                 <ComboBoxItem Content="All Type" IsSelected="True"/>
@@ -697,6 +847,7 @@
                     <DataGrid x:Name="RequestsGrid"
                               Style="{StaticResource ModernDataGrid}"
                               RowStyle="{StaticResource DataGridRowStyle}"
+                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
                               AutoGenerateColumns="False"
                               SelectionChanged="RequestsGrid_SelectionChanged">
                         <DataGrid.Columns>
