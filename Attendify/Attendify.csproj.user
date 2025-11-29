@@ -17,7 +17,25 @@
     <Compile Update="Views\Admin\AdminSettingsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\Employee\EmployeeAttendanceView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\Employee\EmployeeDashboard.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Employee\EmployeeHomeView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Employee\EmployeeLeaveRequestsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Employee\EmployeeNotificationsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Employee\EmployeeReportsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Employee\EmployeeShiftsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\LandingPage.xaml.cs">

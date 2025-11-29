@@ -1,21 +1,10 @@
 ﻿using Attendify.Views;
-
+using Attendify.Views.Employee;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-
 
 namespace Attendify
 {
@@ -37,6 +26,7 @@ namespace Attendify
                     string.IsNullOrWhiteSpace(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
             };
         }
+
         private void UsernameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             UserPlaceholder.Visibility =
@@ -48,6 +38,7 @@ namespace Attendify
             PassPlaceholder.Visibility =
                 string.IsNullOrEmpty(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
         }
+
         private void LoginButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
             var anim = new DoubleAnimation
@@ -74,22 +65,29 @@ namespace Attendify
             LoginButton.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
         }
 
-
-
         private void Login_Click(object sender, RoutedEventArgs e)
         {
-            // --- ADDED LOGIN CHECK ---
+            // Admin login check
             if (UsernameBox.Text == "admin" && PasswordBox.Password == "1234")
             {
                 AdminDashboard dashboard = new AdminDashboard();
                 dashboard.Show();
-
                 this.Close();
                 return;
             }
-            // -------------------------
 
-            MessageBox.Show("Login pressed!");
+            // Employee login check
+            if (UsernameBox.Text == "emp" && PasswordBox.Password == "123")
+            {
+                EmployeeDashboard employeeDashboard = new EmployeeDashboard();
+                employeeDashboard.Show();
+                this.Close();
+                return;
+            }
+
+            // Invalid credentials
+            MessageBox.Show("Invalid username or password!", "Login Failed",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
