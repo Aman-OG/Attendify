@@ -237,7 +237,7 @@
         <!-- DataGrid Column Header Style -->
         <Style x:Key="GlassColumnHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#00A6FB"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Height" Value="40"/>
@@ -354,7 +354,7 @@
         <!-- Settings Header -->
         <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
             <StackPanel>
-                <TextBlock Text="Settings" 
+                <TextBlock Text="Admin Settings" 
                            Foreground="#00A6FB" 
                            FontSize="24" 
                            FontWeight="Bold"
