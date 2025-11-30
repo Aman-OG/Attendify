@@ -97,7 +97,7 @@
             <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="Welcome, Aman Baye" 
-                              Foreground="#dddf00" 
+                              Foreground="#00A6FB" 
                                FontSize="24" 
                                FontWeight="Bold"
                                Margin="0,0,0,5"/>
@@ -120,9 +120,9 @@
                 <ContentControl Grid.Column="0" Style="{StaticResource StatCardStyle}">
                     <StackPanel Margin="10">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="🕒" FontSize="16" VerticalAlignment="Center" Foreground="#dddf00"  Margin="0,0,8,0"/>
+                            <TextBlock Text="🕒" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB"  Margin="0,0,8,0"/>
                             <TextBlock Text="Next Shift" 
-                                       Foreground="#dddf00" 
+                                       Foreground="#00A6FB" 
                                        FontSize="16" 
                                        FontWeight="Bold"
                                        VerticalAlignment="Center"/>
@@ -151,9 +151,9 @@
                 <ContentControl Grid.Column="1" Style="{StaticResource StatCardStyle}">
                     <StackPanel Margin="10">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center" Foreground="#dddf00"  Margin="0,0,8,0"/>
+                            <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB"  Margin="0,0,8,0"/>
                             <TextBlock Text="Today's Attendance" 
-                                       Foreground="#dddf00"  
+                                       Foreground="#00A6FB"  
                                        FontSize="16" 
                                        FontWeight="Bold"
                                        VerticalAlignment="Center"/>
@@ -195,9 +195,9 @@
                 <ContentControl Grid.Column="2" Style="{StaticResource StatCardStyle}">
                     <StackPanel Margin="10">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="🏖️" FontSize="16" VerticalAlignment="Center" Foreground="#dddf00"  Margin="0,0,8,0"/>
+                            <TextBlock Text="🏖️" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB"  Margin="0,0,8,0"/>
                             <TextBlock Text="Leave Status" 
-Foreground="#dddf00" 
+Foreground="#00A6FB" 
                                        FontSize="16" 
                                        FontWeight="Bold"
                                        VerticalAlignment="Center"/>
@@ -261,7 +261,7 @@ Foreground="#dddf00"
             <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="Quick Actions" 
-                               Foreground="#dddf00" 
+                               Foreground="#00A6FB" 
                                FontSize="18" 
                                FontWeight="Bold"
                                Margin="0,0,0,15"/>
@@ -291,7 +291,7 @@ Foreground="#dddf00"
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                         <TextBlock Text="📢 Recent Admin Messages" 
-Foreground="#dddf00" 
+Foreground="#00A6FB" 
                                    FontSize="18" 
                                    FontWeight="Bold"
                                    VerticalAlignment="Center"/>

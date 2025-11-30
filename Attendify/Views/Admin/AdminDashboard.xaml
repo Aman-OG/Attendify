@@ -135,7 +135,7 @@
 
         <!-- decorative uploaded background, low opacity -->
         <Image Source="/Assets/Images/bb2.png"
-               Opacity="0.10"
+               Opacity="0.30"
                Stretch="UniformToFill"
                IsHitTestVisible="False" />
 

@@ -103,7 +103,7 @@
         <!-- DataGrid Column Header Style -->
         <Style x:Key="GlassColumnHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#dddf00"/>
+            <Setter Property="Foreground" Value="#00A6FB"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Height" Value="40"/>
@@ -131,7 +131,7 @@
                 <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
                     <StackPanel>
                         <TextBlock Text="Leave Requests" 
-                                   Foreground="#dddf00" 
+                                   Foreground="#00A6FB" 
                                    FontSize="24" 
                                    FontWeight="Bold"
                                    Margin="0,0,0,10"/>
@@ -155,7 +155,7 @@
                     <ContentControl Grid.Column="0" Template="{StaticResource GlassContainerTemplate}" Margin="10">
                         <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="⏳ Pending" 
-                                       Foreground="#dddf00" 
+                                       Foreground="#00A6FB" 
                                        FontSize="14" 
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
@@ -172,7 +172,7 @@
                     <ContentControl Grid.Column="1" Template="{StaticResource GlassContainerTemplate}" Margin="10">
                         <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="✅ Approved" 
-                                       Foreground="#dddf00" 
+                                       Foreground="#00A6FB" 
                                        FontSize="14" 
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
@@ -189,7 +189,7 @@
                     <ContentControl Grid.Column="2" Template="{StaticResource GlassContainerTemplate}" Margin="10">
                         <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="❌ Rejected" 
-                                       Foreground="#dddf00" 
+                                       Foreground="#00A6FB" 
                                        FontSize="14" 
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
@@ -216,7 +216,7 @@
                 <ContentControl Template="{StaticResource GlassContainerTemplate}">
                     <StackPanel>
                         <TextBlock Text="Leave History" 
-                                   Foreground="#dddf00" 
+                                   Foreground="#00A6FB" 
                                    FontSize="18" 
                                    FontWeight="Bold"
                                    Margin="0,0,0,15"/>

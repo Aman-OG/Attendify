@@ -70,7 +70,7 @@ namespace Attendify.Views.Employee
                 TxtCheckedInTime.Text = $"Checked in at {DateTime.Now:HH:mm}";
                 TxtCheckedInTime.Visibility = Visibility.Visible;
 
-                MessageBox.Show($"Successfully checked in at {DateTime.Now:HH:mm:ss}", "Check In Successful",
+                MessageBox.Show($"Successfully checked in at {DateTime.Now:HH:mm:ss}", "Check In Successful", 
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }

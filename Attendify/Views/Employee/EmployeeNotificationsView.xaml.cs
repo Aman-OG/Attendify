@@ -1,28 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace Attendify.Views.Employee
+namespace Attendify.Views.UserControls
 {
-    /// <summary>
-    /// Interaction logic for EmployeeNotificationsView.xaml
-    /// </summary>
     public partial class EmployeeNotificationsView : UserControl
     {
         public EmployeeNotificationsView()
         {
             InitializeComponent();
+        }
+
+        private void FilterAll_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Showing all notifications", "Filter Applied", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void FilterImportant_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Showing important notifications only", "Filter Applied", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void FilterMeetings_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Showing meeting notifications only", "Filter Applied", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void FilterSystem_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Showing system update notifications only", "Filter Applied", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void FilterCompleted_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Showing completed notifications only", "Filter Applied", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void LoadMore_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Loading more notifications...", "Load More", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

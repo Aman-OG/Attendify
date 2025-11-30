@@ -15,8 +15,8 @@
             <GradientStop Color="#010D2A" Offset="1"/>
         </RadialGradientBrush>
 
-        <SolidColorBrush x:Key="SidebarBrush" Color="#081c15"/>
-        <SolidColorBrush x:Key="AccentBlue" Color="#70e000"/>
+        <SolidColorBrush x:Key="SidebarBrush" Color="#010D2A"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#00A6FB"/>
         <SolidColorBrush x:Key="LightText" Color="#FFFFFF"/>
 
         <!-- Glass container style -->
@@ -134,8 +134,8 @@
         <Border Background="{StaticResource MainRadial}" />
 
         <!-- decorative uploaded background, low opacity -->
-        <Image Source="/Assets/Images/darkgrenn.png"
-               Opacity="0.90"
+        <Image Source="/Assets/Images/bb2.png"
+               Opacity="0.20"
                Stretch="UniformToFill"
                IsHitTestVisible="False" />
 
