@@ -32,6 +32,8 @@
     <None Remove="Assets\Images\attendance.png" />
     <None Remove="Assets\Images\Attendifysplah.png" />
     <None Remove="Assets\Images\bb2.png" />
+    <None Remove="Assets\Images\darkgreen2.png" />
+    <None Remove="Assets\Images\darkgrenn.png" />
     <None Remove="Assets\Images\landing.jpg" />
     <None Remove="Assets\Images\login.png" />
     <None Remove="Assets\Images\logo.png" />
@@ -80,6 +82,8 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\Images\bb2.png" />
+    <Resource Include="Assets\Images\darkgreen2.png" />
+    <Resource Include="Assets\Images\darkgrenn.png" />
     <Resource Include="Assets\Images\landing.jpg" />
     <Resource Include="Assets\Images\login.png" />
     <Resource Include="Assets\Images\logo.png" />

@@ -134,7 +134,7 @@
         <Border Background="{StaticResource MainRadial}" />
 
         <!-- decorative uploaded background, low opacity -->
-        <Image Source="/Assets/Images/adminbackground.png"
+        <Image Source="/Assets/Images/darkgrenn.png"
                Opacity="0.90"
                Stretch="UniformToFill"
                IsHitTestVisible="False" />
