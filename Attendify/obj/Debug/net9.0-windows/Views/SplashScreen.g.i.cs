@@ -61,7 +61,7 @@ namespace Attendify.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Attendify;component/views/splashscreen.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Attendify.UI;V1.0.0.0;component/views/splashscreen.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\SplashScreen.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

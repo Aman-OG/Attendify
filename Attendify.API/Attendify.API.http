@@ -1,0 +1,6 @@
+@Attendify.API_HostAddress = http://localhost:5232
+
+GET {{Attendify.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

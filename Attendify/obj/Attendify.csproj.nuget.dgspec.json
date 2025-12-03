@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\DBU\\Desktop\\Attendify\\Attendify\\Attendify.csproj": {}
+    "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.csproj": {}
   },
   "projects": {
-    "C:\\Users\\DBU\\Desktop\\Attendify\\Attendify\\Attendify.csproj": {
+    "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\DBU\\Desktop\\Attendify\\Attendify\\Attendify.csproj",
+        "projectUniqueName": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.csproj",
         "projectName": "Attendify",
-        "projectPath": "C:\\Users\\DBU\\Desktop\\Attendify\\Attendify\\Attendify.csproj",
+        "projectPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.csproj",
         "packagesPath": "C:\\Users\\DBU\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\DBU\\Desktop\\Attendify\\Attendify\\obj\\",
+        "outputPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
