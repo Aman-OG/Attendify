@@ -1,44 +1,27 @@
 using Attendify.DATA;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-AppContext.SetSwitch("Npgsql.EnableIPv6", false);
-
+using Microsoft.OpenApi.Models;         
 var builder = WebApplication.CreateBuilder(args);
 
-// Read connection string
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// ---- REMOVE THIS LINE COMPLETELY (it was breaking the connection) ----
+// AppContext.SetSwitch("Npgsql.EnableIPv6", false);
 
+// Add DbContext (PostgreSQL / Supabase)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
-Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Attendify API",
-        Version = "v1"
-    });
-});
-
+// Add controllers
 builder.Services.AddControllers();
+
+// Add Swagger / OpenAPI
+builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Attendify API v1");
-    });
-}
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Attendify.DATA.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251205182815_Initial")]
-    partial class Initial
+    [Migration("20251206073014_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
