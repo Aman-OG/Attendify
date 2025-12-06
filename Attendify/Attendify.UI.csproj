@@ -54,6 +54,10 @@
     <PackageReference Include="SkiaSharp" Version="3.119.2-preview.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
 </ItemGroup>
+	
+<ItemGroup>
+  <ProjectReference Include="..\Attendify.DATA\Attendify.DATA.csproj" />
+</ItemGroup>
 
 
   <ItemGroup>

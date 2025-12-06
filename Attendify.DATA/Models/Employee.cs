@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +11,14 @@ namespace Attendify.DATA.Models
 {
     public class Employee
     {
-        public int EmployeeID { get; set; }   // PK
+
+        [Key]
+        public int EmployeeID { get; set; }  // Internal int PK
+
+        [Required]
+        [StringLength(20)]
+        [Column("EmpCode")]
+        public string EmpCode { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string? MiddleName { get; set; }
         public string LastName { get; set; } = null!;

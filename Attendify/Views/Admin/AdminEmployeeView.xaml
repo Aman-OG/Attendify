@@ -8,6 +8,7 @@
              Background="Transparent">
 
     <UserControl.Resources>
+        
         <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
             <Grid>
@@ -353,7 +354,13 @@
                           SelectionChanged="EmployeesGrid_SelectionChanged">
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding EmployeeID}" Width="80"/>
+                        <!-- Row Number -->
+                        <DataGridTextColumn Header="No" Binding="{Binding No}" Width="60"/>
+
+                        <!-- Employee ID (EmpCode) -->
+                        <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpID}" Width="110"/>
+
+                        <!-- Full Name using MultiBinding (FirstName + LastName) -->
                         <DataGridTextColumn Header="Name" Width="*">
                             <DataGridTextColumn.Binding>
                                 <MultiBinding StringFormat="{}{0} {1}">
@@ -362,10 +369,25 @@
                                 </MultiBinding>
                             </DataGridTextColumn.Binding>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="120"/>
-                        <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="120"/>
-                        <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="120"/>
-                        <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="80"/>
+
+                        <!-- Department -->
+                        <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="130"/>
+
+                        <!-- Position -->
+                        <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="130"/>
+
+                        <!-- Email -->
+                        <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
+
+                        <!-- Status (Active/Inactive) with color -->
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                     </DataGrid.Columns>
 
                     <DataGrid.CellStyle>

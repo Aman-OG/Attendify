@@ -9,7 +9,7 @@ namespace Attendify.DATA.Models
 {
     public class Shift
     {
-        public int ShiftID { get; set; }   // PK
+        public int ShiftID { get; set; }   
 
         public string Name { get; set; } = null!;
         public string StartTime { get; set; } = null!;
