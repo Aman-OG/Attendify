@@ -23,18 +23,15 @@ namespace Attendify.API.Controllers
         // Supports filtering, searching, sorting & pagination
         [HttpGet]
         public async Task<ActionResult<object>> GetEmployees(
-    [FromQuery] string? search = null,
-    [FromQuery] string? department = null,
-    [FromQuery] string? position = null,
-    [FromQuery] string? role = null,
-    [FromQuery] string? sortBy = "EmpCode",
-    [FromQuery] string? sortOrder = "asc",
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 50)
+            [FromQuery] string? search = null,
+            [FromQuery] string? sortBy = "EmpCode",
+            [FromQuery] string? sortOrder = "asc",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50)
         {
             var query = _context.Employees.AsQueryable();
 
-            // Search using EmpCode (string) — NEVER EmployeeID (int)
+            // Search only
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim().ToLower();
@@ -45,16 +42,7 @@ namespace Attendify.API.Controllers
                     (e.Email != null && e.Email.ToLower().Contains(term)));
             }
 
-            if (!string.IsNullOrWhiteSpace(department) && department != "All Departments")
-                query = query.Where(e => e.Department == department);
-
-            if (!string.IsNullOrWhiteSpace(position) && position != "All Position")
-                query = query.Where(e => e.Position == position);
-
-            if (!string.IsNullOrWhiteSpace(role) && role != "All Roles")
-                query = query.Where(e => e.Role == role);
-
-            // Sort by string EmpCode
+            // Sorting
             query = sortBy?.ToLower() switch
             {
                 "firstname" => sortOrder == "desc" ? query.OrderByDescending(e => e.FirstName) : query.OrderBy(e => e.FirstName),
@@ -104,24 +92,120 @@ namespace Attendify.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Employee>> CreateEmployee([FromBody] Employee employee)
         {
-            if (string.IsNullOrWhiteSpace(employee.EmpCode))
-                return BadRequest(new { message = "Employee ID (EmpCode) is required" });
+            Console.WriteLine("=== START CreateEmployee ===");
+            Console.WriteLine($"Received EmpCode: {employee.EmpCode}");
+            Console.WriteLine($"Received Email: {employee.Email}");
 
-            if (await _context.Employees.AnyAsync(e => e.EmpCode == employee.EmpCode))
-                return Conflict(new { message = "Employee ID already exists" });
+            try
+            {
+                // 1. VALIDATION
+                if (string.IsNullOrWhiteSpace(employee.EmpCode))
+                {
+                    Console.WriteLine("Validation failed: EmpCode is empty");
+                    return BadRequest(new { message = "Employee ID (EmpCode) is required" });
+                }
 
-            if (!string.IsNullOrWhiteSpace(employee.Email) &&
-                await _context.Employees.AnyAsync(e => e.Email == employee.Email))
-                return Conflict(new { message = "Email already in use" });
+                Console.WriteLine($"Checking if EmpCode '{employee.EmpCode}' already exists...");
+                bool empCodeExists = await _context.Employees.AnyAsync(e => e.EmpCode == employee.EmpCode);
+                Console.WriteLine($"EmpCode exists check: {empCodeExists}");
 
-            employee.CreatedAt = DateTime.UtcNow;
-            employee.IsActive = true;
+                if (empCodeExists)
+                {
+                    Console.WriteLine($"Conflict: EmpCode '{employee.EmpCode}' already exists");
+                    return Conflict(new { message = "Employee ID already exists" });
+                }
 
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+                if (!string.IsNullOrWhiteSpace(employee.Email))
+                {
+                    Console.WriteLine($"Checking if Email '{employee.Email}' already exists...");
+                    bool emailExists = await _context.Employees.AnyAsync(e => e.Email == employee.Email);
+                    Console.WriteLine($"Email exists check: {emailExists}");
 
-            return CreatedAtAction(nameof(GetEmployee), new { empCode = employee.EmpCode }, employee);
+                    if (emailExists)
+                    {
+                        Console.WriteLine($"Conflict: Email '{employee.Email}' already in use");
+                        return Conflict(new { message = "Email already in use" });
+                    }
+                }
+
+                // 2. GENERATE AND HASH PASSWORD
+                Console.WriteLine($"Extracting number from EmpCode: {employee.EmpCode}");
+                string numberPart = employee.EmpCode.Replace("Emp", "");
+                Console.WriteLine($"Number part: {numberPart}");
+
+                string rawPassword = $"Pass{numberPart}";
+                Console.WriteLine($"Raw password generated: {rawPassword}");
+
+                Console.WriteLine("Hashing password...");
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(rawPassword);
+                Console.WriteLine($"Password hashed successfully. Hash length: {hashedPassword.Length}");
+                Console.WriteLine($"PasswordHash before assignment: {employee.PasswordHash ?? "NULL"}");
+
+                employee.PasswordHash = hashedPassword;
+                Console.WriteLine($"PasswordHash after assignment: {employee.PasswordHash ?? "NULL"}");
+
+                // 3. SET OTHER PROPERTIES
+                employee.CreatedAt = DateTime.UtcNow;
+                employee.IsActive = true;
+                Console.WriteLine($"IsActive set to: {employee.IsActive}");
+                Console.WriteLine($"CreatedAt set to: {employee.CreatedAt}");
+
+                // 4. SAVE TO DATABASE
+                Console.WriteLine("Adding employee to context...");
+                _context.Employees.Add(employee);
+
+                Console.WriteLine("Saving changes to database...");
+                int changes = await _context.SaveChangesAsync();
+                Console.WriteLine($"SaveChanges completed. Rows affected: {changes}");
+
+                // 5. RETURN RESPONSE
+                Console.WriteLine("Employee created successfully!");
+                Console.WriteLine($"=== END CreateEmployee ===");
+
+                return CreatedAtAction(nameof(GetEmployee), new { empCode = employee.EmpCode }, new
+                {
+                    employee.EmployeeID,
+                    employee.EmpCode,
+                    employee.FirstName,
+                    employee.LastName,
+                    employee.Department,
+                    employee.Position,
+                    employee.Email,
+                    employee.Role,
+                    employee.Phone,
+                    employee.IsActive,
+                    employee.CreatedAt
+                });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                Console.WriteLine($"=== DATABASE ERROR ===");
+                Console.WriteLine($"DbUpdateException: {dbEx.Message}");
+                Console.WriteLine($"Inner Exception: {dbEx.InnerException?.Message}");
+                Console.WriteLine($"StackTrace: {dbEx.StackTrace}");
+                Console.WriteLine($"=== END ERROR ===");
+
+                return StatusCode(500, new
+                {
+                    message = "Database error while saving employee",
+                    error = dbEx.InnerException?.Message ?? dbEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== GENERAL ERROR ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"=== END ERROR ===");
+
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while creating the employee",
+                    error = ex.Message
+                });
+            }
         }
+
 
         [HttpPut("{empCode}")]
         public async Task<IActionResult> UpdateEmployee(string empCode, [FromBody] Employee updated)

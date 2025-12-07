@@ -50,6 +50,9 @@
     <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
     <PackageReference Include="SkiaSharp" Version="3.119.2-preview.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
@@ -92,6 +95,13 @@
     <Resource Include="Assets\Images\login.png" />
     <Resource Include="Assets\Images\logo.png" />
     <Resource Include="Assets\Images\stats.png" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

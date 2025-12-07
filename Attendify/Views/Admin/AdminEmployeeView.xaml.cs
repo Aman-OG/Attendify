@@ -1,150 +1,145 @@
-﻿using System;
+﻿
+using Attendify.DATA;// ← THIS ONE ONLY for Employee
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Diagnostics;
+using System.Windows.Controls;
+using System.Windows.Data;
+
+
+using DataEmployee = Attendify.DATA.Models.Employee;
 
 namespace Attendify.Views.UserControls
 {
     public partial class EmployeesView : UserControl, INotifyPropertyChanged
     {
-        private ObservableCollection<Employee> _employees;
-        private Employee _selectedEmployee;
+        private ObservableCollection<DataEmployee> _employees = new();
+        private DataEmployee _selectedEmployee;
         private bool _isAddingNew = false;
+        private App _app;  // For service provider
 
-        public ObservableCollection<Employee> Employees
+        public ObservableCollection<DataEmployee> Employees
         {
             get => _employees;
-            set
-            {
-                _employees = value;
-                OnPropertyChanged();
-            }
+            set { _employees = value; OnPropertyChanged(); }
         }
 
-        public Employee SelectedEmployee
+        public DataEmployee SelectedEmployee
         {
             get => _selectedEmployee;
-            set
-            {
-                _selectedEmployee = value;
-                OnPropertyChanged();
-            }
+            set { _selectedEmployee = value; OnPropertyChanged(); }
         }
 
         public EmployeesView()
         {
             InitializeComponent();
+            _app = (App)Application.Current;  // Get service provider
             DataContext = this;
-            LoadSampleData();
+            Loaded += async (s, e) => await LoadEmployeesFromSupabaseAsync();  // Load on init
             ShowEmptyForm();
         }
 
-        private void LoadSampleData()
+        private async Task LoadEmployeesFromSupabaseAsync()
         {
-            Employees = new ObservableCollection<Employee>
+            try
             {
-                new Employee { EmployeeID = "EMP10001", FirstName = "Aman", MiddleName = "", LastName = "Baye",
-                             Department = "HR", Position = "Manager", Email = "aman@company.com",
-                             Phone = "+1234567890", Role = "Admin" },
-                new Employee { EmployeeID = "EMP10002", FirstName = "Markos", MiddleName = "K", LastName = "Neby",
-                             Department = "Software", Position = "Developer", Email = "markos@company.com",
-                             Phone = "+1234567891", Role = "User" },
-                new Employee { EmployeeID = "EMP10003", FirstName = "Teddy", MiddleName = "J", LastName = "Smith",
-                             Department = "Electrical", Position = "Engineer", Email = "teddy@company.com",
-                             Phone = "+1234567892", Role = "Manager" }
-            };
+                using var scope = _app.ServiceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            EmployeesGrid.ItemsSource = Employees;
+                var employees = await context.Employees
+                    .Where(e => e.IsActive)  // Only active ones
+                    .OrderBy(e => e.EmpCode)
+                    .ToListAsync();
+
+                Employees = new ObservableCollection<DataEmployee>(employees);
+                EmployeesGrid.ItemsSource = Employees;
+
+                if (Employees.Count == 0)
+                    MessageBox.Show("No employees found. Add your first one!", "Info");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading from Supabase: {ex.Message}\nCheck connection string.", "Error");
+            }
         }
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (SearchPlaceholder != null)
-                SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+            Console.WriteLine($"SearchBox text: {SearchBox.Text}");
             ApplyFilters();
         }
 
-        private void FilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ApplyFilters();
-        }
 
         private void ApplyFilters()
         {
-            if (Employees == null) return;
+            if (Employees == null || Employees.Count == 0)
+                return;
 
-            var collectionView = System.Windows.Data.CollectionViewSource.GetDefaultView(Employees);
+            var view = CollectionViewSource.GetDefaultView(Employees);
+            if (view == null)
+                return;
 
-            collectionView.Filter = item =>
+            string search = SearchBox?.Text?.Trim().ToLower() ?? "";
+
+      
+            view.Filter = empObj =>
             {
-                var employee = item as Employee;
-                if (employee == null) return false;
+                if (empObj is not DataEmployee emp)
+                    return false;
 
-                try
+                // ============================
+                // SEARCH FILTER
+                // ============================
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    // Search filter
-                    var searchText = SearchBox?.Text?.ToLower() ?? "";
-                    if (!string.IsNullOrEmpty(searchText))
-                    {
-                        var matchesSearch = (employee.FirstName?.ToLower().Contains(searchText) == true) ||
-                                          (employee.LastName?.ToLower().Contains(searchText) == true) ||
-                                          (employee.Email?.ToLower().Contains(searchText) == true) ||
-                                          (employee.EmployeeID?.ToLower().Contains(searchText) == true) ||
-                                          (employee.Department?.ToLower().Contains(searchText) == true);
-                        if (!matchesSearch) return false;
-                    }
+                    bool match =
+                        (emp.EmpCode?.ToLower().Contains(search) ?? false) ||
+                        (emp.FirstName?.ToLower().Contains(search) ?? false) ||
+                        (emp.LastName?.ToLower().Contains(search) ?? false) ||
+                        (emp.Email?.ToLower().Contains(search) ?? false) ||
+                        (emp.Department?.ToLower().Contains(search) ?? false) ||
+                        (emp.Position?.ToLower().Contains(search) ?? false);
 
-                    // Department filter
-                    var departmentFilterItem = DepartmentFilter?.SelectedItem as ComboBoxItem;
-                    var departmentFilter = departmentFilterItem?.Content?.ToString();
-
-                    if (!string.IsNullOrEmpty(departmentFilter) &&
-                        departmentFilter != "All Departments" &&
-                        departmentFilter != employee.Department)
+                    if (!match)
                         return false;
-
-                    // Role filter
-                    var roleFilterItem = RoleFilter?.SelectedItem as ComboBoxItem;
-                    var roleFilter = roleFilterItem?.Content?.ToString();
-
-                    if (!string.IsNullOrEmpty(roleFilter) &&
-                        roleFilter != "All Roles" &&
-                        roleFilter != employee.Role)
-                        return false;
-
-                    return true;
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Filter error: {ex.Message}");
-                    return true;
-                }
+
+
+                return true;
             };
+
+            view.Refresh();
         }
+
 
         private void EmployeesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SelectedEmployee = EmployeesGrid.SelectedItem as Employee;
-
+            SelectedEmployee = EmployeesGrid.SelectedItem as DataEmployee;
             if (SelectedEmployee != null)
-            {
-                ShowEmployeeForm(SelectedEmployee, false); // Edit mode
-            }
+                ShowEmployeeForm(SelectedEmployee, false);
         }
 
         private void BtnAddEmployee_Click(object sender, RoutedEventArgs e)
         {
-            ShowEmployeeForm(null, true); // Add mode
+            ShowEmployeeForm(null, true);
         }
 
-        private void BtnUpdate_Click(object sender, RoutedEventArgs e)
+        private async void BtnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedEmployee != null && ValidateForm())
+            if (SelectedEmployee == null || !ValidateForm()) return;
+
+            try
             {
-                // Update existing employee
+                using var scope = _app.ServiceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
                 SelectedEmployee.FirstName = TxtFirstName.Text;
                 SelectedEmployee.MiddleName = TxtMiddleName.Text;
                 SelectedEmployee.LastName = TxtLastName.Text;
@@ -152,84 +147,117 @@ namespace Attendify.Views.UserControls
                 SelectedEmployee.Position = TxtPosition.Text;
                 SelectedEmployee.Email = TxtEmail.Text;
                 SelectedEmployee.Phone = TxtPhone.Text;
-                SelectedEmployee.Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content.ToString();
+                SelectedEmployee.Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString();
 
-                EmployeesGrid.Items.Refresh();
-                MessageBox.Show("Employee updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                ApplyFilters();
+                context.Employees.Update(SelectedEmployee);
+                await context.SaveChangesAsync();
+
+                MessageBox.Show("Employee updated in Supabase!", "Success");
+                await LoadEmployeesFromSupabaseAsync();  // Refresh
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Update failed: {ex.Message}");
             }
         }
 
-        private void BtnDelete_Click(object sender, RoutedEventArgs e)
+        private async void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedEmployee != null)
-            {
-                var result = MessageBox.Show($"Are you sure you want to delete {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
-                                           "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (SelectedEmployee == null) return;
 
-                if (result == MessageBoxResult.Yes)
+            var result = MessageBox.Show($"Delete {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                using var scope = _app.ServiceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                SelectedEmployee.IsActive = false;  // Soft delete
+                context.Employees.Update(SelectedEmployee);
+                await context.SaveChangesAsync();
+
+                Employees.Remove(SelectedEmployee);
+                ShowEmptyForm();
+                MessageBox.Show("Employee deactivated in Supabase!", "Success");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Delete failed: {ex.Message}");
+            }
+        }
+
+        private async void BtnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidateForm()) return;
+
+            var newEmp = new DataEmployee
+            {
+                EmpCode = TxtEmployeeID.Text.Trim(),
+                FirstName = TxtFirstName.Text,
+                MiddleName = TxtMiddleName.Text,
+                LastName = TxtLastName.Text,
+                Department = TxtDepartment.Text,
+                Position = TxtPosition.Text,
+                Email = TxtEmail.Text,
+                Phone = TxtPhone.Text,
+                Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "User",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            if (string.IsNullOrWhiteSpace(newEmp.EmpCode))
+            {
+                MessageBox.Show("Employee ID (EmpCode) is required!", "Error");
+                return;
+            }
+
+            try
+            {
+                using var scope = _app.ServiceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                if (await context.Employees.AnyAsync(x => x.EmpCode == newEmp.EmpCode))
                 {
-                    Employees.Remove(SelectedEmployee);
-                    ShowEmptyForm();
-                    ApplyFilters();
-                    MessageBox.Show("Employee deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Employee ID already exists!", "Duplicate");
+                    return;
                 }
-            }
-        }
 
-        private void BtnAdd_Click(object sender, RoutedEventArgs e)
-        {
-            if (ValidateForm())
-            {
-                // Add new employee
-                var newEmployee = new Employee
-                {
-                    EmployeeID = TxtEmployeeID.Text,
-                    FirstName = TxtFirstName.Text,
-                    MiddleName = TxtMiddleName.Text,
-                    LastName = TxtLastName.Text,
-                    Department = TxtDepartment.Text,
-                    Position = TxtPosition.Text,
-                    Email = TxtEmail.Text,
-                    Phone = TxtPhone.Text,
-                    Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content.ToString()
-                };
+                context.Employees.Add(newEmp);
+                await context.SaveChangesAsync();
 
-                Employees.Add(newEmployee);
-                MessageBox.Show("Employee added successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                ApplyFilters();
+                MessageBox.Show($"Employee {newEmp.EmpCode} added to Supabase!", "Success");
+                await LoadEmployeesFromSupabaseAsync();  // Refresh
                 ShowEmptyForm();
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Add failed: {ex.Message}");
+            }
         }
 
-        private void BtnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            ShowEmptyForm();
-        }
+        private void BtnCancel_Click(object sender, RoutedEventArgs e) => ShowEmptyForm();
 
-        private void ShowEmployeeForm(Employee employee, bool isAddMode)
+        private void ShowEmployeeForm(DataEmployee employee, bool isAddMode)
         {
             _isAddingNew = isAddMode;
-
-            if (EmptyFormText != null) EmptyFormText.Visibility = Visibility.Collapsed;
-            if (EmployeeForm != null) EmployeeForm.Visibility = Visibility.Visible;
+            EmptyFormText.Visibility = Visibility.Collapsed;
+            EmployeeForm.Visibility = Visibility.Visible;
 
             if (isAddMode)
             {
-                // Add mode
                 ClearForm();
-                TxtEmployeeID.Text = GenerateNewEmployeeID();
-                EditModeButtons.Visibility = Visibility.Collapsed;
+                TxtEmployeeID.IsReadOnly = false;  // Editable for new
                 AddModeButtons.Visibility = Visibility.Visible;
+                EditModeButtons.Visibility = Visibility.Collapsed;
             }
             else
             {
-                // Edit mode
                 if (employee != null)
                 {
-                    TxtEmployeeID.Text = employee.EmployeeID ?? "";
+                    TxtEmployeeID.Text = employee.EmpCode ?? "";
+                    TxtEmployeeID.IsReadOnly = true;  // Read-only for edit
                     TxtFirstName.Text = employee.FirstName ?? "";
                     TxtMiddleName.Text = employee.MiddleName ?? "";
                     TxtLastName.Text = employee.LastName ?? "";
@@ -237,143 +265,50 @@ namespace Attendify.Views.UserControls
                     TxtPosition.Text = employee.Position ?? "";
                     TxtEmail.Text = employee.Email ?? "";
                     TxtPhone.Text = employee.Phone ?? "";
-
-                    // Select role in combobox
-                    if (!string.IsNullOrEmpty(employee.Role) && CmbRole != null)
-                    {
-                        foreach (ComboBoxItem item in CmbRole.Items)
-                        {
-                            if (item?.Content?.ToString() == employee.Role)
-                            {
-                                CmbRole.SelectedItem = item;
-                                break;
-                            }
-                        }
-                    }
+                    foreach (ComboBoxItem item in CmbRole.Items)
+                        if (item.Content?.ToString() == employee.Role) { CmbRole.SelectedItem = item; break; }
                 }
-                EditModeButtons.Visibility = Visibility.Visible;
                 AddModeButtons.Visibility = Visibility.Collapsed;
+                EditModeButtons.Visibility = Visibility.Visible;
             }
         }
 
         private void ShowEmptyForm()
         {
-            if (EmployeeForm != null) EmployeeForm.Visibility = Visibility.Collapsed;
-            if (EmptyFormText != null) EmptyFormText.Visibility = Visibility.Visible;
+            EmployeeForm.Visibility = Visibility.Collapsed;
+            EmptyFormText.Visibility = Visibility.Visible;
             ClearForm();
             _isAddingNew = false;
         }
 
         private void ClearForm()
         {
-            if (TxtEmployeeID != null) TxtEmployeeID.Text = "";
-            if (TxtFirstName != null) TxtFirstName.Text = "";
-            if (TxtMiddleName != null) TxtMiddleName.Text = "";
-            if (TxtLastName != null) TxtLastName.Text = "";
-            if (TxtDepartment != null) TxtDepartment.Text = "";
-            if (TxtPosition != null) TxtPosition.Text = "";
-            if (TxtEmail != null) TxtEmail.Text = "";
-            if (TxtPhone != null) TxtPhone.Text = "";
-            if (CmbRole != null) CmbRole.SelectedIndex = -1;
+            TxtEmployeeID.Text = "";
+            TxtFirstName.Text = "";
+            TxtMiddleName.Text = "";
+            TxtLastName.Text = "";
+            TxtDepartment.Text = "";
+            TxtPosition.Text = "";
+            TxtEmail.Text = "";
+            TxtPhone.Text = "";
+            CmbRole.SelectedIndex = -1;
         }
 
         private bool ValidateForm()
         {
-            if (string.IsNullOrWhiteSpace(TxtFirstName?.Text))
-            {
-                MessageBox.Show("First Name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtFirstName?.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtLastName?.Text))
-            {
-                MessageBox.Show("Last Name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtLastName?.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtDepartment?.Text))
-            {
-                MessageBox.Show("Department is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtDepartment?.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtPosition?.Text))
-            {
-                MessageBox.Show("Position is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtPosition?.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtEmail?.Text))
-            {
-                MessageBox.Show("Email is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtEmail?.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtPhone?.Text))
-            {
-                MessageBox.Show("Phone is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                TxtPhone?.Focus();
-                return false;
-            }
-
-            if (CmbRole?.SelectedItem == null)
-            {
-                MessageBox.Show("Role is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                CmbRole?.Focus();
-                return false;
-            }
-
+            if (string.IsNullOrWhiteSpace(TxtFirstName.Text)) { MessageBox.Show("First Name required"); TxtFirstName.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtLastName.Text)) { MessageBox.Show("Last Name required"); TxtLastName.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtDepartment.Text)) { MessageBox.Show("Department required"); TxtDepartment.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtPosition.Text)) { MessageBox.Show("Position required"); TxtPosition.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtEmail.Text)) { MessageBox.Show("Email required"); TxtEmail.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtPhone.Text)) { MessageBox.Show("Phone required"); TxtPhone.Focus(); return false; }
+            if (CmbRole.SelectedItem == null) { MessageBox.Show("Role required"); CmbRole.Focus(); return false; }
+            if (_isAddingNew && string.IsNullOrWhiteSpace(TxtEmployeeID.Text)) { MessageBox.Show("Employee ID required"); TxtEmployeeID.Focus(); return false; }
             return true;
-        }
-
-        private string GenerateNewEmployeeID()
-        {
-            if (Employees == null || Employees.Count == 0)
-                return "EMP10001";
-
-            try
-            {
-                var maxId = Employees.Max(e =>
-                {
-                    if (e?.EmployeeID != null && e.EmployeeID.StartsWith("EMP"))
-                    {
-                        var idPart = e.EmployeeID.Replace("EMP", "");
-                        if (int.TryParse(idPart, out int id))
-                            return id;
-                    }
-                    return 10000;
-                });
-                return $"EMP{maxId + 1:00000}";
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error generating employee ID: {ex.Message}");
-                return "EMP10001";
-            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    public class Employee
-    {
-        public string EmployeeID { get; set; } = "";
-        public string FirstName { get; set; } = "";
-        public string MiddleName { get; set; } = "";
-        public string LastName { get; set; } = "";
-        public string Department { get; set; } = "";
-        public string Position { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Role { get; set; } = "";
-        public string Phone { get; set; } = "";
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

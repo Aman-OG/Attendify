@@ -83,15 +83,21 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="border" 
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost" 
-                                          Margin="{TemplateBinding Padding}"
+                        <Grid>
+                            <Border x:Name="border" 
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                                <!-- Change from ScrollViewer to a Grid with ScrollViewer -->
+                                <Grid>
+                                    <ScrollViewer x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Stretch"
                                           Background="Transparent"/>
-                        </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#00A6FB"/>
@@ -101,7 +107,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
         <!-- SIMPLE WORKING COMBOBOX STYLE -->
         <Style x:Key="GlassComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="#20FFFFFF"/>
@@ -262,70 +267,82 @@
         </Grid.RowDefinitions>
 
         <!-- Search and Filter Section -->
-        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+      <!-- SEARCH & FILTERS -->
+<ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
-                <!-- Search Box -->
+        <!-- SEARCH BOX – FULLY CLICKABLE -->
+                <!-- SEARCH BOX - FINAL VERSION WITH ICON + FULLY WORKING SEARCH -->
                 <Border Grid.Column="0" 
-                        Background="#20FFFFFF" 
-                        CornerRadius="8" 
-                        BorderBrush="#40FFFFFF" 
-                        BorderThickness="1"
-                        Margin="5"
-                        Height="35"
-
-                        VerticalAlignment="Center">
+        Background="#20FFFFFF" 
+        CornerRadius="8" 
+        BorderBrush="#40FFFFFF" 
+        BorderThickness="1" 
+        Margin="5" 
+        Height="40">
                     <Grid>
-                        <TextBox x:Name="SearchBox" 
-                                 Style="{StaticResource ModernTextBox}"
-                                 BorderThickness="0"
-                                 Padding="15,8"
-                                 TextChanged="SearchBox_TextChanged"/>
-                        <TextBlock x:Name="SearchPlaceholder" 
-                                   Text="🔍 Search employees..." 
-                                   Foreground="#e5e5e5"
-                                   Margin="15,0,0,0"
-                                   VerticalAlignment="Center"
-                                   IsHitTestVisible="False"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search Icon -->
+                        <Path Grid.Column="0" 
+              Data="M21.5 20L15.8 14.3C17.3 12.5 18 10.2 18 7.7 18 3.5 14.5 0 10.3 0 6.1 0 2.6 3.5 2.6 7.7 2.6 11.9 6.1 15.4 10.3 15.4 12.8 15.4 15.1 14.7 17 13.3L22.7 19 21.5 20ZM10.3 13.4C7.2 13.4 4.6 10.8 4.6 7.7 4.6 4.6 7.2 2 10.3 2 13.4 2 16 4.6 16 7.7 16 10.8 13.4 13.4 10.3 13.4Z"
+              Fill="#88FFFFFF"
+              Width="16" 
+              Height="16"
+              Stretch="Uniform"
+              Margin="12,0,8,0"
+              VerticalAlignment="Center"/>
+
+                        <!-- TextBox -->
+                        <TextBox x:Name="SearchBox"
+                 Grid.Column="1"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Foreground="White"
+                 FontSize="14"
+                 Padding="8,0,12,0"
+                 VerticalContentAlignment="Center"
+                 CaretBrush="White"
+                 SelectionBrush="#6000A6FB"
+                 TextChanged="SearchBox_TextChanged"/>
+
+                        <!-- Placeholder Text -->
+                        <TextBlock Grid.Column="1"
+                   Text="Search employees..."
+                   Foreground="#88FFFFFF"
+                   Margin="8,0,0,0"
+                   VerticalAlignment="Center"
+                   FontSize="14"
+                   IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Grid>
                 </Border>
 
-                <!-- Filter ComboBox -->
-                <ComboBox Grid.Column="1" 
-                          x:Name="DepartmentFilter"
-                          Style="{StaticResource GlassComboBox}"
-                          Width="150"
-                          Margin="5"
-                          Height="35"
-                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                          SelectionChanged="FilterComboBox_SelectionChanged">
-                    <ComboBoxItem Content="All Departments" IsSelected="True"/>
-                    <ComboBoxItem Content="Software"/>
-                    <ComboBoxItem Content="Electrical"/>
-                    <ComboBoxItem Content="Chemical"/>
-                    <ComboBoxItem Content="HR"/>
-                    <ComboBoxItem Content="Finance"/>
-                </ComboBox>
+                <!-- ADD BUTTON -->
+        <Button Grid.Column="3" Content="+ Add Employee"
+                Style="{StaticResource ModernButton}"
+                Margin="5" Height="40"
+                Click="BtnAddEmployee_Click"/>
 
-                <ComboBox Grid.Column="2" 
-                          x:Name="RoleFilter"
-                          Style="{StaticResource GlassComboBox}"
-                          Width="120"
-                          Margin="5"
-                          Height="35"
-                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                          SelectionChanged="FilterComboBox_SelectionChanged">
-                    <ComboBoxItem Content="All Position" IsSelected="True"/>
-                    <ComboBoxItem Content="Developer"/>
-                    <ComboBoxItem Content="Lecturer"/>
-                    <ComboBoxItem Content="Head Dean"/>
-                </ComboBox>
 
                 <!-- Add Employee Button -->
                 <Button Grid.Column="3" 
@@ -354,14 +371,11 @@
                           SelectionChanged="EmployeesGrid_SelectionChanged">
 
                     <DataGrid.Columns>
-                        <!-- Row Number -->
-                        <DataGridTextColumn Header="No" Binding="{Binding No}" Width="60"/>
-
-                        <!-- Employee ID (EmpCode) -->
-                        <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpID}" Width="110"/>
+                                     <!-- Employee ID (EmpCode) -->
+                        <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpCode}" Width="110"/>
 
                         <!-- Full Name using MultiBinding (FirstName + LastName) -->
-                        <DataGridTextColumn Header="Name" Width="*">
+                        <DataGridTextColumn Header="Name" Width="130">
                             <DataGridTextColumn.Binding>
                                 <MultiBinding StringFormat="{}{0} {1}">
                                     <Binding Path="FirstName"/>
@@ -374,13 +388,13 @@
                         <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="130"/>
 
                         <!-- Position -->
-                        <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="130"/>
+                        <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="*"/>
 
                         <!-- Email -->
                         <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
 
                         <!-- Status (Active/Inactive) with color -->
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100">
+                        <DataGridTextColumn Header="Status" Binding="{Binding IsActive}" Width="100">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="FontWeight" Value="SemiBold"/>

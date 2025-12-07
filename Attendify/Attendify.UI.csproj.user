@@ -17,25 +17,25 @@
     <Compile Update="Views\Admin\AdminSettingsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeAttendanceView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeAttendanceView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeDashboard.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeDashboard.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeHomeView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeHomeView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeLeaveRequestsView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeLeaveRequestsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeNotificationsView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeNotificationsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeReportsView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeReportsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\Employee\EmployeeShiftsView.xaml.cs">
+    <Compile Update="Views\EmployeeUI\EmployeeShiftsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\LandingPage.xaml.cs">
