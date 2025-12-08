@@ -1,81 +1,217 @@
-﻿
-using Attendify.DATA;// ← THIS ONE ONLY for Employee
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Data;
-
-
-using DataEmployee = Attendify.DATA.Models.Employee;
 
 namespace Attendify.Views.UserControls
 {
     public partial class EmployeesView : UserControl, INotifyPropertyChanged
     {
-        private ObservableCollection<DataEmployee> _employees = new();
-        private DataEmployee _selectedEmployee;
+        private ObservableCollection<EmployeeDto> _employees = new();
+        private EmployeeDto _selectedEmployee;
         private bool _isAddingNew = false;
-        private App _app;  // For service provider
+        private readonly HttpClient _httpClient;
+        private readonly string _apiBaseUrl = "https://localhost:7129/";
 
-        public ObservableCollection<DataEmployee> Employees
+        // Loading states
+        private bool _isLoadingEmployees = false;
+        private bool _isUpdating = false;
+        private bool _isAdding = false;
+        private bool _isDeleting = false;
+        private bool _isResettingPassword = false;
+
+        // Cache for performance
+        private EmployeeDto[] _cachedEmployees = Array.Empty<EmployeeDto>();
+        private DateTime _lastLoadTime = DateTime.MinValue;
+        private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(5);
+
+        // DTO Classes - MUST BE PUBLIC
+        public class EmployeeDto
+        {
+            public int EmployeeID { get; set; }
+            public string EmpCode { get; set; } = "";
+            public string FirstName { get; set; } = "";
+            public string? MiddleName { get; set; }
+            public string LastName { get; set; } = "";
+            public string? Department { get; set; }
+            public string? Position { get; set; }
+            public string? Email { get; set; }
+            public string? Phone { get; set; }
+            public string? Role { get; set; }
+            public bool IsActive { get; set; }
+            public DateTime CreatedAt { get; set; }
+        }
+
+        public class ApiResponse
+        {
+            public EmployeeDto[] Data { get; set; } = Array.Empty<EmployeeDto>();
+            public int Total { get; set; }
+            public int Page { get; set; }
+            public int PageSize { get; set; }
+            public int TotalPages { get; set; }
+        }
+
+        public class CreateEmployeeResponse
+        {
+            public int EmployeeID { get; set; }
+            public string EmpCode { get; set; } = "";
+            public string FirstName { get; set; } = "";
+            public string? MiddleName { get; set; }
+            public string LastName { get; set; } = "";
+            public string? Department { get; set; }
+            public string? Position { get; set; }
+            public string? Email { get; set; }
+            public string? Phone { get; set; }
+            public string? Role { get; set; }
+            public bool IsActive { get; set; }
+            public string GeneratedPassword { get; set; } = "";
+            public string Message { get; set; } = "";
+        }
+
+        public class ResetPasswordResponse
+        {
+            public string Message { get; set; } = "";
+            public string NewPassword { get; set; } = "";
+        }
+
+        // Properties
+        public ObservableCollection<EmployeeDto> Employees
         {
             get => _employees;
             set { _employees = value; OnPropertyChanged(); }
         }
 
-        public DataEmployee SelectedEmployee
+        public EmployeeDto SelectedEmployee
         {
             get => _selectedEmployee;
             set { _selectedEmployee = value; OnPropertyChanged(); }
         }
 
+        // Loading properties
+        public bool IsLoadingEmployees
+        {
+            get => _isLoadingEmployees;
+            set { _isLoadingEmployees = value; OnPropertyChanged(); }
+        }
+
+        public bool IsUpdating
+        {
+            get => _isUpdating;
+            set { _isUpdating = value; OnPropertyChanged(); }
+        }
+
+        public bool IsAdding
+        {
+            get => _isAdding;
+            set { _isAdding = value; OnPropertyChanged(); }
+        }
+
+        public bool IsDeleting
+        {
+            get => _isDeleting;
+            set { _isDeleting = value; OnPropertyChanged(); }
+        }
+
+        public bool IsResettingPassword
+        {
+            get => _isResettingPassword;
+            set { _isResettingPassword = value; OnPropertyChanged(); }
+        }
+
+        public bool IsBusy => IsUpdating || IsAdding || IsDeleting || IsResettingPassword;
+
         public EmployeesView()
         {
             InitializeComponent();
-            _app = (App)Application.Current;  // Get service provider
             DataContext = this;
-            Loaded += async (s, e) => await LoadEmployeesFromSupabaseAsync();  // Load on init
+
+            // Initialize HttpClient
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    (sender, cert, chain, sslPolicyErrors) => true
+            };
+
+            _httpClient = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(_apiBaseUrl),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            Loaded += async (s, e) => await LoadEmployeesFromApiAsync(false);
             ShowEmptyForm();
         }
 
-        private async Task LoadEmployeesFromSupabaseAsync()
+        private async Task LoadEmployeesFromApiAsync(bool forceRefresh = false)
         {
+            // Use cache if available and not expired
+            if (!forceRefresh &&
+                _cachedEmployees.Length > 0 &&
+                (DateTime.Now - _lastLoadTime) < _cacheDuration)
+            {
+                Employees = new ObservableCollection<EmployeeDto>(_cachedEmployees);
+                return;
+            }
+
+            if (IsLoadingEmployees) return;
+
+            IsLoadingEmployees = true;
+            EmployeesLoading.Visibility = Visibility.Visible;
+
             try
             {
-                using var scope = _app.ServiceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var response = await _httpClient.GetAsync("api/admin/employees?pageSize=100");
 
-                var employees = await context.Employees
-                    .Where(e => e.IsActive)  // Only active ones
-                    .OrderBy(e => e.EmpCode)
-                    .ToListAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                Employees = new ObservableCollection<DataEmployee>(employees);
-                EmployeesGrid.ItemsSource = Employees;
+                    if (result != null && result.Data != null)
+                    {
+                        // Update cache
+                        _cachedEmployees = result.Data;
+                        _lastLoadTime = DateTime.Now;
 
-                if (Employees.Count == 0)
-                    MessageBox.Show("No employees found. Add your first one!", "Info");
+                        Employees = new ObservableCollection<EmployeeDto>(_cachedEmployees);
+                        EmployeesGrid.ItemsSource = Employees;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"Error loading employees: {response.StatusCode}", "Error");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                MessageBox.Show($"Cannot connect to API. Make sure the API is running at {_apiBaseUrl}\n\nError: {ex.Message}", "Connection Error");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading from Supabase: {ex.Message}\nCheck connection string.", "Error");
+                MessageBox.Show($"Error: {ex.Message}", "Error");
+            }
+            finally
+            {
+                IsLoadingEmployees = false;
+                EmployeesLoading.Visibility = Visibility.Collapsed;
             }
         }
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Console.WriteLine($"SearchBox text: {SearchBox.Text}");
             ApplyFilters();
         }
-
 
         private void ApplyFilters()
         {
@@ -88,40 +224,32 @@ namespace Attendify.Views.UserControls
 
             string search = SearchBox?.Text?.Trim().ToLower() ?? "";
 
-      
-            view.Filter = empObj =>
+            if (string.IsNullOrWhiteSpace(search))
             {
-                if (empObj is not DataEmployee emp)
-                    return false;
-
-                // ============================
-                // SEARCH FILTER
-                // ============================
-                if (!string.IsNullOrWhiteSpace(search))
+                view.Filter = null; // Show all
+            }
+            else
+            {
+                view.Filter = empObj =>
                 {
-                    bool match =
-                        (emp.EmpCode?.ToLower().Contains(search) ?? false) ||
-                        (emp.FirstName?.ToLower().Contains(search) ?? false) ||
-                        (emp.LastName?.ToLower().Contains(search) ?? false) ||
-                        (emp.Email?.ToLower().Contains(search) ?? false) ||
-                        (emp.Department?.ToLower().Contains(search) ?? false) ||
-                        (emp.Position?.ToLower().Contains(search) ?? false);
-
-                    if (!match)
+                    if (empObj is not EmployeeDto emp)
                         return false;
-                }
 
-
-                return true;
-            };
+                    return (emp.EmpCode?.ToLower().Contains(search) ?? false) ||
+                           (emp.FirstName?.ToLower().Contains(search) ?? false) ||
+                           (emp.LastName?.ToLower().Contains(search) ?? false) ||
+                           (emp.Email?.ToLower().Contains(search) ?? false) ||
+                           (emp.Department?.ToLower().Contains(search) ?? false) ||
+                           (emp.Position?.ToLower().Contains(search) ?? false);
+                };
+            }
 
             view.Refresh();
         }
 
-
         private void EmployeesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SelectedEmployee = EmployeesGrid.SelectedItem as DataEmployee;
+            SelectedEmployee = EmployeesGrid.SelectedItem as EmployeeDto;
             if (SelectedEmployee != null)
                 ShowEmployeeForm(SelectedEmployee, false);
         }
@@ -133,66 +261,61 @@ namespace Attendify.Views.UserControls
 
         private async void BtnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedEmployee == null || !ValidateForm()) return;
+            if (SelectedEmployee == null || !ValidateForm(true) || IsUpdating) return;
+
+            IsUpdating = true;
+            FormLoadingText.Text = "Updating employee...";
+            FormLoading.Visibility = Visibility.Visible;
 
             try
             {
-                using var scope = _app.ServiceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var updateRequest = new
+                {
+                    FirstName = TxtFirstName.Text,
+                    MiddleName = TxtMiddleName.Text,
+                    LastName = TxtLastName.Text,
+                    Department = TxtDepartment.Text,
+                    Position = TxtPosition.Text,
+                    Email = TxtEmail.Text,
+                    Phone = TxtPhone.Text,
+                    Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString()
+                };
 
-                SelectedEmployee.FirstName = TxtFirstName.Text;
-                SelectedEmployee.MiddleName = TxtMiddleName.Text;
-                SelectedEmployee.LastName = TxtLastName.Text;
-                SelectedEmployee.Department = TxtDepartment.Text;
-                SelectedEmployee.Position = TxtPosition.Text;
-                SelectedEmployee.Email = TxtEmail.Text;
-                SelectedEmployee.Phone = TxtPhone.Text;
-                SelectedEmployee.Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString();
+                var response = await _httpClient.PutAsJsonAsync(
+                    $"api/admin/employees/{SelectedEmployee.EmpCode}",
+                    updateRequest);
 
-
-                context.Employees.Update(SelectedEmployee);
-                await context.SaveChangesAsync();
-
-                MessageBox.Show("Employee updated in Supabase!", "Success");
-                await LoadEmployeesFromSupabaseAsync();  // Refresh
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Employee updated successfully!", "Success");
+                    await LoadEmployeesFromApiAsync(true); // Force refresh
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Update failed: {error}", "Error");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Update failed: {ex.Message}");
+                MessageBox.Show($"Update failed: {ex.Message}", "Error");
             }
-        }
-
-        private async void BtnDelete_Click(object sender, RoutedEventArgs e)
-        {
-            if (SelectedEmployee == null) return;
-
-            var result = MessageBox.Show($"Delete {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.Yes) return;
-
-            try
+            finally
             {
-                using var scope = _app.ServiceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                SelectedEmployee.IsActive = false;  // Soft delete
-                context.Employees.Update(SelectedEmployee);
-                await context.SaveChangesAsync();
-
-                Employees.Remove(SelectedEmployee);
-                ShowEmptyForm();
-                MessageBox.Show("Employee deactivated in Supabase!", "Success");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Delete failed: {ex.Message}");
+                IsUpdating = false;
+                FormLoading.Visibility = Visibility.Collapsed;
             }
         }
 
         private async void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidateForm()) return;
+            if (!ValidateForm(false) || IsAdding) return;
 
-            var newEmp = new DataEmployee
+            IsAdding = true;
+            FormLoadingText.Text = "Creating employee...";
+            FormLoading.Visibility = Visibility.Visible;
+
+            var createRequest = new
             {
                 EmpCode = TxtEmployeeID.Text.Trim(),
                 FirstName = TxtFirstName.Text,
@@ -202,44 +325,145 @@ namespace Attendify.Views.UserControls
                 Position = TxtPosition.Text,
                 Email = TxtEmail.Text,
                 Phone = TxtPhone.Text,
-                Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "User",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                Role = (CmbRole.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "User"
             };
-
-            if (string.IsNullOrWhiteSpace(newEmp.EmpCode))
-            {
-                MessageBox.Show("Employee ID (EmpCode) is required!", "Error");
-                return;
-            }
 
             try
             {
-                using var scope = _app.ServiceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var response = await _httpClient.PostAsJsonAsync("api/admin/employees", createRequest);
 
-                if (await context.Employees.AnyAsync(x => x.EmpCode == newEmp.EmpCode))
+                if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Employee ID already exists!", "Duplicate");
-                    return;
+                    var result = await response.Content.ReadFromJsonAsync<CreateEmployeeResponse>();
+
+                    if (result != null)
+                    {
+                        MessageBox.Show($"Employee added successfully!\n\nGenerated Password: {result.GeneratedPassword}\n\nPlease inform the employee.",
+                            "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        await LoadEmployeesFromApiAsync(true); // Force refresh
+                        ShowEmptyForm();
+                    }
                 }
-
-                context.Employees.Add(newEmp);
-                await context.SaveChangesAsync();
-
-                MessageBox.Show($"Employee {newEmp.EmpCode} added to Supabase!", "Success");
-                await LoadEmployeesFromSupabaseAsync();  // Refresh
-                ShowEmptyForm();
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Add failed: {error}", "Error");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Add failed: {ex.Message}");
+                MessageBox.Show($"Add failed: {ex.Message}", "Error");
+            }
+            finally
+            {
+                IsAdding = false;
+                FormLoading.Visibility = Visibility.Collapsed;
             }
         }
 
-        private void BtnCancel_Click(object sender, RoutedEventArgs e) => ShowEmptyForm();
+        private async void BtnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedEmployee == null || IsDeleting) return;
 
-        private void ShowEmployeeForm(DataEmployee employee, bool isAddMode)
+            var result = MessageBox.Show($"Deactivate {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
+                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes) return;
+
+            IsDeleting = true;
+            FormLoadingText.Text = "Deactivating employee...";
+            FormLoading.Visibility = Visibility.Visible;
+
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"api/admin/employees/{SelectedEmployee.EmpCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Remove from local collection immediately
+                    Employees.Remove(SelectedEmployee);
+                    ShowEmptyForm();
+                    MessageBox.Show("Employee deactivated successfully!", "Success");
+
+                    // Update cache
+                    _cachedEmployees = _cachedEmployees
+                        .Where(e => e.EmpCode != SelectedEmployee.EmpCode)
+                        .ToArray();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Delete failed: {error}", "Error");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Delete failed: {ex.Message}", "Error");
+            }
+            finally
+            {
+                IsDeleting = false;
+                FormLoading.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private async void BtnResetPassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedEmployee == null || IsResettingPassword) return;
+
+            var result = MessageBox.Show($"Reset password for {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
+                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            IsResettingPassword = true;
+            FormLoadingText.Text = "Resetting password...";
+            FormLoading.Visibility = Visibility.Visible;
+
+            try
+            {
+                var response = await _httpClient.PostAsync(
+                    $"api/admin/employees/{SelectedEmployee.EmpCode}/reset-password",
+                    null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultJson = await response.Content.ReadFromJsonAsync<ResetPasswordResponse>();
+                    if (resultJson != null)
+                    {
+                        MessageBox.Show($"Password reset successfully!\n\nNew Password: {resultJson.NewPassword}\n\nPlease inform the employee.",
+                            "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Reset failed: {error}", "Error");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Reset failed: {ex.Message}", "Error");
+            }
+            finally
+            {
+                IsResettingPassword = false;
+                FormLoading.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            ShowEmptyForm();
+        }
+
+        // Refresh button click handler (add this if you add refresh button)
+        private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            await LoadEmployeesFromApiAsync(true);
+        }
+
+        private void ShowEmployeeForm(EmployeeDto employee, bool isAddMode)
         {
             _isAddingNew = isAddMode;
             EmptyFormText.Visibility = Visibility.Collapsed;
@@ -248,7 +472,7 @@ namespace Attendify.Views.UserControls
             if (isAddMode)
             {
                 ClearForm();
-                TxtEmployeeID.IsReadOnly = false;  // Editable for new
+                TxtEmployeeID.IsReadOnly = false;
                 AddModeButtons.Visibility = Visibility.Visible;
                 EditModeButtons.Visibility = Visibility.Collapsed;
             }
@@ -257,7 +481,7 @@ namespace Attendify.Views.UserControls
                 if (employee != null)
                 {
                     TxtEmployeeID.Text = employee.EmpCode ?? "";
-                    TxtEmployeeID.IsReadOnly = true;  // Read-only for edit
+                    TxtEmployeeID.IsReadOnly = true;
                     TxtFirstName.Text = employee.FirstName ?? "";
                     TxtMiddleName.Text = employee.MiddleName ?? "";
                     TxtLastName.Text = employee.LastName ?? "";
@@ -265,8 +489,15 @@ namespace Attendify.Views.UserControls
                     TxtPosition.Text = employee.Position ?? "";
                     TxtEmail.Text = employee.Email ?? "";
                     TxtPhone.Text = employee.Phone ?? "";
+
                     foreach (ComboBoxItem item in CmbRole.Items)
-                        if (item.Content?.ToString() == employee.Role) { CmbRole.SelectedItem = item; break; }
+                    {
+                        if (item.Content?.ToString() == employee.Role)
+                        {
+                            CmbRole.SelectedItem = item;
+                            break;
+                        }
+                    }
                 }
                 AddModeButtons.Visibility = Visibility.Collapsed;
                 EditModeButtons.Visibility = Visibility.Visible;
@@ -294,21 +525,72 @@ namespace Attendify.Views.UserControls
             CmbRole.SelectedIndex = -1;
         }
 
-        private bool ValidateForm()
+        private bool ValidateForm(bool isEditMode)
         {
-            if (string.IsNullOrWhiteSpace(TxtFirstName.Text)) { MessageBox.Show("First Name required"); TxtFirstName.Focus(); return false; }
-            if (string.IsNullOrWhiteSpace(TxtLastName.Text)) { MessageBox.Show("Last Name required"); TxtLastName.Focus(); return false; }
-            if (string.IsNullOrWhiteSpace(TxtDepartment.Text)) { MessageBox.Show("Department required"); TxtDepartment.Focus(); return false; }
-            if (string.IsNullOrWhiteSpace(TxtPosition.Text)) { MessageBox.Show("Position required"); TxtPosition.Focus(); return false; }
-            if (string.IsNullOrWhiteSpace(TxtEmail.Text)) { MessageBox.Show("Email required"); TxtEmail.Focus(); return false; }
-            if (string.IsNullOrWhiteSpace(TxtPhone.Text)) { MessageBox.Show("Phone required"); TxtPhone.Focus(); return false; }
-            if (CmbRole.SelectedItem == null) { MessageBox.Show("Role required"); CmbRole.Focus(); return false; }
-            if (_isAddingNew && string.IsNullOrWhiteSpace(TxtEmployeeID.Text)) { MessageBox.Show("Employee ID required"); TxtEmployeeID.Focus(); return false; }
+            if (string.IsNullOrWhiteSpace(TxtFirstName.Text))
+            {
+                MessageBox.Show("First Name is required", "Validation Error");
+                TxtFirstName.Focus();
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(TxtLastName.Text))
+            {
+                MessageBox.Show("Last Name is required", "Validation Error");
+                TxtLastName.Focus();
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(TxtDepartment.Text))
+            {
+                MessageBox.Show("Department is required", "Validation Error");
+                TxtDepartment.Focus();
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(TxtPosition.Text))
+            {
+                MessageBox.Show("Position is required", "Validation Error");
+                TxtPosition.Focus();
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(TxtEmail.Text))
+            {
+                MessageBox.Show("Email is required", "Validation Error");
+                TxtEmail.Focus();
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(TxtPhone.Text))
+            {
+                MessageBox.Show("Phone is required", "Validation Error");
+                TxtPhone.Focus();
+                return false;
+            }
+            if (CmbRole.SelectedItem == null)
+            {
+                MessageBox.Show("Role is required", "Validation Error");
+                CmbRole.Focus();
+                return false;
+            }
+            if (!isEditMode && string.IsNullOrWhiteSpace(TxtEmployeeID.Text))
+            {
+                MessageBox.Show("Employee ID is required", "Validation Error");
+                TxtEmployeeID.Focus();
+                return false;
+            }
             return true;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+            // Notify IsBusy property when any loading state changes
+            if (propertyName == nameof(IsUpdating) ||
+                propertyName == nameof(IsAdding) ||
+                propertyName == nameof(IsDeleting) ||
+                propertyName == nameof(IsResettingPassword))
+            {
+                OnPropertyChanged(nameof(IsBusy));
+            }
+        }
     }
 }

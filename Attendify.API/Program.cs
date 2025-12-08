@@ -1,7 +1,8 @@
+using Attendify.API.Services;
 using Attendify.DATA;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using Microsoft.OpenApi.Models;         
+using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- REMOVE THIS LINE COMPLETELY (it was breaking the connection) ----
@@ -16,7 +17,8 @@ builder.Services.AddControllers();
 
 // Add Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-
+// Add to Program.cs
+builder.Services.AddScoped<IPasswordHasher,PasswordHasher>();
 var app = builder.Build();
 
 

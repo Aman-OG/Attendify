@@ -8,15 +8,15 @@
              Background="Transparent">
 
     <UserControl.Resources>
-        
+
         <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
             <Grid>
                 <Border CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#33FFFFFF" Offset="0" />
-                            <GradientStop Color="#13FFFFFF" Offset="1" />
+                            <GradientStop Color="#13FFFFFF" Offset="0" />
+                            <GradientStop Color="#19FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.Effect>
@@ -34,7 +34,7 @@
             <Setter Property="Background" Value="#00A6FB"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -67,9 +67,21 @@
         <!-- Secondary Button Style -->
         <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="white"/>
+            <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#00A6FB"/>
             <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Busy Button Style -->
+        <Style x:Key="BusyButtonStyle" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+            <Setter Property="IsEnabled" Value="True"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Opacity" Value="0.6"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <!-- TextBox Style -->
@@ -89,13 +101,9 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="8">
-                                <!-- Change from ScrollViewer to a Grid with ScrollViewer -->
-                                <Grid>
-                                    <ScrollViewer x:Name="PART_ContentHost"
+                                <ScrollViewer x:Name="PART_ContentHost"
                                           VerticalAlignment="Center"
-                                          HorizontalAlignment="Stretch"
                                           Background="Transparent"/>
-                                </Grid>
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -107,6 +115,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
         <!-- SIMPLE WORKING COMBOBOX STYLE -->
         <Style x:Key="GlassComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="#20FFFFFF"/>
@@ -151,7 +160,7 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Toggle Button - Make it NOT cover the entire area -->
+                            <!-- Toggle Button -->
                             <ToggleButton x:Name="ToggleButton"
                                   Background="Transparent"
                                   BorderBrush="Transparent"
@@ -258,6 +267,37 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Loading Spinner Style -->
+        <Style x:Key="LoadingSpinnerStyle" TargetType="Control">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Viewbox Width="24" Height="24">
+                            <Grid>
+                                <Ellipse Stroke="#00A6FB" StrokeThickness="3" Opacity="0.3"/>
+                                <Path Data="M1,0.5 A0.5,0.5 0 0,1 0.5,1" Stroke="#00A6FB" StrokeThickness="3">
+                                    <Path.RenderTransform>
+                                        <RotateTransform Angle="0" CenterX="0.5" CenterY="0.5"/>
+                                    </Path.RenderTransform>
+                                    <Path.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
+                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Path.Triggers>
+                                </Path>
+                            </Grid>
+                        </Viewbox>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -266,26 +306,76 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Search and Filter Section -->
-      <!-- SEARCH & FILTERS -->
-<ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
+        <!-- Loading Overlay -->
+        <Border x:Name="LoadingOverlay" 
+                Grid.RowSpan="2" 
+                Background="#80000000"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                Visibility="Collapsed"
+                Panel.ZIndex="1000">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Control Style="{StaticResource LoadingSpinnerStyle}" Width="40" Height="40"/>
+                <TextBlock Text="Loading..." 
+                           Foreground="White" 
+                           FontSize="16" 
+                           FontWeight="Bold"
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
 
-        <!-- SEARCH BOX – FULLY CLICKABLE -->
-                <!-- SEARCH BOX - FINAL VERSION WITH ICON + FULLY WORKING SEARCH -->
+        <!-- Loading indicator for employee list -->
+        <Border x:Name="EmployeesLoading" 
+                Grid.Row="1" 
+                Grid.Column="0"
+                Background="#80000000"
+                CornerRadius="10"
+                Visibility="Collapsed"
+                Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Control Style="{StaticResource LoadingSpinnerStyle}" Width="30" Height="30"/>
+                <TextBlock Text="Loading employees..." 
+                           Foreground="White" 
+                           FontSize="14" 
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Loading indicator for form actions -->
+        <Border x:Name="FormLoading" 
+                Grid.Row="1" 
+                Grid.Column="2"
+                Background="#80000000"
+                CornerRadius="10"
+                Visibility="Collapsed"
+                Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Control Style="{StaticResource LoadingSpinnerStyle}" Width="30" Height="30"/>
+                <TextBlock x:Name="FormLoadingText" 
+                           Text="Processing..." 
+                           Foreground="White" 
+                           FontSize="14" 
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Search and Filter Section -->
+        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Box -->
                 <Border Grid.Column="0" 
-        Background="#20FFFFFF" 
-        CornerRadius="8" 
-        BorderBrush="#40FFFFFF" 
-        BorderThickness="1" 
-        Margin="5" 
-        Height="40">
+                        Background="#20FFFFFF" 
+                        CornerRadius="8" 
+                        BorderBrush="#40FFFFFF" 
+                        BorderThickness="1" 
+                        Margin="5" 
+                        Height="40">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -294,35 +384,35 @@
 
                         <!-- Search Icon -->
                         <Path Grid.Column="0" 
-              Data="M21.5 20L15.8 14.3C17.3 12.5 18 10.2 18 7.7 18 3.5 14.5 0 10.3 0 6.1 0 2.6 3.5 2.6 7.7 2.6 11.9 6.1 15.4 10.3 15.4 12.8 15.4 15.1 14.7 17 13.3L22.7 19 21.5 20ZM10.3 13.4C7.2 13.4 4.6 10.8 4.6 7.7 4.6 4.6 7.2 2 10.3 2 13.4 2 16 4.6 16 7.7 16 10.8 13.4 13.4 10.3 13.4Z"
-              Fill="#88FFFFFF"
-              Width="16" 
-              Height="16"
-              Stretch="Uniform"
-              Margin="12,0,8,0"
-              VerticalAlignment="Center"/>
+                              Data="M21.5 20L15.8 14.3C17.3 12.5 18 10.2 18 7.7 18 3.5 14.5 0 10.3 0 6.1 0 2.6 3.5 2.6 7.7 2.6 11.9 6.1 15.4 10.3 15.4 12.8 15.4 15.1 14.7 17 13.3L22.7 19 21.5 20ZM10.3 13.4C7.2 13.4 4.6 10.8 4.6 7.7 4.6 4.6 7.2 2 10.3 2 13.4 2 16 4.6 16 7.7 16 10.8 13.4 13.4 10.3 13.4Z"
+                              Fill="#88FFFFFF"
+                              Width="16" 
+                              Height="16"
+                              Stretch="Uniform"
+                              Margin="12,0,8,0"
+                              VerticalAlignment="Center"/>
 
                         <!-- TextBox -->
                         <TextBox x:Name="SearchBox"
-                 Grid.Column="1"
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Foreground="White"
-                 FontSize="14"
-                 Padding="8,0,12,0"
-                 VerticalContentAlignment="Center"
-                 CaretBrush="White"
-                 SelectionBrush="#6000A6FB"
-                 TextChanged="SearchBox_TextChanged"/>
+                                 Grid.Column="1"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="White"
+                                 FontSize="14"
+                                 Padding="8,0,12,0"
+                                 VerticalContentAlignment="Center"
+                                 CaretBrush="White"
+                                 SelectionBrush="#6000A6FB"
+                                 TextChanged="SearchBox_TextChanged"/>
 
                         <!-- Placeholder Text -->
                         <TextBlock Grid.Column="1"
-                   Text="Search employees..."
-                   Foreground="#88FFFFFF"
-                   Margin="8,0,0,0"
-                   VerticalAlignment="Center"
-                   FontSize="14"
-                   IsHitTestVisible="False">
+                                   Text="Search employees..."
+                                   Foreground="#88FFFFFF"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="14"
+                                   IsHitTestVisible="False">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -337,15 +427,19 @@
                     </Grid>
                 </Border>
 
-                <!-- ADD BUTTON -->
-        <Button Grid.Column="3" Content="+ Add Employee"
-                Style="{StaticResource ModernButton}"
-                Margin="5" Height="40"
-                Click="BtnAddEmployee_Click"/>
-
+                <!-- Refresh Button -->
+                <Button Grid.Column="1" 
+                        x:Name="BtnRefresh"
+                        Content="🔄" 
+                        Style="{StaticResource SecondaryButton}"
+                        Margin="2" 
+                        Height="35"
+                        Width="50"
+                        Click="BtnRefresh_Click"
+                        ToolTip="Refresh list"/>
 
                 <!-- Add Employee Button -->
-                <Button Grid.Column="3" 
+                <Button Grid.Column="2" 
                         x:Name="BtnAddEmployee"
                         Content="+ Add Employee" 
                         Style="{StaticResource ModernButton}"
@@ -371,7 +465,7 @@
                           SelectionChanged="EmployeesGrid_SelectionChanged">
 
                     <DataGrid.Columns>
-                                     <!-- Employee ID (EmpCode) -->
+                        <!-- Employee ID (EmpCode) -->
                         <DataGridTextColumn Header="Emp ID" Binding="{Binding EmpCode}" Width="110"/>
 
                         <!-- Full Name using MultiBinding (FirstName + LastName) -->
@@ -436,149 +530,154 @@
 
             <!-- Employee Form -->
             <ContentControl Grid.Column="2" 
-                            Template="{StaticResource GlassContainerTemplate}"
-                            x:Name="EmployeeFormContainer">
+                Template="{StaticResource GlassContainerTemplate}"
+                x:Name="EmployeeFormContainer">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="10">
                         <TextBlock Text="Employee Details" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="18" 
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,15"/>
+                       Foreground="#00A6FB" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Margin="0,0,0,15"/>
 
                         <StackPanel x:Name="EmployeeForm" Visibility="Collapsed">
-                            <!-- Employee ID (Read-only for editing) -->
-                            <TextBlock Text="Employee ID" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,5,0,2"/>
+                            <!-- Employee ID -->
+                            <TextBlock Text="Employee ID *" 
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,5,0,2"/>
                             <TextBox x:Name="TxtEmployeeID" 
-                                     Style="{StaticResource ModernTextBox}"
-                                     IsReadOnly="True"
-                                     Background="#10000000"/>
+                         Style="{StaticResource ModernTextBox}"
+                         IsReadOnly="{Binding ElementName=IsEditModeCheckBox, Path=IsChecked}"
+                         ToolTip="Employee ID (e.g., Emp00012)"/>
 
                             <!-- First Name -->
                             <TextBlock Text="First Name *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtFirstName" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Middle Name -->
                             <TextBlock Text="Middle Name" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtMiddleName" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Last Name -->
                             <TextBlock Text="Last Name *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtLastName" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Department -->
                             <TextBlock Text="Department *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtDepartment" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Position -->
                             <TextBlock Text="Position *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtPosition" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Email -->
                             <TextBlock Text="Email *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtEmail" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Phone -->
                             <TextBlock Text="Phone *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <TextBox x:Name="TxtPhone" 
-                                     Style="{StaticResource ModernTextBox}"/>
+                         Style="{StaticResource ModernTextBox}"/>
 
                             <!-- Role -->
                             <TextBlock Text="Role *" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold"
-                                       Margin="0,10,0,2"/>
+                           Foreground="White" 
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,2"/>
                             <ComboBox x:Name="CmbRole" 
-                                      Style="{StaticResource GlassComboBox}"
-                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}">
+                          Style="{StaticResource GlassComboBox}"
+                          ItemContainerStyle="{StaticResource GlassComboBoxItem}">
                                 <ComboBoxItem Content="User"/>
                                 <ComboBoxItem Content="Admin"/>
-                                <ComboBoxItem Content="Manager"/>
                             </ComboBox>
+
+                            <!-- Invisible checkbox to track edit mode -->
+                            <CheckBox x:Name="IsEditModeCheckBox" 
+                          Visibility="Collapsed" 
+                          IsChecked="False"/>
 
                             <!-- Form Buttons - Dynamic based on mode -->
                             <StackPanel x:Name="EditModeButtons" 
-                                        Orientation="Horizontal" 
-                                        HorizontalAlignment="Stretch" 
-                                        Margin="0,20,0,0">
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Stretch" 
+                            Margin="0,20,0,0">
                                 <Button x:Name="BtnUpdate" 
-                                        Content="Update" 
-                                        Style="{StaticResource ModernButton}"
-                                        Margin="0,0,10,0"
-                                        Height="35"
-                                        Click="BtnUpdate_Click"/>
+                            Content="Update" 
+                            Style="{StaticResource BusyButtonStyle}"
+                            Margin="0,0,10,0"
+                            Height="35"
+                            Click="BtnUpdate_Click"/>
+
                                 <Button x:Name="BtnDelete" 
-                                        Content="Delete" 
-                                        Style="{StaticResource ModernButton}"
-                                        Height="35"
-                                        Background="#DC3545"
-                                        Click="BtnDelete_Click"/>
+                            Content="Delete" 
+                            Style="{StaticResource BusyButtonStyle}"
+                            Height="35"
+                            Background="#DC3545"
+                            Click="BtnDelete_Click"/>
                             </StackPanel>
 
                             <StackPanel x:Name="AddModeButtons" 
-                                        Orientation="Horizontal" 
-                                        HorizontalAlignment="Stretch" 
-                                        Margin="0,20,0,0"
-                                        Visibility="Collapsed">
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Stretch" 
+                            Margin="0,20,0,0"
+                            Visibility="Collapsed">
                                 <Button x:Name="BtnAdd" 
-                                        Content="Add Employee" 
-                                        Style="{StaticResource ModernButton}"
-                                        Margin="0,0,10,0"
-                                        Height="35"
-                                        Click="BtnAdd_Click"/>
+                            Content="Add Employee" 
+                            Style="{StaticResource BusyButtonStyle}"
+                            Margin="0,0,10,0"
+                            Height="35"
+                            Click="BtnAdd_Click"/>
                                 <Button x:Name="BtnCancel" 
-                                        Content="Cancel" 
-                                        Style="{StaticResource SecondaryButton}"
-                                        Height="35"
-                                        Click="BtnCancel_Click"/>
+                            Content="Cancel" 
+                            Style="{StaticResource SecondaryButton}"
+                            Height="35"
+                            Click="BtnCancel_Click"/>
                             </StackPanel>
 
                             <!-- Required fields note -->
                             <TextBlock Text="* Required fields" 
-                                       Foreground="#888888" 
-                                       FontSize="11"
-                                       Margin="0,10,0,0"
-                                       FontStyle="Italic"/>
+                           Foreground="#888888" 
+                           FontSize="11"
+                           Margin="0,10,0,0"
+                           FontStyle="Italic"/>
                         </StackPanel>
 
                         <!-- Empty State -->
                         <TextBlock x:Name="EmptyFormText" 
-                                   Text="Select an employee to edit or click 'Add Employee' to create new"
-                                   Foreground="#ced4da" 
-                                   FontSize="14" 
-                                   TextAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   Margin="0,50,0,0"/>
+                       Text="Select an employee to edit or click 'Add Employee' to create new"
+                       Foreground="#ced4da" 
+                       FontSize="14" 
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="0,50,0,0"/>
                     </StackPanel>
                 </ScrollViewer>
             </ContentControl>
