@@ -8,6 +8,7 @@
              Background="Transparent">
 
     <UserControl.Resources>
+
         <!-- Glass container style using standard Border -->
         <Style x:Key="GlassRoundedBorder" TargetType="Border">
             <Setter Property="CornerRadius" Value="10"/>
@@ -337,9 +338,10 @@
                                 </DataGridTemplateColumn.HeaderStyle>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- StatusColor is a string from API (e.g., "#2FBF4C") -->
                                         <Border Style="{StaticResource StatusBadgeStyle}" 
-                        Background="{Binding StatusColor}"
-                        Margin="2">
+        Background="{Binding StatusBrush}"
+        Margin="2">
                                             <TextBlock Text="{Binding Status}" 
                                Foreground="White" 
                                FontWeight="SemiBold" 

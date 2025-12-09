@@ -3,6 +3,10 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Attendify.Views.UserControls
 {
@@ -11,11 +15,13 @@ namespace Attendify.Views.UserControls
         private ObservableCollection<LeaveRequest> _leaveRequests;
         private LeaveRequest _selectedRequest;
         private Button _activeFilterButton;
+        private HttpClient _httpClient;
+        private string _apiBaseUrl = "https://localhost:7129/api/leaveRequests";
 
         public LeaveRequestsView()
         {
             InitializeComponent();
-            LoadSampleData();
+            InitializeHttpClient();
             InitializeRejectionPlaceholder();
 
             // Set up hover effects for filter buttons
@@ -23,6 +29,52 @@ namespace Attendify.Views.UserControls
 
             // Set All as default active filter
             SetActiveFilter(BtnAll);
+
+            // Load data when control is loaded
+            Loaded += async (s, e) => await LoadLeaveRequestsAsync();
+        }
+
+        private void InitializeHttpClient()
+        {
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        }
+
+        private async Task LoadLeaveRequestsAsync(string status = "all", string filter = "all", string search = "")
+        {
+            try
+            {
+                // Show loading
+                LeaveRequestsGrid.ItemsSource = null;
+
+                var url = $"{_apiBaseUrl}?status={status}&filter={filter}";
+                if (!string.IsNullOrEmpty(search))
+                {
+                    url += $"&search={Uri.EscapeDataString(search)}";
+                }
+
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var leaves = await response.Content.ReadFromJsonAsync<List<LeaveRequest>>();
+                    _leaveRequests = new ObservableCollection<LeaveRequest>(leaves ?? new List<LeaveRequest>());
+                    LeaveRequestsGrid.ItemsSource = _leaveRequests;
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading leave requests: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SetupFilterButtonHoverEffects()
@@ -134,124 +186,44 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void LoadSampleData()
-        {
-            _leaveRequests = new ObservableCollection<LeaveRequest>
-            {
-                new LeaveRequest
-                {
-                    No = "1",
-                    EmployeeName = "Aman Baye",
-                    EmpId = "emp10002",
-                    Department = "HR",
-                    Position = "Manager",
-                    Email = "am@gmail.com",
-                    FromDate = "12/05/25",
-                    ToDate = "13/05/25",
-                    Reason = "Sick leave",
-                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
-                    Status = "Approved",
-                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"))
-                },
-                new LeaveRequest
-                {
-                    No = "2",
-                    EmployeeName = "Markos Neby",
-                    EmpId = "emp1500975",
-                    Department = "HR",
-                    Position = "Manager",
-                    Email = "markos@gmail.com",
-                    FromDate = "12/05/25",
-                    ToDate = "16/05/25",
-                    Reason = "Family Trip",
-                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
-                    Status = "Pending",
-                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"))
-                },
-                new LeaveRequest
-                {
-                    No = "3",
-                    EmployeeName = "Teddy K",
-                    EmpId = "emp10003",
-                    Department = "Software",
-                    Position = "Developer",
-                    Email = "teddy@g.com",
-                    FromDate = "15/05/25",
-                    ToDate = "18/05/25",
-                    Reason = "Vacation",
-                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
-                    Status = "Pending",
-                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3C63A"))
-                },
-                new LeaveRequest
-                {
-                    No = "4",
-                    EmployeeName = "Sarah Johnson",
-                    EmpId = "emp10004",
-                    Department = "Electrical",
-                    Position = "Engineer",
-                    Email = "sarah@email.com",
-                    FromDate = "10/05/25",
-                    ToDate = "11/05/25",
-                    Reason = "Medical appointment",
-                    Description = "Additional details about the leave request would appear here. This could include specific reasons, emergency contact information",
-                    Status = "Rejected",
-                    StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"))
-                }
-            };
-
-            LeaveRequestsGrid.ItemsSource = _leaveRequests;
-        }
-
-        private void FilterButton_Click(object sender, RoutedEventArgs e)
+        private async void FilterButton_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
             if (button != null)
             {
                 SetActiveFilter(button);
-                ApplyFilter(button.Content.ToString());
-            }
-        }
 
-        private void ApplyFilter(string filter)
-        {
-            var collectionView = System.Windows.Data.CollectionViewSource.GetDefaultView(_leaveRequests);
-
-            if (filter == "All")
-            {
-                collectionView.Filter = null;
-            }
-            else
-            {
-                collectionView.Filter = item =>
+                // Map button content to filter parameters
+                var (status, filter) = button.Content.ToString() switch
                 {
-                    var request = item as LeaveRequest;
-                    return request?.Status == filter;
+                    "All" => ("all", "all"),
+                    "Today" => ("all", "today"),
+                    "Approved" => ("Approved", "all"),
+                    "Pending" => ("Pending", "all"),
+                    "Rejected" => ("Rejected", "all"),
+                    _ => ("all", "all")
                 };
+
+                await LoadLeaveRequestsAsync(status, filter, SearchBox.Text);
             }
         }
 
-        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
 
-            var searchText = SearchBox.Text.ToLower();
-            var collectionView = System.Windows.Data.CollectionViewSource.GetDefaultView(_leaveRequests);
+            // Get current filter status
+            var status = _activeFilterButton?.Content.ToString() switch
+            {
+                "Approved" => "Approved",
+                "Pending" => "Pending",
+                "Rejected" => "Rejected",
+                _ => "all"
+            };
 
-            if (string.IsNullOrEmpty(searchText))
-            {
-                collectionView.Filter = null;
-            }
-            else
-            {
-                collectionView.Filter = item =>
-                {
-                    var request = item as LeaveRequest;
-                    return request?.EmployeeName.ToLower().Contains(searchText) == true ||
-                           request?.EmpId.ToLower().Contains(searchText) == true ||
-                           request?.Department.ToLower().Contains(searchText) == true;
-                };
-            }
+            var filter = _activeFilterButton?.Content.ToString() == "Today" ? "today" : "all";
+
+            await LoadLeaveRequestsAsync(status, filter, SearchBox.Text);
         }
 
         private void LeaveRequestsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -287,7 +259,7 @@ namespace Attendify.Views.UserControls
             DetailReason.Text = request.Reason;
             DetailDescription.Text = request.Description;
             DetailStatus.Text = request.Status;
-            DetailStatusBorder.Background = request.StatusColor;
+            DetailStatusBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(request.StatusColor));
 
             // Show/hide action buttons based on status
             if (request.Status == "Pending")
@@ -316,24 +288,45 @@ namespace Attendify.Views.UserControls
             UpdateRejectionPlaceholder();
         }
 
-        private void BtnApprove_Click(object sender, RoutedEventArgs e)
+        private async void BtnApprove_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedRequest != null)
             {
-                _selectedRequest.Status = "Approved";
-                _selectedRequest.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2FBF4C"));
+                try
+                {
+                    var response = await _httpClient.PutAsync(
+                        $"{_apiBaseUrl}/{_selectedRequest.LeaveId}/approve", null);
 
-                // Refresh the display
-                LeaveRequestsGrid.Items.Refresh();
-                ShowDetailedView(_selectedRequest);
-                ResetRejectionPanel();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Update local data
+                        _selectedRequest.Status = "Approved";
+                        _selectedRequest.StatusColor = "#2FBF4C";
 
-                MessageBox.Show("Leave request approved successfully!", "Success",
-                              MessageBoxButton.OK, MessageBoxImage.Information);
+                        // Refresh the display
+                        LeaveRequestsGrid.Items.Refresh();
+                        ShowDetailedView(_selectedRequest);
+                        ResetRejectionPanel();
+
+                        MessageBox.Show("Leave request approved successfully!", "Success",
+                                      MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        var error = await response.Content.ReadAsStringAsync();
+                        MessageBox.Show($"Error approving request: {error}", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
-        private void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
             // Clear selection
             LeaveRequestsGrid.SelectedItem = null;
@@ -345,6 +338,20 @@ namespace Attendify.Views.UserControls
             if (button != null)
             {
                 button.Content = "⏳";
+
+                // Get current filter status
+                var status = _activeFilterButton?.Content.ToString() switch
+                {
+                    "Approved" => "Approved",
+                    "Pending" => "Pending",
+                    "Rejected" => "Rejected",
+                    _ => "all"
+                };
+
+                var filter = _activeFilterButton?.Content.ToString() == "Today" ? "today" : "all";
+
+                await LoadLeaveRequestsAsync(status, filter, SearchBox.Text);
+
                 var timer = new System.Windows.Threading.DispatcherTimer();
                 timer.Interval = TimeSpan.FromSeconds(1);
                 timer.Tick += (s, args) =>
@@ -356,7 +363,7 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void BtnReject_Click(object sender, RoutedEventArgs e)
+        private async void BtnReject_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedRequest != null && _selectedRequest.Status == "Pending")
             {
@@ -364,7 +371,7 @@ namespace Attendify.Views.UserControls
                 if (RejectionReasonPanel.Visibility == Visibility.Visible)
                 {
                     // If panel is already visible, confirm rejection
-                    ConfirmRejection();
+                    await ConfirmRejection();
                 }
                 else
                 {
@@ -379,25 +386,49 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void ConfirmRejection()
+        private async Task ConfirmRejection()
         {
             if (_selectedRequest != null && !string.IsNullOrWhiteSpace(RejectionReasonTextBox.Text))
             {
-                _selectedRequest.Status = "Rejected";
-                _selectedRequest.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D23C3C"));
+                try
+                {
+                    var rejectDto = new
+                    {
+                        RejectionReason = RejectionReasonTextBox.Text,
+                        AdminId = 1 // Get from your auth system
+                    };
 
-                // Store rejection reason
-                string rejectionReason = RejectionReasonTextBox.Text;
+                    var response = await _httpClient.PutAsJsonAsync(
+                        $"{_apiBaseUrl}/{_selectedRequest.LeaveId}/reject", rejectDto);
 
-                // Refresh the display
-                LeaveRequestsGrid.Items.Refresh();
-                ShowDetailedView(_selectedRequest);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Update local data
+                        _selectedRequest.Status = "Rejected";
+                        _selectedRequest.StatusColor = "#D23C3C";
 
-                // Hide rejection panel and reset
-                ResetRejectionPanel();
+                        // Refresh the display
+                        LeaveRequestsGrid.Items.Refresh();
+                        ShowDetailedView(_selectedRequest);
 
-                MessageBox.Show($"Leave request rejected. Reason: {rejectionReason}", "Rejected",
-                              MessageBoxButton.OK, MessageBoxImage.Information);
+                        // Hide rejection panel and reset
+                        ResetRejectionPanel();
+
+                        MessageBox.Show($"Leave request rejected. Reason: {rejectDto.RejectionReason}", "Rejected",
+                                      MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        var error = await response.Content.ReadAsStringAsync();
+                        MessageBox.Show($"Error rejecting request: {error}", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             else
             {
@@ -406,8 +437,13 @@ namespace Attendify.Views.UserControls
             }
         }
 
+
+
+
+        // DTO class for WPF data binding
         public class LeaveRequest
         {
+            public int LeaveId { get; set; }
             public string No { get; set; }
             public string EmployeeName { get; set; }
             public string EmpId { get; set; }
@@ -419,7 +455,22 @@ namespace Attendify.Views.UserControls
             public string Reason { get; set; }
             public string Description { get; set; }
             public string Status { get; set; }
-            public Brush StatusColor { get; set; }
+            public string StatusColor { get; set; } // Store as string for API compatibility
+                                                    // Add a Brush property that converts the string
+            public Brush StatusBrush
+            {
+                get
+                {
+                    try
+                    {
+                        return new SolidColorBrush((Color)ColorConverter.ConvertFromString(StatusColor));
+                    }
+                    catch
+                    {
+                        return new SolidColorBrush(Colors.Gray);
+                    }
+                }
+            }
         }
     }
 }

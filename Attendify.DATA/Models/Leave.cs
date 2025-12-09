@@ -14,8 +14,10 @@ namespace Attendify.DATA.Models
 
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public string? Reason { get; set; }
+        public string? ReasonTitle { get; set; }
+        public string? Detail { get; set; }
         public string? Status { get; set; }
+        public string? AdminResponse { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
