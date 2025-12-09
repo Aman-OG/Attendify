@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,118 +17,92 @@ namespace Attendify.Views.UserControls
 {
     public partial class SettingsView : UserControl
     {
-        // Sample data collections
-        private List<AttendanceRule> _attendanceRules;
-        private List<Shift> _shifts;
-        private List<BroadcastMessage> _broadcastMessages;
-        private List<EmployeeRequest> _employeeRequests;
+        private HttpClient _httpClient;
+        private string _apiBaseUrl = "https://localhost:7129/api/settings";
+
+        // Data collections
+        private List<AttendanceRuleDto> _attendanceRules = new List<AttendanceRuleDto>();
+        private List<ShiftDto> _shifts = new List<ShiftDto>();
+        private List<BroadcastMessageDto> _broadcastMessages = new List<BroadcastMessageDto>();
+        private List<EmployeeRequestDto> _employeeRequests = new List<EmployeeRequestDto>();
 
         // Track current editing items
-        private AttendanceRule _currentEditingRule;
-        private Shift _currentEditingShift;
-        private BroadcastMessage _currentEditingMessage;
-        private EmployeeRequest _currentReviewingRequest;
+        private AttendanceRuleDto _currentEditingRule;
+        private ShiftDto _currentEditingShift;
+        private BroadcastMessageDto _currentEditingMessage;
+        private EmployeeRequestDto _currentReviewingRequest;
 
         // Track if data is initialized
         private bool _isDataInitialized = false;
 
+        #region DTO Classes
+
+        public class AttendanceRuleDto
+        {
+            public int AttendanceRuleId { get; set; }
+            public string Day { get; set; } = "";
+            public string StartTime { get; set; } = "";
+            public string EndTime { get; set; } = "";
+            public string GracePeriod { get; set; } = "";
+        }
+
+        public class ShiftDto
+        {
+            public int ShiftId { get; set; }
+            public string Name { get; set; } = "";
+            public string StartTime { get; set; } = "";
+            public string EndTime { get; set; } = "";
+            public string GracePeriod { get; set; } = "";
+        }
+
+        public class BroadcastMessageDto
+        {
+            public int BroadcastMessageId { get; set; }
+            public string Title { get; set; } = "";
+            public string Body { get; set; } = "";
+            public string Status { get; set; } = "";
+            public string StatusColor { get; set; } = "";
+            public string CreatedDate { get; set; } = "";
+        }
+
+        public class EmployeeRequestDto
+        {
+            public int EmployeeRequestId { get; set; }
+            public string EmployeeID { get; set; } = "";
+            public string EmployeeName { get; set; } = "";
+            public string Type { get; set; } = "";
+            public string Message { get; set; } = "";
+            public string Status { get; set; } = "";
+            public string StatusColor { get; set; } = "";
+            public string CreatedDate { get; set; } = "";
+        }
+
+        #endregion
+
         public SettingsView()
         {
             InitializeComponent();
+            InitializeHttpClient();
             Loaded += SettingsView_Loaded;
         }
 
-        private void SettingsView_Loaded(object sender, RoutedEventArgs e)
+        private void InitializeHttpClient()
+        {
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        }
+
+        private async void SettingsView_Loaded(object sender, RoutedEventArgs e)
         {
             if (!_isDataInitialized)
             {
-                InitializeData();
                 ShowTab("AttendanceRules");
                 UpdateTabButtonStyles(BtnAttendanceRules);
+                await LoadAttendanceRulesAsync();
                 _isDataInitialized = true;
-            }
-        }
-
-        private void InitializeData()
-        {
-            // Initialize sample data
-            _attendanceRules = new List<AttendanceRule>
-            {
-                new AttendanceRule { Day = "Monday", StartTime = "09:00 AM", EndTime = "05:00 PM", GracePeriod = "10" },
-                new AttendanceRule { Day = "Tuesday", StartTime = "09:00 AM", EndTime = "05:00 PM", GracePeriod = "10" },
-                new AttendanceRule { Day = "Wednesday", StartTime = "09:00 AM", EndTime = "05:00 PM", GracePeriod = "10" }
-            };
-
-            _shifts = new List<Shift>
-            {
-                new Shift { Name = "Morning", StartTime = "08:00", EndTime = "16:00", GracePeriod = "5" },
-                new Shift { Name = "Evening", StartTime = "16:00", EndTime = "00:00", GracePeriod = "5" }
-            };
-
-            _broadcastMessages = new List<BroadcastMessage>
-            {
-                new BroadcastMessage {
-                    Title = "System Maintenance",
-                    Body = "System will be down for maintenance",
-                    Status = "Active",
-                    StatusColor = new SolidColorBrush(Color.FromRgb(0, 128, 0)),
-                    CreatedDate = DateTime.Now.ToString("MMM dd, yyyy")
-                },
-                new BroadcastMessage {
-                    Title = "Holiday Notice",
-                    Body = "Office closed for public holiday",
-                    Status = "Inactive",
-                    StatusColor = new SolidColorBrush(Color.FromRgb(255, 165, 0)),
-                    CreatedDate = DateTime.Now.AddDays(-2).ToString("MMM dd, yyyy")
-                }
-            };
-
-            _employeeRequests = new List<EmployeeRequest>
-            {
-                new EmployeeRequest {
-                    EmployeeID = "EMP001",
-                    EmployeeName = "John Doe",
-                    Type = "Late",
-                    Message = "Traffic jam caused delay",
-                    Status = "Pending",
-                    StatusColor = new SolidColorBrush(Color.FromRgb(255, 165, 0))
-                },
-                new EmployeeRequest {
-                    EmployeeID = "EMP002",
-                    EmployeeName = "Jane Smith",
-                    Type = "Absence",
-                    Message = "Medical appointment",
-                    Status = "Pending",
-                    StatusColor = new SolidColorBrush(Color.FromRgb(255, 165, 0))
-                },
-                new EmployeeRequest {
-                    EmployeeID = "EMP003",
-                    EmployeeName = "Mike Johnson",
-                    Type = "Correction",
-                    Message = "Forgot to clock in",
-                    Status = "Approved",
-                    StatusColor = new SolidColorBrush(Color.FromRgb(0, 128, 0))
-                }
-            };
-
-            // Safely bind data to grids
-            SafeSetItemsSource(RulesGrid, _attendanceRules);
-            SafeSetItemsSource(ShiftsGrid, _shifts);
-            SafeSetItemsSource(MessagesGrid, _broadcastMessages);
-            SafeSetItemsSource(RequestsGrid, _employeeRequests);
-
-            // Initialize search placeholder
-            if (RequestSearchPlaceholder != null)
-            {
-                RequestSearchPlaceholder.Visibility = Visibility.Visible;
-            }
-        }
-
-        private void SafeSetItemsSource(DataGrid dataGrid, System.Collections.IEnumerable itemsSource)
-        {
-            if (dataGrid != null && itemsSource != null)
-            {
-                dataGrid.ItemsSource = itemsSource;
             }
         }
 
@@ -143,7 +121,7 @@ namespace Attendify.Views.UserControls
 
         private void ShowTab(string tabName)
         {
-            // Hide all panels first
+            // Hide all panels
             if (AttendanceRulesPanel != null) AttendanceRulesPanel.Visibility = Visibility.Collapsed;
             if (ShiftsPanel != null) ShiftsPanel.Visibility = Visibility.Collapsed;
             if (MessagesPanel != null) MessagesPanel.Visibility = Visibility.Collapsed;
@@ -155,20 +133,28 @@ namespace Attendify.Views.UserControls
             if (MessageFormContainer != null) MessageFormContainer.Visibility = Visibility.Collapsed;
             if (ReviewPanel != null) ReviewPanel.Visibility = Visibility.Collapsed;
 
-            // Show selected tab
+            // Show selected tab and load data
             switch (tabName)
             {
                 case "AttendanceRules":
-                    if (AttendanceRulesPanel != null) AttendanceRulesPanel.Visibility = Visibility.Visible;
+                    AttendanceRulesPanel.Visibility = Visibility.Visible;
+                    if (_attendanceRules.Count == 0)
+                        _ = LoadAttendanceRulesAsync();
                     break;
                 case "Shifts":
-                    if (ShiftsPanel != null) ShiftsPanel.Visibility = Visibility.Visible;
+                    ShiftsPanel.Visibility = Visibility.Visible;
+                    if (_shifts.Count == 0)
+                        _ = LoadShiftsAsync();
                     break;
                 case "BroadcastMessages":
-                    if (MessagesPanel != null) MessagesPanel.Visibility = Visibility.Visible;
+                    MessagesPanel.Visibility = Visibility.Visible;
+                    if (_broadcastMessages.Count == 0)
+                        _ = LoadBroadcastMessagesAsync();
                     break;
                 case "EmployeeRequests":
-                    if (RequestsPanel != null) RequestsPanel.Visibility = Visibility.Visible;
+                    RequestsPanel.Visibility = Visibility.Visible;
+                    if (_employeeRequests.Count == 0)
+                        _ = LoadEmployeeRequestsAsync();
                     break;
             }
         }
@@ -179,15 +165,15 @@ namespace Attendify.Views.UserControls
 
             // Reset all tab buttons
             var inactiveColor = new SolidColorBrush(Color.FromRgb(204, 204, 204));
-            if (BtnAttendanceRules != null) BtnAttendanceRules.Foreground = inactiveColor;
-            if (BtnShifts != null) BtnShifts.Foreground = inactiveColor;
-            if (BtnBroadcastMessages != null) BtnBroadcastMessages.Foreground = inactiveColor;
-            if (BtnEmployeeRequests != null) BtnEmployeeRequests.Foreground = inactiveColor;
+            BtnAttendanceRules.Foreground = inactiveColor;
+            BtnShifts.Foreground = inactiveColor;
+            BtnBroadcastMessages.Foreground = inactiveColor;
+            BtnEmployeeRequests.Foreground = inactiveColor;
 
-            if (BtnAttendanceRules != null) BtnAttendanceRules.BorderThickness = new Thickness(0);
-            if (BtnShifts != null) BtnShifts.BorderThickness = new Thickness(0);
-            if (BtnBroadcastMessages != null) BtnBroadcastMessages.BorderThickness = new Thickness(0);
-            if (BtnEmployeeRequests != null) BtnEmployeeRequests.BorderThickness = new Thickness(0);
+            BtnAttendanceRules.BorderThickness = new Thickness(0);
+            BtnShifts.BorderThickness = new Thickness(0);
+            BtnBroadcastMessages.BorderThickness = new Thickness(0);
+            BtnEmployeeRequests.BorderThickness = new Thickness(0);
 
             // Style active button
             var activeColor = new SolidColorBrush(Color.FromRgb(0, 166, 251));
@@ -197,23 +183,141 @@ namespace Attendify.Views.UserControls
 
         #endregion
 
-        #region Attendance Rules
+        #region Attendance Rules API Methods
+
+        private async Task LoadAttendanceRulesAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/attendance-rules");
+                if (response.IsSuccessStatusCode)
+                {
+                    var rules = await response.Content.ReadFromJsonAsync<List<AttendanceRuleDto>>();
+                    _attendanceRules = rules ?? new List<AttendanceRuleDto>();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        RulesGrid.ItemsSource = _attendanceRules;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading attendance rules: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task AddAttendanceRuleAsync(AttendanceRuleDto rule)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/attendance-rules", rule);
+                if (response.IsSuccessStatusCode)
+                {
+                    var createdRule = await response.Content.ReadFromJsonAsync<AttendanceRuleDto>();
+                    if (createdRule != null)
+                    {
+                        _attendanceRules.Add(createdRule);
+                        Dispatcher.Invoke(() =>
+                        {
+                            RulesGrid.ItemsSource = null;
+                            RulesGrid.ItemsSource = _attendanceRules;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task UpdateAttendanceRuleAsync(AttendanceRuleDto rule)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/attendance-rules/{rule.AttendanceRuleId}", rule);
+                if (response.IsSuccessStatusCode)
+                {
+                    var index = _attendanceRules.FindIndex(r => r.AttendanceRuleId == rule.AttendanceRuleId);
+                    if (index != -1)
+                    {
+                        _attendanceRules[index] = rule;
+                        Dispatcher.Invoke(() =>
+                        {
+                            RulesGrid.ItemsSource = null;
+                            RulesGrid.ItemsSource = _attendanceRules;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteAttendanceRuleAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/attendance-rules/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    _attendanceRules.RemoveAll(r => r.AttendanceRuleId == id);
+                    Dispatcher.Invoke(() =>
+                    {
+                        RulesGrid.ItemsSource = null;
+                        RulesGrid.ItemsSource = _attendanceRules;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region Attendance Rules Event Handlers
 
         private void BtnAddRule_Click(object sender, RoutedEventArgs e)
         {
             _currentEditingRule = null;
             ResetRuleForm();
-            if (RuleFormContainer != null) RuleFormContainer.Visibility = Visibility.Visible;
+            RuleFormContainer.Visibility = Visibility.Visible;
         }
 
         private void EditRule_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            _currentEditingRule = button?.DataContext as AttendanceRule;
+            _currentEditingRule = button?.DataContext as AttendanceRuleDto;
 
-            if (_currentEditingRule != null && RuleFormContainer != null)
+            if (_currentEditingRule != null)
             {
-                // Populate form with rule data
                 if (CmbRuleDay != null) CmbRuleDay.Text = _currentEditingRule.Day;
                 if (TxtStartTime != null) TxtStartTime.Text = _currentEditingRule.StartTime;
                 if (TxtEndTime != null) TxtEndTime.Text = _currentEditingRule.EndTime;
@@ -223,101 +327,207 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void DeleteRule_Click(object sender, RoutedEventArgs e)
+        private async void DeleteRule_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            var rule = button?.DataContext as AttendanceRule;
+            var rule = button?.DataContext as AttendanceRuleDto;
 
             if (rule != null)
             {
-                var result = MessageBox.Show($"Are you sure you want to delete the rule for {rule.Day}?",
-                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show($"Delete rule for {rule.Day}?", "Confirm",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    _attendanceRules.Remove(rule);
-                    RefreshRulesGrid();
+                    await DeleteAttendanceRuleAsync(rule.AttendanceRuleId);
                 }
             }
         }
 
-        private void BtnSaveRule_Click(object sender, RoutedEventArgs e)
+        private async void BtnSaveRule_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbRuleDay == null || TxtStartTime == null || TxtEndTime == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(CmbRuleDay.Text) ||
-                string.IsNullOrWhiteSpace(TxtStartTime.Text) ||
-                string.IsNullOrWhiteSpace(TxtEndTime.Text))
+            if (string.IsNullOrWhiteSpace(CmbRuleDay?.Text) ||
+                string.IsNullOrWhiteSpace(TxtStartTime?.Text) ||
+                string.IsNullOrWhiteSpace(TxtEndTime?.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Validation Error",
+                MessageBox.Show("Please fill in all required fields.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            var rule = new AttendanceRuleDto
+            {
+                Day = CmbRuleDay.Text,
+                StartTime = TxtStartTime.Text,
+                EndTime = TxtEndTime.Text,
+                GracePeriod = TxtGracePeriod?.Text ?? "10"
+            };
+
             if (_currentEditingRule == null)
             {
-                // Add new rule
-                var newRule = new AttendanceRule
-                {
-                    Day = CmbRuleDay.Text,
-                    StartTime = TxtStartTime.Text,
-                    EndTime = TxtEndTime.Text,
-                    GracePeriod = TxtGracePeriod?.Text ?? "10"
-                };
-                _attendanceRules.Add(newRule);
+                await AddAttendanceRuleAsync(rule);
             }
             else
             {
-                // Update existing rule
-                _currentEditingRule.Day = CmbRuleDay.Text;
-                _currentEditingRule.StartTime = TxtStartTime.Text;
-                _currentEditingRule.EndTime = TxtEndTime.Text;
-                _currentEditingRule.GracePeriod = TxtGracePeriod?.Text ?? "10";
+                rule.AttendanceRuleId = _currentEditingRule.AttendanceRuleId;
+                await UpdateAttendanceRuleAsync(rule);
             }
 
-            RefreshRulesGrid();
-            if (RuleFormContainer != null) RuleFormContainer.Visibility = Visibility.Collapsed;
+            RuleFormContainer.Visibility = Visibility.Collapsed;
             ResetRuleForm();
         }
 
         private void BtnCancelRule_Click(object sender, RoutedEventArgs e)
         {
-            if (RuleFormContainer != null) RuleFormContainer.Visibility = Visibility.Collapsed;
+            RuleFormContainer.Visibility = Visibility.Collapsed;
             ResetRuleForm();
         }
 
         private void ResetRuleForm()
         {
             if (CmbRuleDay != null) CmbRuleDay.SelectedIndex = -1;
-            if (TxtStartTime != null) TxtStartTime.Text = "09:00 AM";
-            if (TxtEndTime != null) TxtEndTime.Text = "05:00 PM";
+            if (TxtStartTime != null) TxtStartTime.Text = "09:00";
+            if (TxtEndTime != null) TxtEndTime.Text = "17:00";
             if (TxtGracePeriod != null) TxtGracePeriod.Text = "10";
             _currentEditingRule = null;
         }
 
-        private void RefreshRulesGrid()
+        #endregion
+
+        #region Shifts API Methods
+
+        private async Task LoadShiftsAsync()
         {
-            SafeSetItemsSource(RulesGrid, _attendanceRules);
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/shifts");
+                if (response.IsSuccessStatusCode)
+                {
+                    var shifts = await response.Content.ReadFromJsonAsync<List<ShiftDto>>();
+                    _shifts = shifts ?? new List<ShiftDto>();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        ShiftsGrid.ItemsSource = _shifts;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading shifts: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading shifts: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task AddShiftAsync(ShiftDto shift)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/shifts", shift);
+                if (response.IsSuccessStatusCode)
+                {
+                    var createdShift = await response.Content.ReadFromJsonAsync<ShiftDto>();
+                    if (createdShift != null)
+                    {
+                        _shifts.Add(createdShift);
+                        Dispatcher.Invoke(() =>
+                        {
+                            ShiftsGrid.ItemsSource = null;
+                            ShiftsGrid.ItemsSource = _shifts;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task UpdateShiftAsync(ShiftDto shift)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/shifts/{shift.ShiftId}", shift);
+                if (response.IsSuccessStatusCode)
+                {
+                    var index = _shifts.FindIndex(s => s.ShiftId == shift.ShiftId);
+                    if (index != -1)
+                    {
+                        _shifts[index] = shift;
+                        Dispatcher.Invoke(() =>
+                        {
+                            ShiftsGrid.ItemsSource = null;
+                            ShiftsGrid.ItemsSource = _shifts;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteShiftAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/shifts/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    _shifts.RemoveAll(s => s.ShiftId == id);
+                    Dispatcher.Invoke(() =>
+                    {
+                        ShiftsGrid.ItemsSource = null;
+                        ShiftsGrid.ItemsSource = _shifts;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
 
-        #region Shifts
+        #region Shifts Event Handlers
 
         private void BtnAddShift_Click(object sender, RoutedEventArgs e)
         {
             _currentEditingShift = null;
             ResetShiftForm();
-            if (ShiftFormContainer != null) ShiftFormContainer.Visibility = Visibility.Visible;
+            ShiftFormContainer.Visibility = Visibility.Visible;
         }
 
         private void EditShift_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            _currentEditingShift = button?.DataContext as Shift;
+            _currentEditingShift = button?.DataContext as ShiftDto;
 
-            if (_currentEditingShift != null && ShiftFormContainer != null)
+            if (_currentEditingShift != null)
             {
                 if (TxtShiftName != null) TxtShiftName.Text = _currentEditingShift.Name;
                 if (TxtShiftStart != null) TxtShiftStart.Text = _currentEditingShift.StartTime;
@@ -328,101 +538,207 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void DeleteShift_Click(object sender, RoutedEventArgs e)
+        private async void DeleteShift_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            var shift = button?.DataContext as Shift;
+            var shift = button?.DataContext as ShiftDto;
 
             if (shift != null)
             {
-                var result = MessageBox.Show($"Are you sure you want to delete the {shift.Name} shift?",
-                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show($"Delete shift '{shift.Name}'?", "Confirm",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    _shifts.Remove(shift);
-                    RefreshShiftsGrid();
+                    await DeleteShiftAsync(shift.ShiftId);
                 }
             }
         }
 
-        private void BtnSaveShift_Click(object sender, RoutedEventArgs e)
+        private async void BtnSaveShift_Click(object sender, RoutedEventArgs e)
         {
-            if (TxtShiftName == null || TxtShiftStart == null || TxtShiftEnd == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(TxtShiftName.Text) ||
-                string.IsNullOrWhiteSpace(TxtShiftStart.Text) ||
-                string.IsNullOrWhiteSpace(TxtShiftEnd.Text))
+            if (string.IsNullOrWhiteSpace(TxtShiftName?.Text) ||
+                string.IsNullOrWhiteSpace(TxtShiftStart?.Text) ||
+                string.IsNullOrWhiteSpace(TxtShiftEnd?.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Validation Error",
+                MessageBox.Show("Please fill in all required fields.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            var shift = new ShiftDto
+            {
+                Name = TxtShiftName.Text,
+                StartTime = TxtShiftStart.Text,
+                EndTime = TxtShiftEnd.Text,
+                GracePeriod = TxtShiftGrace?.Text ?? "5"
+            };
+
             if (_currentEditingShift == null)
             {
-                // Add new shift
-                var newShift = new Shift
-                {
-                    Name = TxtShiftName.Text,
-                    StartTime = TxtShiftStart.Text,
-                    EndTime = TxtShiftEnd.Text,
-                    GracePeriod = TxtShiftGrace?.Text ?? "5"
-                };
-                _shifts.Add(newShift);
+                await AddShiftAsync(shift);
             }
             else
             {
-                // Update existing shift
-                _currentEditingShift.Name = TxtShiftName.Text;
-                _currentEditingShift.StartTime = TxtShiftStart.Text;
-                _currentEditingShift.EndTime = TxtShiftEnd.Text;
-                _currentEditingShift.GracePeriod = TxtShiftGrace?.Text ?? "5";
+                shift.ShiftId = _currentEditingShift.ShiftId;
+                await UpdateShiftAsync(shift);
             }
 
-            RefreshShiftsGrid();
-            if (ShiftFormContainer != null) ShiftFormContainer.Visibility = Visibility.Collapsed;
+            ShiftFormContainer.Visibility = Visibility.Collapsed;
             ResetShiftForm();
         }
 
         private void BtnCancelShift_Click(object sender, RoutedEventArgs e)
         {
-            if (ShiftFormContainer != null) ShiftFormContainer.Visibility = Visibility.Collapsed;
+            ShiftFormContainer.Visibility = Visibility.Collapsed;
             ResetShiftForm();
         }
 
         private void ResetShiftForm()
         {
-            if (TxtShiftName != null) TxtShiftName.Text = "Morning";
+            if (TxtShiftName != null) TxtShiftName.Text = "";
             if (TxtShiftStart != null) TxtShiftStart.Text = "08:00";
             if (TxtShiftEnd != null) TxtShiftEnd.Text = "14:00";
             if (TxtShiftGrace != null) TxtShiftGrace.Text = "5";
             _currentEditingShift = null;
         }
 
-        private void RefreshShiftsGrid()
+        #endregion
+
+        #region Broadcast Messages API Methods
+
+        private async Task LoadBroadcastMessagesAsync()
         {
-            SafeSetItemsSource(ShiftsGrid, _shifts);
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/broadcast-messages");
+                if (response.IsSuccessStatusCode)
+                {
+                    var messages = await response.Content.ReadFromJsonAsync<List<BroadcastMessageDto>>();
+                    _broadcastMessages = messages ?? new List<BroadcastMessageDto>();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessagesGrid.ItemsSource = _broadcastMessages;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading messages: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading messages: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task AddBroadcastMessageAsync(BroadcastMessageDto message)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/broadcast-messages", message);
+                if (response.IsSuccessStatusCode)
+                {
+                    var createdMessage = await response.Content.ReadFromJsonAsync<BroadcastMessageDto>();
+                    if (createdMessage != null)
+                    {
+                        _broadcastMessages.Add(createdMessage);
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessagesGrid.ItemsSource = null;
+                            MessagesGrid.ItemsSource = _broadcastMessages;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task UpdateBroadcastMessageAsync(BroadcastMessageDto message)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/broadcast-messages/{message.BroadcastMessageId}", message);
+                if (response.IsSuccessStatusCode)
+                {
+                    var index = _broadcastMessages.FindIndex(m => m.BroadcastMessageId == message.BroadcastMessageId);
+                    if (index != -1)
+                    {
+                        _broadcastMessages[index] = message;
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessagesGrid.ItemsSource = null;
+                            MessagesGrid.ItemsSource = _broadcastMessages;
+                        });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteBroadcastMessageAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/broadcast-messages/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    _broadcastMessages.RemoveAll(m => m.BroadcastMessageId == id);
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessagesGrid.ItemsSource = null;
+                        MessagesGrid.ItemsSource = _broadcastMessages;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
 
-        #region Broadcast Messages
+        #region Broadcast Messages Event Handlers
 
         private void BtnNewMessage_Click(object sender, RoutedEventArgs e)
         {
             _currentEditingMessage = null;
             ResetMessageForm();
-            if (MessageFormContainer != null) MessageFormContainer.Visibility = Visibility.Visible;
+            MessageFormContainer.Visibility = Visibility.Visible;
         }
 
         private void EditMessage_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            _currentEditingMessage = button?.DataContext as BroadcastMessage;
+            _currentEditingMessage = button?.DataContext as BroadcastMessageDto;
 
-            if (_currentEditingMessage != null && MessageFormContainer != null)
+            if (_currentEditingMessage != null)
             {
                 if (TxtMessageTitle != null) TxtMessageTitle.Text = _currentEditingMessage.Title;
                 if (TxtMessageBody != null) TxtMessageBody.Text = _currentEditingMessage.Body;
@@ -432,72 +748,59 @@ namespace Attendify.Views.UserControls
             }
         }
 
-        private void DeleteMessage_Click(object sender, RoutedEventArgs e)
+        private async void DeleteMessage_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            var message = button?.DataContext as BroadcastMessage;
+            var message = button?.DataContext as BroadcastMessageDto;
 
             if (message != null)
             {
-                var result = MessageBox.Show($"Are you sure you want to delete the message '{message.Title}'?",
-                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show($"Delete message '{message.Title}'?", "Confirm",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    _broadcastMessages.Remove(message);
-                    RefreshMessagesGrid();
+                    await DeleteBroadcastMessageAsync(message.BroadcastMessageId);
                 }
             }
         }
 
-        private void BtnSaveMessage_Click(object sender, RoutedEventArgs e)
+        private async void BtnSaveMessage_Click(object sender, RoutedEventArgs e)
         {
-            if (TxtMessageTitle == null || TxtMessageBody == null || ChkIsActive == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(TxtMessageTitle.Text) ||
-                string.IsNullOrWhiteSpace(TxtMessageBody.Text))
+            if (string.IsNullOrWhiteSpace(TxtMessageTitle?.Text) ||
+                string.IsNullOrWhiteSpace(TxtMessageBody?.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Validation Error",
+                MessageBox.Show("Please fill in title and message body.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var status = ChkIsActive.IsChecked == true ? "Active" : "Inactive";
-            var statusColor = status == "Active" ?
-                new SolidColorBrush(Color.FromRgb(0, 128, 0)) :
-                new SolidColorBrush(Color.FromRgb(255, 165, 0));
+            var message = new BroadcastMessageDto
+            {
+                Title = TxtMessageTitle.Text,
+                Body = TxtMessageBody.Text,
+                Status = (ChkIsActive?.IsChecked == true) ? "Active" : "Inactive",
+                StatusColor = (ChkIsActive?.IsChecked == true) ? "#4CAF50" : "#F44336",
+                CreatedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+            };
 
             if (_currentEditingMessage == null)
             {
-                // Add new message
-                var newMessage = new BroadcastMessage
-                {
-                    Title = TxtMessageTitle.Text,
-                    Body = TxtMessageBody.Text,
-                    Status = status,
-                    StatusColor = statusColor,
-                    CreatedDate = DateTime.Now.ToString("MMM dd, yyyy")
-                };
-                _broadcastMessages.Add(newMessage);
+                await AddBroadcastMessageAsync(message);
             }
             else
             {
-                // Update existing message
-                _currentEditingMessage.Title = TxtMessageTitle.Text;
-                _currentEditingMessage.Body = TxtMessageBody.Text;
-                _currentEditingMessage.Status = status;
-                _currentEditingMessage.StatusColor = statusColor;
+                message.BroadcastMessageId = _currentEditingMessage.BroadcastMessageId;
+                await UpdateBroadcastMessageAsync(message);
             }
 
-            RefreshMessagesGrid();
-            if (MessageFormContainer != null) MessageFormContainer.Visibility = Visibility.Collapsed;
+            MessageFormContainer.Visibility = Visibility.Collapsed;
             ResetMessageForm();
         }
 
         private void BtnCancelMessage_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageFormContainer != null) MessageFormContainer.Visibility = Visibility.Collapsed;
+            MessageFormContainer.Visibility = Visibility.Collapsed;
             ResetMessageForm();
         }
 
@@ -509,70 +812,57 @@ namespace Attendify.Views.UserControls
             _currentEditingMessage = null;
         }
 
-        private void RefreshMessagesGrid()
+        #endregion
+
+        #region Employee Requests API Methods
+
+        private async Task LoadEmployeeRequestsAsync()
         {
-            SafeSetItemsSource(MessagesGrid, _broadcastMessages);
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/employee-requests");
+                if (response.IsSuccessStatusCode)
+                {
+                    var requests = await response.Content.ReadFromJsonAsync<List<EmployeeRequestDto>>();
+                    _employeeRequests = requests ?? new List<EmployeeRequestDto>();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        RequestsGrid.ItemsSource = _employeeRequests;
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading requests: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading requests: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
 
-        #region Employee Requests
+        #region Employee Requests Event Handlers
+
+        private void FilterRequests()
+        {
+            // This will be handled server-side now
+            _ = LoadEmployeeRequestsAsync(); // Reload with current filters
+        }
 
         private void TxtRequestSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             FilterRequests();
         }
 
-        private void RequestFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            FilterRequests();
-        }
-
-        private void FilterRequests()
-        {
-            try
-            {
-                if (_employeeRequests == null || RequestsGrid == null)
-                {
-                    return;
-                }
-
-                var searchText = TxtRequestSearch?.Text?.ToLower() ?? "";
-                var statusFilterItem = CmbRequestStatus?.SelectedItem as ComboBoxItem;
-                var typeFilterItem = CmbRequestType?.SelectedItem as ComboBoxItem;
-
-                var statusFilter = statusFilterItem?.Content?.ToString() ?? "Pending";
-                var typeFilter = typeFilterItem?.Content?.ToString() ?? "All Type";
-
-                var filtered = _employeeRequests.Where(r =>
-                    (string.IsNullOrEmpty(searchText) ||
-                     (r.EmployeeName?.ToLower().Contains(searchText) == true) ||
-                     (r.EmployeeID?.ToLower().Contains(searchText) == true)) &&
-                    (statusFilter == "All Status" || r.Status == statusFilter) &&
-                    (typeFilter == "All Type" || r.Type == typeFilter)
-                ).ToList();
-
-                RequestsGrid.ItemsSource = filtered;
-
-                // Show/hide placeholder
-                if (RequestSearchPlaceholder != null)
-                {
-                    RequestSearchPlaceholder.Visibility = string.IsNullOrEmpty(searchText) ?
-                        Visibility.Visible : Visibility.Collapsed;
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log error and show all items
-                System.Diagnostics.Debug.WriteLine($"Filter error: {ex.Message}");
-                if (RequestsGrid != null)
-                    RequestsGrid.ItemsSource = _employeeRequests;
-            }
-        }
-
         private void RequestsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (RequestsGrid?.SelectedItem is EmployeeRequest selectedRequest)
+            if (RequestsGrid?.SelectedItem is EmployeeRequestDto selectedRequest)
             {
                 _currentReviewingRequest = selectedRequest;
                 ShowReviewPanel(selectedRequest);
@@ -582,117 +872,82 @@ namespace Attendify.Views.UserControls
         private void ReviewRequest_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            var request = button?.DataContext as EmployeeRequest;
+            var request = button?.DataContext as EmployeeRequestDto;
 
-            if (request != null && RequestsGrid != null)
+            if (request != null)
             {
                 _currentReviewingRequest = request;
                 ShowReviewPanel(request);
-                RequestsGrid.SelectedItem = request;
             }
         }
 
-        private void ShowReviewPanel(EmployeeRequest request)
+        private void ShowReviewPanel(EmployeeRequestDto request)
         {
-            if (request == null || ReviewPanel == null) return;
+            if (request == null) return;
 
-            if (TxtReviewEmployee != null) TxtReviewEmployee.Text = $"{request.EmployeeName} ({request.EmployeeID})";
-            if (TxtReviewType != null) TxtReviewType.Text = request.Type;
-            if (TxtReviewMessage != null) TxtReviewMessage.Text = request.Message;
-            if (TxtAdminReply != null) TxtAdminReply.Text = "";
+            TxtReviewEmployee.Text = $"{request.EmployeeName} ({request.EmployeeID})";
+            TxtReviewType.Text = request.Type;
+            TxtReviewMessage.Text = request.Message;
+            TxtAdminReply.Text = "";
 
-            // Reset radio buttons
-            if (RadioApprove != null) RadioApprove.IsChecked = false;
-            if (RadioReject != null) RadioReject.IsChecked = false;
+            RadioApprove.IsChecked = false;
+            RadioReject.IsChecked = false;
 
             ReviewPanel.Visibility = Visibility.Visible;
         }
 
-        private void BtnSubmitDecision_Click(object sender, RoutedEventArgs e)
+        private async void BtnSubmitDecision_Click(object sender, RoutedEventArgs e)
         {
             if (_currentReviewingRequest == null)
             {
-                MessageBox.Show("No request selected for review.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No request selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if ((RadioApprove?.IsChecked != true) && (RadioReject?.IsChecked != true))
             {
-                MessageBox.Show("Please select a decision (Approve or Reject).", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select Approve or Reject.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(TxtAdminReply?.Text))
             {
-                MessageBox.Show("Please provide an admin reply.", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Enter admin reply.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Update request status
-            _currentReviewingRequest.Status = RadioApprove.IsChecked == true ? "Approved" : "Rejected";
-            _currentReviewingRequest.StatusColor = RadioApprove.IsChecked == true ?
-                new SolidColorBrush(Color.FromRgb(0, 128, 0)) :
-                new SolidColorBrush(Color.FromRgb(255, 0, 0));
+            try
+            {
+                var reviewDto = new
+                {
+                    Decision = RadioApprove.IsChecked == true ? "Approved" : "Rejected",
+                    AdminReply = TxtAdminReply.Text,
+                    AdminId = 1 // Get from your auth system
+                };
 
-            // In a real application, you would save this to a database
-            // and possibly notify the employee
+                var response = await _httpClient.PutAsJsonAsync(
+                    $"{_apiBaseUrl}/employee-requests/{_currentReviewingRequest.EmployeeRequestId}/review",
+                    reviewDto);
 
-            MessageBox.Show($"Request has been {_currentReviewingRequest.Status.ToLower()}.", "Decision Submitted",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-
-            RefreshRequestsGrid();
-            if (ReviewPanel != null) ReviewPanel.Visibility = Visibility.Collapsed;
-            _currentReviewingRequest = null;
-        }
-
-        private void RefreshRequestsGrid()
-        {
-            SafeSetItemsSource(RequestsGrid, _employeeRequests);
-            FilterRequests(); // Re-apply filters
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Decision submitted.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ReviewPanel.Visibility = Visibility.Collapsed;
+                    _currentReviewingRequest = null;
+                    await LoadEmployeeRequestsAsync(); // Refresh list
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
     }
-
-    #region Data Models
-
-    public class AttendanceRule
-    {
-        public string Day { get; set; } = "";
-        public string StartTime { get; set; } = "";
-        public string EndTime { get; set; } = "";
-        public string GracePeriod { get; set; } = "";
-    }
-
-    public class Shift
-    {
-        public string Name { get; set; } = "";
-        public string StartTime { get; set; } = "";
-        public string EndTime { get; set; } = "";
-        public string GracePeriod { get; set; } = "";
-    }
-
-    public class BroadcastMessage
-    {
-        public string Title { get; set; } = "";
-        public string Body { get; set; } = "";
-        public string Status { get; set; } = "";
-        public Brush StatusColor { get; set; } = Brushes.Transparent;
-        public string CreatedDate { get; set; } = "";
-    }
-
-    public class EmployeeRequest
-    {
-        public string EmployeeID { get; set; } = "";
-        public string EmployeeName { get; set; } = "";
-        public string Type { get; set; } = "";
-        public string Message { get; set; } = "";
-        public string Status { get; set; } = "";
-        public Brush StatusColor { get; set; } = Brushes.Transparent;
-    }
-
-    #endregion
 }

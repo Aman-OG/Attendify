@@ -14,7 +14,7 @@
                 <Border CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#33FFFFFF" Offset="0" />
+                            <GradientStop Color="#13FFFFFF" Offset="0" />
                             <GradientStop Color="#13FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
@@ -69,7 +69,7 @@
 
         <!-- TextBox Style -->
         <Style x:Key="ModernTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="Background" Value="#10FFFFFF"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -232,6 +232,7 @@
             <Setter Property="IsReadOnly" Value="True"/>
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="MaxHeight" Value="300"/>
         </Style>
 
         <!-- DataGrid Column Header Style -->
@@ -385,614 +386,638 @@
             </StackPanel>
         </ContentControl>
 
-        <!-- Content Area -->
-        <ContentControl Grid.Row="1" Template="{StaticResource GlassContainerTemplate}">
-            <Grid>
-                <!-- Attendance Rules -->
-                <StackPanel x:Name="AttendanceRulesPanel" Visibility="Visible">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="Attendance Rules" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="18" 
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-                        <Button x:Name="BtnAddRule" 
-                                Content="+ Add Rule" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="20,0,0,0"
-                                Click="BtnAddRule_Click"/>
-                    </StackPanel>
+        <!-- Content Area - Main ScrollViewer -->
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0"
+                      Margin="0">
+            <ContentControl Template="{StaticResource GlassContainerTemplate}">
+                <Grid>
+                    <!-- Attendance Rules Panel -->
+                    <Grid x:Name="AttendanceRulesPanel" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <DataGrid x:Name="RulesGrid"
-                              Style="{StaticResource ModernDataGrid}"
-                              RowStyle="{StaticResource DataGridRowStyle}"
-                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                              AutoGenerateColumns="False">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Day" Binding="{Binding Day}" Width="*"/>
-                            <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="*"/>
-                            <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="*"/>
-                            <DataGridTextColumn Header="Grace Period" Binding="{Binding GracePeriod}" Width="*"/>
-                            <DataGridTemplateColumn Header="Actions" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Content="Edit" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="EditRule_Click"/>
-                                            <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
-                                            <Button Content="Delete" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="DeleteRule_Click"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Add/Edit Rule Form -->
-                    <ContentControl x:Name="RuleFormContainer" 
-                                    Template="{StaticResource GlassContainerTemplate}"
-                                    Margin="0,15,0,0"
-                                    Visibility="Collapsed">
-                        <StackPanel Margin="10">
-                            <TextBlock Text="Add/Edit Rule" 
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="Attendance Rules" 
                                        Foreground="#00A6FB" 
-                                       FontSize="16" 
+                                       FontSize="18" 
                                        FontWeight="Bold"
-                                       Margin="0,0,0,15"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Day -->
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Day of Week" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <ComboBox x:Name="CmbRuleDay" 
-                                              Style="{StaticResource GlassComboBox}"
-                                              ItemContainerStyle="{StaticResource GlassComboBoxItem}">
-                                        <ComboBoxItem Content="Monday"/>
-                                        <ComboBoxItem Content="Tuesday"/>
-                                        <ComboBoxItem Content="Wednesday"/>
-                                        <ComboBoxItem Content="Thursday"/>
-                                        <ComboBoxItem Content="Friday"/>
-                                        <ComboBoxItem Content="Saturday"/>
-                                        <ComboBoxItem Content="Sunday"/>
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <!-- Start Time -->
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Start Time" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <TextBox x:Name="TxtStartTime" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             Text="09:00 AM"/>
-                                </StackPanel>
-
-                                <!-- End Time -->
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="End Time" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <TextBox x:Name="TxtEndTime" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             Text="05:00 PM"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Grace Period -->
-                            <StackPanel Margin="0,15,0,0">
-                                <TextBlock Text="Grace Period (minutes)" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,5"/>
-                                <TextBox x:Name="TxtGracePeriod" 
-                                         Style="{StaticResource ModernTextBox}"
-                                         Text="10"/>
-                            </StackPanel>
-
-                            <!-- Buttons -->
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Right" 
-                                        Margin="0,15,0,0">
-                                <Button x:Name="BtnSaveRule" 
-                                        Content="Save Rule" 
-                                        Style="{StaticResource ModernButton}"
-                                        Margin="0,0,10,0"
-                                        Click="BtnSaveRule_Click"/>
-                                <Button x:Name="BtnCancelRule" 
-                                        Content="Cancel" 
-                                        Style="{StaticResource SecondaryButton}"
-                                        Click="BtnCancelRule_Click"/>
-                            </StackPanel>
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="BtnAddRule" 
+                                    Content="+ Add Rule" 
+                                    Style="{StaticResource ModernButton}"
+                                    Margin="20,0,0,0"
+                                    Click="BtnAddRule_Click"/>
                         </StackPanel>
-                    </ContentControl>
-                </StackPanel>
 
-                <!-- Shifts -->
-                <StackPanel x:Name="ShiftsPanel" Visibility="Collapsed">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="Shifts" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="18" 
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-                        <Button x:Name="BtnAddShift" 
-                                Content="+ Add Shift" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="20,0,0,0"
-                                Click="BtnAddShift_Click"/>
-                    </StackPanel>
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  x:Name="RulesGrid"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  RowStyle="{StaticResource DataGridRowStyle}"
+                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
+                                  AutoGenerateColumns="False"
+                                  Margin="0,0,0,15"
+                                  Height="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Day" Binding="{Binding Day}" Width="*"/>
+                                <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="*"/>
+                                <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="*"/>
+                                <DataGridTextColumn Header="Grace Period" Binding="{Binding GracePeriod}" Width="*"/>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="EditRule_Click"/>
+                                                <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
+                                                <Button Content="Delete" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="DeleteRule_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-                    <DataGrid x:Name="ShiftsGrid"
-                              Style="{StaticResource ModernDataGrid}"
-                              RowStyle="{StaticResource DataGridRowStyle}"
-                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                              AutoGenerateColumns="False">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Shift Name" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="*"/>
-                            <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="*"/>
-                            <DataGridTextColumn Header="Grace Period" Binding="{Binding GracePeriod}" Width="*"/>
-                            <DataGridTemplateColumn Header="Actions" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Content="Edit" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="EditShift_Click"/>
-                                            <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
-                                            <Button Content="Delete" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="DeleteShift_Click"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        <!-- Add/Edit Rule Form -->
+                        <ContentControl Grid.Row="2"
+                                        x:Name="RuleFormContainer" 
+                                        Template="{StaticResource GlassContainerTemplate}"
+                                        Visibility="Collapsed">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Add/Edit Rule" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="16" 
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,15"/>
 
-                    <!-- Add/Edit Shift Form -->
-                    <ContentControl x:Name="ShiftFormContainer" 
-                                    Template="{StaticResource GlassContainerTemplate}"
-                                    Margin="0,15,0,0"
-                                    Visibility="Collapsed">
-                        <StackPanel Margin="10">
-                            <TextBlock Text="Add/Edit Shift" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="16" 
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,15"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Shift Name -->
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Shift Name" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <TextBox x:Name="TxtShiftName" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             Text="Morning"/>
-                                </StackPanel>
-
-                                <!-- Start Time -->
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Start Time" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <TextBox x:Name="TxtShiftStart" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             Text="08:00"/>
-                                </StackPanel>
-
-                                <!-- End Time -->
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="End Time" 
-                                               Foreground="White" 
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,5"/>
-                                    <TextBox x:Name="TxtShiftEnd" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             Text="14:00"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Grace Period -->
-                            <StackPanel Margin="0,15,0,0">
-                                <TextBlock Text="Grace Period (minutes)" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,5"/>
-                                <TextBox x:Name="TxtShiftGrace" 
-                                         Style="{StaticResource ModernTextBox}"
-                                         Text="5"/>
-                            </StackPanel>
-
-                            <!-- Buttons -->
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Right" 
-                                        Margin="0,15,0,0">
-                                <Button x:Name="BtnSaveShift" 
-                                        Content="Save Shift" 
-                                        Style="{StaticResource ModernButton}"
-                                        Margin="0,0,10,0"
-                                        Click="BtnSaveShift_Click"/>
-                                <Button x:Name="BtnCancelShift" 
-                                        Content="Cancel" 
-                                        Style="{StaticResource SecondaryButton}"
-                                        Click="BtnCancelShift_Click"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </ContentControl>
-                </StackPanel>
-
-                <!-- Broadcast Messages -->
-                <StackPanel x:Name="MessagesPanel" Visibility="Collapsed">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="Broadcast Messages" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="18" 
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-                        <Button x:Name="BtnNewMessage" 
-                                Content="+ New Message" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="20,0,0,0"
-                                Click="BtnNewMessage_Click"/>
-                    </StackPanel>
-
-                    <DataGrid x:Name="MessagesGrid"
-                              Style="{StaticResource ModernDataGrid}"
-                              RowStyle="{StaticResource DataGridRowStyle}"
-                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                              AutoGenerateColumns="False">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
-                            <DataGridTemplateColumn Header="Status" Width="80">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding StatusColor}" 
-                                                CornerRadius="10" 
-                                                Padding="5,2"
-                                                HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Status}" 
-                                                       Foreground="White" 
-                                                       FontWeight="SemiBold"
-                                                       FontSize="11"
-                                                       HorizontalAlignment="Center"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Created" Binding="{Binding CreatedDate}" Width="*"/>
-                            <DataGridTemplateColumn Header="Actions" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Content="Edit" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="EditMessage_Click"/>
-                                            <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
-                                            <Button Content="Delete" 
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Padding="8,4"
-                                                    Click="DeleteMessage_Click"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Add/Edit Message Form -->
-                    <ContentControl x:Name="MessageFormContainer" 
-                                    Template="{StaticResource GlassContainerTemplate}"
-                                    Margin="0,15,0,0"
-                                    Visibility="Collapsed">
-                        <StackPanel Margin="10">
-                            <TextBlock Text="Create/Edit Message" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="16" 
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,15"/>
-
-                            <!-- Title -->
-                            <StackPanel>
-                                <TextBlock Text="Title" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,5"/>
-                                <TextBox x:Name="TxtMessageTitle" 
-                                         Style="{StaticResource ModernTextBox}"/>
-                            </StackPanel>
-
-                            <!-- Body -->
-                            <StackPanel Margin="0,15,0,0">
-                                <TextBlock Text="Message Body" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,5"/>
-                                <TextBox x:Name="TxtMessageBody" 
-                                         Style="{StaticResource ModernTextBox}"
-                                         Height="100"
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         VerticalScrollBarVisibility="Auto"/>
-                            </StackPanel>
-
-                            <!-- Active Status -->
-                            <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                                <CheckBox x:Name="ChkIsActive" 
-                                          Style="{StaticResource ToggleSwitchStyle}"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Text="Active" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="10,0,0,0"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Buttons -->
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Right" 
-                                        Margin="0,15,0,0">
-                                <Button x:Name="BtnSaveMessage" 
-                                        Content="Save Message" 
-                                        Style="{StaticResource ModernButton}"
-                                        Margin="0,0,10,0"
-                                        Click="BtnSaveMessage_Click"/>
-                                <Button x:Name="BtnCancelMessage" 
-                                        Content="Cancel" 
-                                        Style="{StaticResource SecondaryButton}"
-                                        Click="BtnCancelMessage_Click"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </ContentControl>
-                </StackPanel>
-
-                <!-- Employee Requests -->
-                <StackPanel x:Name="RequestsPanel" Visibility="Collapsed">
-                    <!-- Search and Filters -->
-                    <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Search Box -->
-                            <Border Grid.Column="0" 
-                                    Background="#20FFFFFF" 
-                                    CornerRadius="8" 
-                                    BorderBrush="#40FFFFFF" 
-                                    BorderThickness="1"
-                                    Margin="5"
-                                    VerticalAlignment="Center">
                                 <Grid>
-                                    <TextBox x:Name="TxtRequestSearch" 
-                                             Style="{StaticResource ModernTextBox}"
-                                             BorderThickness="0"
-                                             Padding="15,8"
-                                             TextChanged="TxtRequestSearch_TextChanged"/>
-                                    <TextBlock x:Name="RequestSearchPlaceholder" 
-                                               Text="🔍 Search employees requests..." 
-                                               Foreground="#B0CFFF"
-                                               Margin="15,0,0,0"
-                                               VerticalAlignment="Center"
-                                               IsHitTestVisible="False"/>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Day -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Day of Week" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <ComboBox x:Name="CmbRuleDay" 
+                                                  Style="{StaticResource GlassComboBox}"
+                                                  ItemContainerStyle="{StaticResource GlassComboBoxItem}">
+                                            <ComboBoxItem Content="Monday"/>
+                                            <ComboBoxItem Content="Tuesday"/>
+                                            <ComboBoxItem Content="Wednesday"/>
+                                            <ComboBoxItem Content="Thursday"/>
+                                            <ComboBoxItem Content="Friday"/>
+                                            <ComboBoxItem Content="Saturday"/>
+                                            <ComboBoxItem Content="Sunday"/>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <!-- Start Time -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Start Time" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtStartTime" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 Text="09:00 AM"/>
+                                    </StackPanel>
+
+                                    <!-- End Time -->
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="End Time" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtEndTime" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 Text="05:00 PM"/>
+                                    </StackPanel>
                                 </Grid>
-                            </Border>
 
-                            <!-- Status Filter -->
-                            <ComboBox Grid.Column="1" 
-                                      x:Name="CmbRequestStatus"
-                                      Style="{StaticResource GlassComboBox}"
-                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                                      Width="140"
-                                      Margin="5"
-                                      SelectionChanged="RequestFilter_SelectionChanged">
-                                <ComboBoxItem Content="Pending" IsSelected="True"/>
-                                <ComboBoxItem Content="All Status"/>
-                                <ComboBoxItem Content="Approved"/>
-                                <ComboBoxItem Content="Rejected"/>
-                            </ComboBox>
-
-                            <!-- Type Filter -->
-                            <ComboBox Grid.Column="2" 
-                                      x:Name="CmbRequestType"
-                                      Style="{StaticResource GlassComboBox}"
-                                      ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                                      Width="140"
-                                      Margin="5"
-                                      SelectionChanged="RequestFilter_SelectionChanged">
-                                <ComboBoxItem Content="All Type" IsSelected="True"/>
-                                <ComboBoxItem Content="Late"/>
-                                <ComboBoxItem Content="Absence"/>
-                                <ComboBoxItem Content="Correction"/>
-                            </ComboBox>
-                        </Grid>
-                    </ContentControl>
-
-                    <!-- Requests Table -->
-                    <DataGrid x:Name="RequestsGrid"
-                              Style="{StaticResource ModernDataGrid}"
-                              RowStyle="{StaticResource DataGridRowStyle}"
-                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                              AutoGenerateColumns="False"
-                              SelectionChanged="RequestsGrid_SelectionChanged">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="EmpID" Binding="{Binding EmployeeID}" Width="80"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding EmployeeName}" Width="*"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
-                            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*"/>
-                            <DataGridTemplateColumn Header="Status" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding StatusColor}" 
-                                                CornerRadius="10" 
-                                                Padding="5,2"
-                                                HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Status}" 
-                                                       Foreground="White" 
-                                                       FontWeight="SemiBold"
-                                                       FontSize="11"
-                                                       HorizontalAlignment="Center"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="Actions" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Review" 
-                                                Style="{StaticResource ModernButton}"
-                                                Padding="8,4"
-                                                Click="ReviewRequest_Click"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Review Panel -->
-                    <ContentControl x:Name="ReviewPanel" 
-                                    Template="{StaticResource GlassContainerTemplate}"
-                                    Margin="0,15,0,0"
-                                    Visibility="Collapsed">
-                        <StackPanel Margin="10">
-                            <TextBlock Text="Employee Request Details" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="16" 
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,15"/>
-
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Employee -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" 
-                                           Text="Employee:" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,8"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" 
-                                           x:Name="TxtReviewEmployee"
-                                           Foreground="#CCCCCC" 
-                                           Margin="0,0,0,8"/>
-
-                                <!-- Type -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" 
-                                           Text="Type:" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,8"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" 
-                                           x:Name="TxtReviewType"
-                                           Foreground="#CCCCCC" 
-                                           Margin="0,0,0,8"/>
-
-                                <!-- Message -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" 
-                                           Text="Message:" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,8"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" 
-                                           x:Name="TxtReviewMessage"
-                                           Foreground="#CCCCCC" 
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,8"/>
-
-                                <!-- Admin Reply -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" 
-                                           Text="Admin Reply:" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,8"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" 
-                                         x:Name="TxtAdminReply"
-                                         Style="{StaticResource ModernTextBox}"
-                                         Height="60"
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Margin="0,0,0,8"/>
-
-                                <!-- Status -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" 
-                                           Text="Status:" 
-                                           Foreground="White" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,8"/>
-                                <StackPanel Grid.Row="4" Grid.Column="1" 
-                                            Orientation="Horizontal"
-                                            Margin="0,0,0,8">
-                                    <RadioButton x:Name="RadioApprove" 
-                                                 Content="Approve" 
-                                                 Foreground="White"
-                                                 Margin="0,0,15,0"
-                                                 GroupName="RequestStatus"/>
-                                    <RadioButton x:Name="RadioReject" 
-                                                 Content="Reject" 
-                                                 Foreground="White"
-                                                 GroupName="RequestStatus"/>
+                                <!-- Grace Period -->
+                                <StackPanel Margin="0,15,0,0">
+                                    <TextBlock Text="Grace Period (minutes)" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="TxtGracePeriod" 
+                                             Style="{StaticResource ModernTextBox}"
+                                             Text="10"/>
                                 </StackPanel>
 
-                                <!-- Submit Button -->
-                                <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
-                                        x:Name="BtnSubmitDecision"
-                                        Content="Submit Decision" 
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Center"
-                                        Margin="0,15,0,0"
-                                        Click="BtnSubmitDecision_Click"/>
-                            </Grid>
+                                <!-- Buttons -->
+                                <StackPanel Orientation="Horizontal" 
+                                            HorizontalAlignment="Right" 
+                                            Margin="0,15,0,0">
+                                    <Button x:Name="BtnSaveRule" 
+                                            Content="Save Rule" 
+                                            Style="{StaticResource ModernButton}"
+                                            Margin="0,0,10,0"
+                                            Click="BtnSaveRule_Click"/>
+                                    <Button x:Name="BtnCancelRule" 
+                                            Content="Cancel" 
+                                            Style="{StaticResource SecondaryButton}"
+                                            Click="BtnCancelRule_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ContentControl>
+                    </Grid>
+
+                    <!-- Shifts Panel -->
+                    <Grid x:Name="ShiftsPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="Shifts" 
+                                       Foreground="#00A6FB" 
+                                       FontSize="18" 
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="BtnAddShift" 
+                                    Content="+ Add Shift" 
+                                    Style="{StaticResource ModernButton}"
+                                    Margin="20,0,0,0"
+                                    Click="BtnAddShift_Click"/>
                         </StackPanel>
-                    </ContentControl>
-                </StackPanel>
-            </Grid>
-        </ContentControl>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  x:Name="ShiftsGrid"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  RowStyle="{StaticResource DataGridRowStyle}"
+                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
+                                  AutoGenerateColumns="False"
+                                  Margin="0,0,0,15"
+                                  Height="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Shift Name" Binding="{Binding Name}" Width="*"/>
+                                <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="*"/>
+                                <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="*"/>
+                                <DataGridTextColumn Header="Grace Period" Binding="{Binding GracePeriod}" Width="*"/>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="EditShift_Click"/>
+                                                <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
+                                                <Button Content="Delete" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="DeleteShift_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Add/Edit Shift Form -->
+                        <ContentControl Grid.Row="2"
+                                        x:Name="ShiftFormContainer" 
+                                        Template="{StaticResource GlassContainerTemplate}"
+                                        Visibility="Collapsed">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Add/Edit Shift" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="16" 
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,15"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Shift Name -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Shift Name" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtShiftName" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 Text="Morning"/>
+                                    </StackPanel>
+
+                                    <!-- Start Time -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Start Time" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtShiftStart" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 Text="08:00"/>
+                                    </StackPanel>
+
+                                    <!-- End Time -->
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="End Time" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtShiftEnd" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 Text="14:00"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Grace Period -->
+                                <StackPanel Margin="0,15,0,0">
+                                    <TextBlock Text="Grace Period (minutes)" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="TxtShiftGrace" 
+                                             Style="{StaticResource ModernTextBox}"
+                                             Text="5"/>
+                                </StackPanel>
+
+                                <!-- Buttons -->
+                                <StackPanel Orientation="Horizontal" 
+                                            HorizontalAlignment="Right" 
+                                            Margin="0,15,0,0">
+                                    <Button x:Name="BtnSaveShift" 
+                                            Content="Save Shift" 
+                                            Style="{StaticResource ModernButton}"
+                                            Margin="0,0,10,0"
+                                            Click="BtnSaveShift_Click"/>
+                                    <Button x:Name="BtnCancelShift" 
+                                            Content="Cancel" 
+                                            Style="{StaticResource SecondaryButton}"
+                                            Click="BtnCancelShift_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ContentControl>
+                    </Grid>
+
+                    <!-- Broadcast Messages Panel -->
+                    <Grid x:Name="MessagesPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="Broadcast Messages" 
+                                       Foreground="#00A6FB" 
+                                       FontSize="18" 
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="BtnNewMessage" 
+                                    Content="+ New Message" 
+                                    Style="{StaticResource ModernButton}"
+                                    Margin="20,0,0,0"
+                                    Click="BtnNewMessage_Click"/>
+                        </StackPanel>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  x:Name="MessagesGrid"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  RowStyle="{StaticResource DataGridRowStyle}"
+                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
+                                  AutoGenerateColumns="False"
+                                  Margin="0,0,0,15"
+                                  Height="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
+                                <DataGridTemplateColumn Header="Status" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding StatusColor}" 
+                                                    CornerRadius="10" 
+                                                    Padding="5,2"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Status}" 
+                                                           Foreground="White" 
+                                                           FontWeight="SemiBold"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Created" Binding="{Binding CreatedDate}" Width="*"/>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="EditMessage_Click"/>
+                                                <TextBlock Text="|" Foreground="#666666" Margin="5,0" VerticalAlignment="Center"/>
+                                                <Button Content="Delete" 
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Padding="8,4"
+                                                        Click="DeleteMessage_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Add/Edit Message Form -->
+                        <ContentControl Grid.Row="2"
+                                        x:Name="MessageFormContainer" 
+                                        Template="{StaticResource GlassContainerTemplate}"
+                                        Visibility="Collapsed">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Create/Edit Message" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="16" 
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,15"/>
+
+                                <!-- Title -->
+                                <StackPanel>
+                                    <TextBlock Text="Title" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="TxtMessageTitle" 
+                                             Style="{StaticResource ModernTextBox}"/>
+                                </StackPanel>
+
+                                <!-- Body -->
+                                <StackPanel Margin="0,15,0,0">
+                                    <TextBlock Text="Message Body" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="TxtMessageBody" 
+                                             Style="{StaticResource ModernTextBox}"
+                                             Height="100"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             VerticalScrollBarVisibility="Auto"/>
+                                </StackPanel>
+
+                                <!-- Active Status -->
+                                <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                                    <CheckBox x:Name="ChkIsActive" 
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              VerticalAlignment="Center"/>
+                                    <TextBlock Text="Active" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="10,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Buttons -->
+                                <StackPanel Orientation="Horizontal" 
+                                            HorizontalAlignment="Right" 
+                                            Margin="0,15,0,0">
+                                    <Button x:Name="BtnSaveMessage" 
+                                            Content="Save Message" 
+                                            Style="{StaticResource ModernButton}"
+                                            Margin="0,0,10,0"
+                                            Click="BtnSaveMessage_Click"/>
+                                    <Button x:Name="BtnCancelMessage" 
+                                            Content="Cancel" 
+                                            Style="{StaticResource SecondaryButton}"
+                                            Click="BtnCancelMessage_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ContentControl>
+                    </Grid>
+
+                    <!-- Employee Requests Panel -->
+                    <Grid x:Name="RequestsPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Search and Filters -->
+                        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Search Box -->
+                                <Border Grid.Column="0" 
+                                        Background="#20FFFFFF" 
+                                        CornerRadius="8" 
+                                        BorderBrush="#40FFFFFF" 
+                                        BorderThickness="1"
+                                        Margin="5"
+                                        VerticalAlignment="Center">
+                                    <Grid>
+                                        <TextBox x:Name="TxtRequestSearch" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 BorderThickness="0"
+                                                 Padding="15,8"
+                                                 Width="300"
+                                                 TextChanged="TxtRequestSearch_TextChanged"/>
+                                        <TextBlock x:Name="RequestSearchPlaceholder" 
+                                                   Text="🔍 Search employees requests..." 
+                                                   Foreground="#B0CFFF"
+                                                   Margin="15,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Width="300"
+                                                   IsHitTestVisible="False"/>
+                                    </Grid>
+                                </Border>
+
+
+                            </Grid>
+                        </ContentControl>
+
+                        <!-- Requests Table -->
+                        <DataGrid Grid.Row="1"
+                                  x:Name="RequestsGrid"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  RowStyle="{StaticResource DataGridRowStyle}"
+                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
+                                  AutoGenerateColumns="False"
+                                  SelectionChanged="RequestsGrid_SelectionChanged"
+                                  Margin="0,0,0,15"
+                                  Height="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="EmpID" Binding="{Binding EmployeeID}" Width="80"/>
+                                <DataGridTextColumn Header="Name" Binding="{Binding EmployeeName}" Width="*"/>
+                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
+                                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*"/>
+                                <DataGridTemplateColumn Header="Status" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding StatusColor}" 
+                                                    CornerRadius="10" 
+                                                    Padding="5,2"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Status}" 
+                                                           Foreground="White" 
+                                                           FontWeight="SemiBold"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Actions" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Review" 
+                                                    Style="{StaticResource ModernButton}"
+                                                    Padding="8,4"
+                                                    Click="ReviewRequest_Click"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Review Panel -->
+                        <ContentControl Grid.Row="2"
+                                        x:Name="ReviewPanel" 
+                                        Template="{StaticResource GlassContainerTemplate}"
+                                        Visibility="Collapsed">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Employee Request Details" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="16" 
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,15"/>
+
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Employee -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" 
+                                               Text="Employee:" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,10,8"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" 
+                                               x:Name="TxtReviewEmployee"
+                                               Foreground="#CCCCCC" 
+                                               Margin="0,0,0,8"/>
+
+                                    <!-- Type -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" 
+                                               Text="Type:" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,10,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" 
+                                               x:Name="TxtReviewType"
+                                               Foreground="#CCCCCC" 
+                                               Margin="0,0,0,8"/>
+
+                                    <!-- Message -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" 
+                                               Text="Message:" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,10,8"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" 
+                                               x:Name="TxtReviewMessage"
+                                               Foreground="#CCCCCC" 
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,0,8"/>
+
+                                    <!-- Admin Reply -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" 
+                                               Text="Admin Reply:" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,10,8"/>
+                                    <TextBox Grid.Row="3" Grid.Column="1" 
+                                             x:Name="TxtAdminReply"
+                                             Style="{StaticResource ModernTextBox}"
+                                             Height="60"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- Status -->
+                                    <TextBlock Grid.Row="4" Grid.Column="0" 
+                                               Text="Status:" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,10,8"/>
+                                    <StackPanel Grid.Row="4" Grid.Column="1" 
+                                                Orientation="Horizontal"
+                                                Margin="0,0,0,8">
+                                        <RadioButton x:Name="RadioApprove" 
+                                                     Content="Approve" 
+                                                     Foreground="White"
+                                                     Margin="0,0,15,0"
+                                                     GroupName="RequestStatus"/>
+                                        <RadioButton x:Name="RadioReject" 
+                                                     Content="Reject" 
+                                                     Foreground="White"
+                                                     GroupName="RequestStatus"/>
+                                    </StackPanel>
+
+                                    <!-- Submit Button -->
+                                    <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                            x:Name="BtnSubmitDecision"
+                                            Content="Submit Decision" 
+                                            Style="{StaticResource ModernButton}"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,15,0,0"
+                                            Click="BtnSubmitDecision_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </ContentControl>
+                    </Grid>
+                </Grid>
+            </ContentControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

@@ -2672,7 +2672,7 @@
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
-        "net9.0-windows"
+        "net9.0-windows7.0"
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
@@ -2680,7 +2680,7 @@
       },
       "frameworks": {
         "net9.0-windows7.0": {
-          "targetAlias": "net9.0-windows",
+          "targetAlias": "net9.0-windows7.0",
           "projectReferences": {
             "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj": {
               "projectPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj"
@@ -2702,7 +2702,7 @@
     },
     "frameworks": {
       "net9.0-windows7.0": {
-        "targetAlias": "net9.0-windows",
+        "targetAlias": "net9.0-windows7.0",
         "dependencies": {
           "CommunityToolkit.Mvvm": {
             "target": "Package",
