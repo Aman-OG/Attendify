@@ -292,27 +292,60 @@
 
                 <!-- Search Box -->
                 <Border Grid.Column="0" 
-                        Background="#20FFFFFF" 
-                        CornerRadius="8" 
-                        BorderBrush="#40FFFFFF" 
-                        BorderThickness="1"
-                        Margin="5"
-                        Height="40"
-                        VerticalAlignment="Center">
+          Background="#20FFFFFF" 
+          CornerRadius="8" 
+          BorderBrush="#40FFFFFF" 
+          BorderThickness="1" 
+          Margin="5" 
+          Height="40">
                     <Grid>
-                        <TextBox x:Name="SearchBox" 
-                                 Style="{StaticResource ModernTextBox}"
-                                 BorderThickness="0"
-                                 Padding="15,8"
-                                 Width="300"
-                                 TextChanged="SearchBox_TextChanged"/>
-                        <TextBlock x:Name="SearchPlaceholder" 
-                                   Text="🔍 Search employees..." 
-                                   Foreground="#B0CFFF"
-                                   Margin="15,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Width="300"
-                                   IsHitTestVisible="False"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search Icon -->
+                        <Path Grid.Column="0" 
+                Data="M21.5 20L15.8 14.3C17.3 12.5 18 10.2 18 7.7 18 3.5 14.5 0 10.3 0 6.1 0 2.6 3.5 2.6 7.7 2.6 11.9 6.1 15.4 10.3 15.4 12.8 15.4 15.1 14.7 17 13.3L22.7 19 21.5 20ZM10.3 13.4C7.2 13.4 4.6 10.8 4.6 7.7 4.6 4.6 7.2 2 10.3 2 13.4 2 16 4.6 16 7.7 16 10.8 13.4 13.4 10.3 13.4Z"
+                Fill="#88FFFFFF"
+                Width="16" 
+                Height="16"
+                Stretch="Uniform"
+                Margin="12,0,8,0"
+                VerticalAlignment="Center"/>
+
+                        <!-- TextBox -->
+                        <TextBox x:Name="SearchBox"
+                   Grid.Column="1"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   Foreground="White"
+                   FontSize="14"
+                   Padding="8,0,12,0"
+                   VerticalContentAlignment="Center"
+                   CaretBrush="White"
+                   SelectionBrush="#6000A6FB"
+                   TextChanged="SearchBox_TextChanged"/>
+
+                        <!-- Placeholder Text -->
+                        <TextBlock Grid.Column="1"
+                     Text="Search employees..."
+                     Foreground="#88FFFFFF"
+                     Margin="8,0,0,0"
+                     VerticalAlignment="Center"
+                     FontSize="14"
+                     IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Grid>
                 </Border>
 
@@ -468,6 +501,8 @@
           VerticalAlignment="Center"
           Visibility="Collapsed"/>
 
+                        
+                        
                         <Button Grid.Column="1"
                                 x:Name="BtnRefresh"
                                 Content="⟳"
