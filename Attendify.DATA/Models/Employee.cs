@@ -12,12 +12,13 @@ namespace Attendify.DATA.Models
     public class Employee
     {
 
-        [Key]
+        
         public int EmployeeID { get; set; }  // Internal int PK
 
         [Required]
         [StringLength(20)]
         [Column("EmpCode")]
+        [Key]
         public string EmpCode { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string? MiddleName { get; set; }

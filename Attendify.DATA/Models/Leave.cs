@@ -10,7 +10,7 @@ namespace Attendify.DATA.Models
     public class Leave
     {
         public int LeaveID { get; set; }       // PK
-        public int EmployeeID { get; set; }    // FK
+        public string EmpCode { get; set; }    // FK
 
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }

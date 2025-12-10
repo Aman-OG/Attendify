@@ -198,7 +198,7 @@ namespace Attendify.API.Controllers
 
                 var leave = new Leave
                 {
-                    EmployeeID = employee.EmployeeID,
+                    EmpCode = employee.EmpCode,
                     FromDate = leaveDto.FromDate,
                     ToDate = leaveDto.ToDate,
                     ReasonTitle = leaveDto.ReasonTitle,

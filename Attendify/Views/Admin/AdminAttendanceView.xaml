@@ -3,18 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Attendify.Views.UserControls"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
              Background="Transparent">
 
     <UserControl.Resources>
+
         <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
             <Grid>
                 <Border CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#33FFFFFF" Offset="0" />
+                            <GradientStop Color="#13FFFFFF" Offset="0" />
                             <GradientStop Color="#13FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
@@ -193,7 +196,7 @@
 
         <!-- TextBox Style -->
         <Style x:Key="ModernTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="Background" Value="#10FFFFFF"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -246,6 +249,56 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- DatePicker Style -->
+        <Style x:Key="GlassDatePicker" TargetType="DatePicker">
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Grid>
+                            <Border x:Name="MainBorder"
+                                CornerRadius="10"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="12,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="30"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Date Text -->
+                                    <TextBlock Grid.Column="0"
+                                           Text="{Binding SelectedDate, StringFormat='dd/MM/yyyy', RelativeSource={RelativeSource TemplatedParent}}"
+                                           VerticalAlignment="Center"
+                                           Foreground="White"/>
+
+                                    <!-- Calendar Icon -->
+                                    <Path Grid.Column="1"
+                                      Data="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"
+                                      Fill="White"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Width="16" Height="16"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- DatePickerTextBox (hidden but functional) -->
+                            <DatePickerTextBox x:Name="PART_TextBox"
+                                        Style="{x:Null}"
+                                        Visibility="Hidden"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -256,13 +309,14 @@
         </Grid.RowDefinitions>
 
         <!-- Search and Filter Section -->
-        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
+        <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Search Box -->
@@ -272,64 +326,56 @@
                         BorderBrush="#40FFFFFF" 
                         BorderThickness="1"
                         Margin="5"
+                        Height="40"
                         VerticalAlignment="Center">
                     <Grid>
                         <TextBox x:Name="SearchBox" 
                                  Style="{StaticResource ModernTextBox}"
                                  BorderThickness="0"
                                  Padding="15,8"
+                                 Width="300"
                                  TextChanged="SearchBox_TextChanged"/>
                         <TextBlock x:Name="SearchPlaceholder" 
                                    Text="🔍 Search employees..." 
                                    Foreground="#B0CFFF"
                                    Margin="15,0,0,0"
                                    VerticalAlignment="Center"
+                                   Width="300"
                                    IsHitTestVisible="False"/>
                     </Grid>
                 </Border>
 
+                <!-- Date Picker -->
+                <DatePicker Grid.Column="1"
+                            x:Name="DateFilter"
+                            Style="{StaticResource GlassDatePicker}"
+                            Margin="10,0"
+                            VerticalAlignment="Center"
+                            SelectedDate="{x:Static sys:DateTime.Today}"
+                            SelectedDateChanged="DateFilter_SelectedDateChanged"/>
+
                 <!-- Department Filter -->
-                <ComboBox Grid.Column="1" 
+                <ComboBox Grid.Column="2"
                           x:Name="DepartmentFilter"
                           Style="{StaticResource GlassComboBox}"
-                          Width="140"
-                          Margin="5"
                           ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                          SelectionChanged="FilterComboBox_SelectionChanged">
-                    <ComboBoxItem Content="Department" IsSelected="True"/>
+                          Width="150"
+                          Margin="10,0"
+                          VerticalAlignment="Center"
+                          SelectionChanged="DepartmentFilter_SelectionChanged">
                     <ComboBoxItem Content="All Departments"/>
-                    <ComboBoxItem Content="Software"/>
-                    <ComboBoxItem Content="Electrical"/>
-                    <ComboBoxItem Content="Chemical"/>
-                    <ComboBoxItem Content="HR"/>
-                    <ComboBoxItem Content="Finance"/>
                 </ComboBox>
 
-                <!-- Position Filter -->
-                <ComboBox Grid.Column="2" 
-                          x:Name="PositionFilter"
-                          Style="{StaticResource GlassComboBox}"
-                          Width="120"
-                          Margin="5"
-                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-                          SelectionChanged="FilterComboBox_SelectionChanged">
-                    <ComboBoxItem Content="Position" IsSelected="True"/>
-                    <ComboBoxItem Content="All Positions"/>
-                    <ComboBoxItem Content="Manager"/>
-                    <ComboBoxItem Content="Developer"/>
-                    <ComboBoxItem Content="Engineer"/>
-                    <ComboBoxItem Content="Analyst"/>
-                </ComboBox>
                 <!-- Status Filter -->
-                <ComboBox Grid.Column="3" 
-          x:Name="StatusFilter"
-          Style="{StaticResource GlassComboBox}"
-          Width="120"
-          Margin="5"
-          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
-          SelectionChanged="FilterComboBox_SelectionChanged">
-                    <ComboBoxItem Content="Status" IsSelected="True"/>
-                    <ComboBoxItem Content="All Status"/>
+                <ComboBox Grid.Column="3"
+                          x:Name="StatusFilter"
+                          Style="{StaticResource GlassComboBox}"
+                          ItemContainerStyle="{StaticResource GlassComboBoxItem}"
+                          Width="120"
+                          Margin="10,0"
+                          VerticalAlignment="Center"
+                          SelectionChanged="StatusFilter_SelectionChanged">
+                    <ComboBoxItem Content="All"/>
                     <ComboBoxItem Content="Present"/>
                     <ComboBoxItem Content="Late"/>
                     <ComboBoxItem Content="On Leave"/>
@@ -343,68 +389,68 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <!-- Present Card -->
                 <Border x:Name="PresentCard" 
-                Style="{StaticResource StatusCardStyle}"
-                Background="#2028A745"
-                BorderBrush="#4028A745"
-                MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
+                        Style="{StaticResource StatusCardStyle}"
+                        Background="#2028A745"
+                        BorderBrush="#4028A745"
+                        MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse Width="12" Height="12" Fill="#28A745" Margin="0,0,10,0"/>
                         <TextBlock>
-                    <Run Text="Present" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=" (" Foreground="#CCCCCC"/>
-                    <Run x:Name="PresentCount" Text="0" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=")" Foreground="#CCCCCC"/>
+                            <Run Text="Present" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=" (" Foreground="#CCCCCC"/>
+                            <Run x:Name="PresentCount" Text="0" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=")" Foreground="#CCCCCC"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- Late Card -->
                 <Border x:Name="LateCard" 
-                Style="{StaticResource StatusCardStyle}"
-                Background="#20FFC107"
-                BorderBrush="#40FFC107"
-                MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
+                        Style="{StaticResource StatusCardStyle}"
+                        Background="#20FFC107"
+                        BorderBrush="#40FFC107"
+                        MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse Width="12" Height="12" Fill="#FFC107" Margin="0,0,10,0"/>
                         <TextBlock>
-                    <Run Text="Late" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=" (" Foreground="#CCCCCC"/>
-                    <Run x:Name="LateCount" Text="0" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=")" Foreground="#CCCCCC"/>
+                            <Run Text="Late" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=" (" Foreground="#CCCCCC"/>
+                            <Run x:Name="LateCount" Text="0" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=")" Foreground="#CCCCCC"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- On Leave Card -->
                 <Border x:Name="OnLeaveCard" 
-                Style="{StaticResource StatusCardStyle}"
-                Background="#20007BFF"
-                BorderBrush="#40007BFF"
-                MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
+                        Style="{StaticResource StatusCardStyle}"
+                        Background="#20007BFF"
+                        BorderBrush="#40007BFF"
+                        MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse Width="12" Height="12" Fill="#007BFF" Margin="0,0,10,0"/>
                         <TextBlock>
-                    <Run Text="On Leave" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=" (" Foreground="#CCCCCC"/>
-                    <Run x:Name="OnLeaveCount" Text="0" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=")" Foreground="#CCCCCC"/>
+                            <Run Text="On Leave" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=" (" Foreground="#CCCCCC"/>
+                            <Run x:Name="OnLeaveCount" Text="0" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=")" Foreground="#CCCCCC"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- Absent Card -->
                 <Border x:Name="AbsentCard" 
-                Style="{StaticResource StatusCardStyle}"
-                Background="#20DC3545"
-                BorderBrush="#40DC3545"
-                MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
+                        Style="{StaticResource StatusCardStyle}"
+                        Background="#20DC3545"
+                        BorderBrush="#40DC3545"
+                        MouseLeftButtonDown="StatusCard_MouseLeftButtonDown">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse Width="12" Height="12" Fill="#DC3545" Margin="0,0,10,0"/>
                         <TextBlock>
-                    <Run Text="Absent" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=" (" Foreground="#CCCCCC"/>
-                    <Run x:Name="AbsentCount" Text="0" Foreground="White" FontWeight="Bold"/>
-                    <Run Text=")" Foreground="#CCCCCC"/>
+                            <Run Text="Absent" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=" (" Foreground="#CCCCCC"/>
+                            <Run x:Name="AbsentCount" Text="0" Foreground="White" FontWeight="Bold"/>
+                            <Run Text=")" Foreground="#CCCCCC"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -455,27 +501,25 @@
                           RowStyle="{StaticResource DataGridRowStyle}">
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="EmpID" Binding="{Binding EmployeeID}" Width="80"/>
-                        <DataGridTextColumn Header="Name" Width="*">
-                            <DataGridTextColumn.Binding>
-                                <MultiBinding StringFormat="{}{0} {1}">
-                                    <Binding Path="FirstName"/>
-                                    <Binding Path="LastName"/>
-                                </MultiBinding>
-                            </DataGridTextColumn.Binding>
-                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="EmpID" Binding="{Binding EmployeeID}" Width="100"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
                         <DataGridTextColumn Header="Department" Binding="{Binding Department}" Width="120"/>
                         <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="120"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="100"/>
+                        <!-- In your DataGrid TemplateColumn -->
                         <DataGridTemplateColumn Header="Status" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
+                                        <Ellipse Width="8" Height="8" 
+                         Fill="{Binding StatusBrush}"
+                                            Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Check-In" Binding="{Binding CheckInTime}" Width="80"/>
                     </DataGrid.Columns>
 
                     <DataGrid.CellStyle>
