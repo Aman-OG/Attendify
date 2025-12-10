@@ -110,7 +110,7 @@ namespace Attendify.API.Controllers
                             AttendanceID = attendance?.AttendanceID ?? 0,
                             EmployeeID = employee.EmpCode ?? "N/A",
                             FirstName = employee.FirstName ?? "Unknown",
-                            LastName = employee.LastName ?? "Unknown",
+                            MiddleName = employee.MiddleName ?? "",
                             Department = employee.Department ?? "N/A",
                             Position = employee.Position ?? "N/A",
                             Date = queryDate.ToString("yyyy-MM-dd"), // Return as string

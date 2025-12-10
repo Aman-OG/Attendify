@@ -250,54 +250,25 @@
             </Setter>
         </Style>
 
-        <!-- DatePicker Style -->
+   
+        <!-- DatePicker Style - WORKING VERSION -->
         <Style x:Key="GlassDatePicker" TargetType="DatePicker">
             <Setter Property="Background" Value="#20FFFFFF"/>
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Padding" Value="15,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DatePicker">
-                        <Grid>
-                            <Border x:Name="MainBorder"
-                                CornerRadius="10"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="12,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="30"/>
-                                    </Grid.ColumnDefinitions>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="IsTodayHighlighted" Value="True"/>
+            <Setter Property="SelectedDateFormat" Value="Short"/>
+            <Setter Property="Focusable" Value="True"/>
+            <Setter Property="IsEnabled" Value="True"/>
 
-                                    <!-- Date Text -->
-                                    <TextBlock Grid.Column="0"
-                                           Text="{Binding SelectedDate, StringFormat='dd/MM/yyyy', RelativeSource={RelativeSource TemplatedParent}}"
-                                           VerticalAlignment="Center"
-                                           Foreground="White"/>
-
-                                    <!-- Calendar Icon -->
-                                    <Path Grid.Column="1"
-                                      Data="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"
-                                      Fill="White"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Width="16" Height="16"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- DatePickerTextBox (hidden but functional) -->
-                            <DatePickerTextBox x:Name="PART_TextBox"
-                                        Style="{x:Null}"
-                                        Visibility="Hidden"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <!-- Disable future dates -->
+            <Setter Property="DisplayDateEnd" Value="{x:Static sys:DateTime.Today}"/>
         </Style>
     </UserControl.Resources>
 
@@ -347,12 +318,14 @@
 
                 <!-- Date Picker -->
                 <DatePicker Grid.Column="1"
-                            x:Name="DateFilter"
-                            Style="{StaticResource GlassDatePicker}"
-                            Margin="10,0"
-                            VerticalAlignment="Center"
-                            SelectedDate="{x:Static sys:DateTime.Today}"
-                            SelectedDateChanged="DateFilter_SelectedDateChanged"/>
+            x:Name="DateFilter"
+            Style="{StaticResource GlassDatePicker}"
+            Margin="10,0"
+            VerticalAlignment="Center"
+            SelectedDate="{x:Static sys:DateTime.Today}"
+            SelectedDateChanged="DateFilter_SelectedDateChanged"/>
+
+ 
 
                 <!-- Department Filter -->
                 <ComboBox Grid.Column="2"
@@ -475,6 +448,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="Attendance Table" 
@@ -482,6 +456,17 @@
                                    FontSize="16" 
                                    FontWeight="Bold"
                                    VerticalAlignment="Center"/>
+
+
+                        <!-- Add this TextBlock for messages -->
+                        <TextBlock x:Name="DateMessageText"
+          Grid.Column="1"
+          Text=""
+          Foreground="#FF6B8E23"
+          FontStyle="Italic"
+          Margin="160,0,0,0"
+          VerticalAlignment="Center"
+          Visibility="Collapsed"/>
 
                         <Button Grid.Column="1"
                                 x:Name="BtnRefresh"
@@ -514,7 +499,7 @@
                                         <Ellipse Width="8" Height="8" 
                          Fill="{Binding StatusBrush}"
                                             Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

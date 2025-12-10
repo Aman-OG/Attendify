@@ -86,9 +86,12 @@ namespace Attendify.Views.UserControls
             if (_httpClient == null)
             {
                 Console.WriteLine("❌ HttpClient is null");
-                await ShowFallbackData();
+                await ShowEmptyTableMessage("Connection not initialized");
                 return;
             }
+
+            // Show loading message initially
+            await ShowLoadingMessage("Loading attendance data...");
 
             await LoadAttendanceDataAsync();
             _isInitialized = true;
@@ -113,7 +116,6 @@ namespace Attendify.Views.UserControls
                 await ShowFallbackData();
             }
         }
-
         private async Task LoadAttendanceAsync()
         {
             try
@@ -121,7 +123,7 @@ namespace Attendify.Views.UserControls
                 if (_httpClient == null)
                 {
                     Console.WriteLine("❌ HttpClient is null in LoadAttendanceAsync");
-                    await ShowFallbackData();
+                    await ShowEmptyTableSilently();
                     return;
                 }
 
@@ -129,7 +131,19 @@ namespace Attendify.Views.UserControls
                 string date = DateTime.Today.ToString("yyyy-MM-dd");
                 if (DateFilter != null && DateFilter.SelectedDate.HasValue)
                 {
-                    date = DateFilter.SelectedDate.Value.ToString("yyyy-MM-dd");
+                    // Don't allow future dates
+                    if (DateFilter.SelectedDate.Value > DateTime.Today)
+                    {
+                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            DateFilter.SelectedDate = DateTime.Today;
+                        });
+                        date = DateTime.Today.ToString("yyyy-MM-dd");
+                    }
+                    else
+                    {
+                        date = DateFilter.SelectedDate.Value.ToString("yyyy-MM-dd");
+                    }
                 }
 
                 string status = "All";
@@ -184,9 +198,11 @@ namespace Attendify.Views.UserControls
                 {
                     var attendanceData = await response.Content.ReadFromJsonAsync<List<AttendanceApiDto>>();
 
-                    if (attendanceData == null)
+                    if (attendanceData == null || !attendanceData.Any())
                     {
-                        attendanceData = new List<AttendanceApiDto>();
+                        // No data for this date - show empty table silently
+                        await ShowEmptyTableSilently();
+                        return;
                     }
 
                     // Convert API DTO to our view model
@@ -195,7 +211,7 @@ namespace Attendify.Views.UserControls
                         AttendanceID = dto.AttendanceID,
                         EmployeeID = dto.EmployeeID ?? "N/A",
                         FirstName = dto.FirstName ?? "Unknown",
-                        LastName = dto.LastName ?? "Unknown",
+                        MiddleName = dto.MiddleName ?? "",
                         Department = dto.Department ?? "N/A",
                         Position = dto.Position ?? "N/A",
                         Date = dto.Date ?? DateTime.Today.ToString("yyyy-MM-dd"),
@@ -210,6 +226,7 @@ namespace Attendify.Views.UserControls
                     {
                         AttendanceRecords = new ObservableCollection<AttendanceRecord>(records);
                         AttendanceGrid.ItemsSource = AttendanceRecords;
+                        UpdateStatusCounts();
                     });
 
                     Console.WriteLine($"✅ Loaded {records.Count} attendance records");
@@ -219,81 +236,180 @@ namespace Attendify.Views.UserControls
                     var error = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"❌ API Error ({response.StatusCode}): {error}");
 
-                    // Show fallback data instead of error message
-                    await ShowFallbackData();
+                    // Show empty table silently instead of error message
+                    await ShowEmptyTableSilently();
                 }
             }
             catch (HttpRequestException httpEx)
             {
                 Console.WriteLine($"❌ HTTP Exception: {httpEx.Message}");
-                await ShowFallbackData();
+                await ShowEmptyTableSilently();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Exception in LoadAttendanceAsync: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                await ShowFallbackData();
+                await ShowEmptyTableSilently();
             }
         }
 
-        private async Task ShowFallbackData()
-        {
-            // Fallback sample data for development
-            var fallbackData = new List<AttendanceRecord>
-            {
-                new AttendanceRecord
-                {
-                    AttendanceID = 1,
-                    EmployeeID = "EMP001",
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Department = "IT",
-                    Position = "Developer",
-                    Date = DateTime.Today.ToString("yyyy-MM-dd"),
-                    Status = "Present",
-                    StatusColor = "#28A745",
-                    StatusBrush = new SolidColorBrush(Colors.Green),
-                    CheckInTime = "09:00"
-                },
-                new AttendanceRecord
-                {
-                    AttendanceID = 2,
-                    EmployeeID = "EMP002",
-                    FirstName = "Jane",
-                    LastName = "Smith",
-                    Department = "HR",
-                    Position = "Manager",
-                    Date = DateTime.Today.ToString("yyyy-MM-dd"),
-                    Status = "Late",
-                    StatusColor = "#FFC107",
-                    StatusBrush = new SolidColorBrush(Colors.Orange),
-                    CheckInTime = "09:30"
-                },
-                new AttendanceRecord
-                {
-                    AttendanceID = 3,
-                    EmployeeID = "EMP003",
-                    FirstName = "Bob",
-                    LastName = "Johnson",
-                    Department = "Finance",
-                    Position = "Analyst",
-                    Date = DateTime.Today.ToString("yyyy-MM-dd"),
-                    Status = "On Leave",
-                    StatusColor = "#007BFF",
-                    StatusBrush = new SolidColorBrush(Colors.Blue),
-                    CheckInTime = "N/A"
-                }
-            };
 
+        private async Task ShowEmptyTableSilently()
+        {
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                AttendanceRecords = new ObservableCollection<AttendanceRecord>(fallbackData);
+                // Clear the table
+                AttendanceRecords = new ObservableCollection<AttendanceRecord>();
                 AttendanceGrid.ItemsSource = AttendanceRecords;
-                UpdateStatusCounts();
-            });
 
-            Console.WriteLine("⚠️ Showing fallback data (API might not be running)");
+                // Update status counts to 0
+                PresentCount.Text = "0";
+                LateCount.Text = "0";
+                OnLeaveCount.Text = "0";
+                AbsentCount.Text = "0";
+            });
         }
+        private async Task ShowFallbackData()
+        {
+            // Only show fallback data on initial load if API is not available
+            bool apiAvailable = await CheckIfApiIsRunning();
+
+            if (!apiAvailable)
+            {
+                // Fallback sample data for development
+                var fallbackData = new List<AttendanceRecord>
+        {
+            new AttendanceRecord
+            {
+                AttendanceID = 1,
+                EmployeeID = "EMP001",
+                FirstName = "John",
+                MiddleName = "Michael",
+                Department = "IT",
+                Position = "Developer",
+                Date = DateTime.Today.ToString("yyyy-MM-dd"),
+                Status = "Present",
+                StatusColor = "#28A745",
+                StatusBrush = new SolidColorBrush(Colors.Green),
+                CheckInTime = "09:00"
+            },
+            new AttendanceRecord
+            {
+                AttendanceID = 2,
+                EmployeeID = "EMP002",
+                FirstName = "Jane",
+                MiddleName = "Marie",
+                Department = "HR",
+                Position = "Manager",
+                Date = DateTime.Today.ToString("yyyy-MM-dd"),
+                Status = "Late",
+                StatusColor = "#FFC107",
+                StatusBrush = new SolidColorBrush(Colors.Orange),
+                CheckInTime = "09:30"
+            },
+            new AttendanceRecord
+            {
+                AttendanceID = 3,
+                EmployeeID = "EMP003",
+                FirstName = "Bob",
+                MiddleName = "James",
+                Department = "Finance",
+                Position = "Analyst",
+                Date = DateTime.Today.ToString("yyyy-MM-dd"),
+                Status = "On Leave",
+                StatusColor = "#007BFF",
+                StatusBrush = new SolidColorBrush(Colors.Blue),
+                CheckInTime = "N/A"
+            }
+        };
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    AttendanceRecords = new ObservableCollection<AttendanceRecord>(fallbackData);
+                    AttendanceGrid.ItemsSource = AttendanceRecords;
+                    UpdateStatusCounts();
+                });
+
+                Console.WriteLine("⚠️ Showing fallback data (API is not running)");
+            }
+            else
+            {
+                // API is running, just show empty table
+                await ShowEmptyTableMessage("No data available");
+            }
+        }
+
+        private async Task<bool> CheckIfApiIsRunning()
+        {
+            try
+            {
+                if (_httpClient == null) return false;
+
+                // Try to ping the API health endpoint
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
+        private async Task ShowLoadingMessage(string message)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                // Create a single record with the loading message
+                var loadingRecord = new AttendanceRecord
+                {
+                    EmployeeID = "",
+                    FirstName = "",
+                    MiddleName = "",
+                    Department = "",
+                    Position = "",
+                    Date = "",
+                    Status = "",
+                    CheckInTime = ""
+                };
+
+                // Create a special collection with just the loading message
+                AttendanceRecords = new ObservableCollection<AttendanceRecord> { loadingRecord };
+
+                // You could also add a custom property or use a different approach
+                // For now, let's just show empty table
+
+                // Alternative: Show a message in the table
+                AttendanceGrid.ItemsSource = null;
+
+                // You could set a TextBlock in the table area instead
+                // For simplicity, we'll just clear the table
+            });
+        }
+
+        private async Task ShowEmptyTableMessage(string message)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                // Clear the table
+                AttendanceRecords = new ObservableCollection<AttendanceRecord>();
+                AttendanceGrid.ItemsSource = AttendanceRecords;
+
+                // Update status counts to 0
+                PresentCount.Text = "0";
+                LateCount.Text = "0";
+                OnLeaveCount.Text = "0";
+                AbsentCount.Text = "0";
+
+                // Optionally show a message box
+                if (!string.IsNullOrEmpty(message) && !message.Contains("Loading"))
+                {
+                    MessageBox.Show(message, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            });
+        }
+
+
 
         private Brush ConvertColorStringToBrush(string colorString)
         {
@@ -484,8 +600,32 @@ namespace Attendify.Views.UserControls
             if (DateFilter != null && DateFilter.SelectedDate.HasValue)
             {
                 _selectedDate = DateFilter.SelectedDate.Value;
+
+                // Show loading state
+                if (DateMessageText != null)
+                {
+                    DateMessageText.Text = "Loading attendance data...";
+                    DateMessageText.Foreground = Brushes.Orange;
+                    DateMessageText.Visibility = Visibility.Visible;
+                }
+
                 await LoadAttendanceAsync();
                 await LoadStatisticsAsync();
+
+                // Check if there's no data for this date
+                if (AttendanceRecords != null && AttendanceRecords.Count == 0)
+                {
+                    if (DateMessageText != null)
+                    {
+                        DateMessageText.Text = $"No attendance records for {_selectedDate:dd/MM/yyyy}";
+                        DateMessageText.Foreground = Brushes.Orange;
+                        DateMessageText.Visibility = Visibility.Visible;
+                    }
+                }
+                else if (DateMessageText != null)
+                {
+                    DateMessageText.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
@@ -600,6 +740,7 @@ namespace Attendify.Views.UserControls
                     if (DepartmentFilter != null) DepartmentFilter.SelectedIndex = 0;
                     if (SearchBox != null) SearchBox.Text = "";
                     if (DateFilter != null) DateFilter.SelectedDate = DateTime.Today;
+                    if (DateMessageText != null) DateMessageText.Visibility = Visibility.Collapsed;
                 });
 
                 // Refresh data
@@ -623,7 +764,6 @@ namespace Attendify.Views.UserControls
                 });
             }
         }
-
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -637,7 +777,7 @@ namespace Attendify.Views.UserControls
         public int AttendanceID { get; set; }
         public string EmployeeID { get; set; } = "";
         public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
+        public string MiddleName { get; set; } = "";
         public string Department { get; set; } = "";
         public string Position { get; set; } = "";
         public string Date { get; set; } = "";
@@ -652,8 +792,10 @@ namespace Attendify.Views.UserControls
         public int AttendanceID { get; set; }
         public string EmployeeID { get; set; } = "";
         public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
-        public string FullName => $"{FirstName} {LastName}";
+        public string MiddleName { get; set; } = "";
+        public string FullName => $"{FirstName} {MiddleName}"; 
+        
+        
         public string Department { get; set; } = "";
         public string Position { get; set; } = "";
         public string Date { get; set; } = "";
