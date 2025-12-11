@@ -11,8 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Windows.Data; 
-using System.Collections; 
+using System.Windows.Data;
 
 namespace Attendify.Views.UserControls
 {
@@ -75,6 +74,9 @@ namespace Attendify.Views.UserControls
                 return;
             }
 
+            // Show loading overlay for initial load
+            ShowInitialLoadingOverlay();
+
             // Suppress date filter events during initialization
             _suppressDateFilterEvents = true;
 
@@ -83,18 +85,19 @@ namespace Attendify.Views.UserControls
             if (_httpClient == null)
             {
                 Console.WriteLine("❌ HttpClient is null");
+                HideInitialLoadingOverlay();
                 await ShowEmptyTableMessage("Connection not initialized");
                 _suppressDateFilterEvents = false;
                 return;
             }
 
             Console.WriteLine("⏳ Loading attendance data...");
-            await ShowLoadingMessage("Loading attendance data...");
 
             await LoadAttendanceDataAsync();
             _isInitialized = true;
             _suppressDateFilterEvents = false;
 
+            HideInitialLoadingOverlay();
             Console.WriteLine("✅ AttendanceView_Loaded completed");
         }
 
@@ -110,7 +113,6 @@ namespace Attendify.Views.UserControls
 
             try
             {
-                await ShowLoadingMessage("Loading attendance data...");
                 await LoadAttendanceAsync();
                 await LoadDepartmentsAsync();
                 await LoadStatisticsAsync();
@@ -271,6 +273,29 @@ namespace Attendify.Views.UserControls
             Console.WriteLine($"✅ LoadAttendanceAsync completed at {DateTime.Now:HH:mm:ss.fff}");
         }
 
+        // Helper methods for loading overlay
+        private void ShowInitialLoadingOverlay()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (InitialLoadingOverlay != null)
+                {
+                    InitialLoadingOverlay.Visibility = Visibility.Visible;
+                }
+            });
+        }
+
+        private void HideInitialLoadingOverlay()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (InitialLoadingOverlay != null)
+                {
+                    InitialLoadingOverlay.Visibility = Visibility.Collapsed;
+                }
+            });
+        }
+
         private async Task ShowEmptyTableSilently()
         {
             await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -368,30 +393,6 @@ namespace Attendify.Views.UserControls
             {
                 return false;
             }
-        }
-
-        private async Task ShowLoadingMessage(string message)
-        {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                // Clear the table
-                AttendanceRecords = new ObservableCollection<AttendanceRecord>();
-                AttendanceGrid.ItemsSource = AttendanceRecords;
-
-                // Update status counts to 0
-                PresentCount.Text = "0";
-                LateCount.Text = "0";
-                OnLeaveCount.Text = "0";
-                AbsentCount.Text = "0";
-
-                // Show loading message
-                if (DateMessageText != null)
-                {
-                    DateMessageText.Text = message;
-                    DateMessageText.Foreground = Brushes.Orange;
-                    DateMessageText.Visibility = Visibility.Visible;
-                }
-            });
         }
 
         private async Task ShowEmptyTableMessage(string message)
@@ -555,8 +556,7 @@ namespace Attendify.Views.UserControls
             });
         }
 
-
-
+        // Helper method for getting selected filter
         private string GetSelectedFilter(ComboBox comboBox, string defaultValue)
         {
             if (comboBox?.SelectedItem == null) return defaultValue;
@@ -567,12 +567,13 @@ namespace Attendify.Views.UserControls
             return comboBox.SelectedItem.ToString() ?? defaultValue;
         }
 
-
+        // Client-side filtering method
         private void ApplyAttendanceFilters()
         {
             if (AttendanceRecords == null || AttendanceRecords.Count == 0)
                 return;
 
+            // Get the default view of the collection
             var view = CollectionViewSource.GetDefaultView(AttendanceRecords);
             if (view == null)
                 return;
@@ -624,32 +625,29 @@ namespace Attendify.Views.UserControls
             UpdateStatusCountsFromFilteredView();
         }
 
-
-
-
-
-
-
         private void UpdateStatusCountsFromFilteredView()
         {
             var view = CollectionViewSource.GetDefaultView(AttendanceRecords);
             if (view == null) return;
 
-            var filteredRecords = view.Cast<AttendanceRecord>().ToList();
+            // Cast the filtered view back to a list
+            var filteredList = new List<AttendanceRecord>();
+            foreach (var item in view)
+            {
+                if (item is AttendanceRecord record)
+                    filteredList.Add(record);
+            }
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                PresentCount.Text = filteredRecords.Count(r => r.Status == "Present").ToString();
-                LateCount.Text = filteredRecords.Count(r => r.Status == "Late").ToString();
-                OnLeaveCount.Text = filteredRecords.Count(r => r.Status == "On Leave").ToString();
-                AbsentCount.Text = filteredRecords.Count(r => r.Status == "Absent").ToString();
+                PresentCount.Text = filteredList.Count(r => r.Status == "Present").ToString();
+                LateCount.Text = filteredList.Count(r => r.Status == "Late").ToString();
+                OnLeaveCount.Text = filteredList.Count(r => r.Status == "On Leave").ToString();
+                AbsentCount.Text = filteredList.Count(r => r.Status == "Absent").ToString();
             });
         }
 
-
-
-
-
+        // Event handlers with client-side filtering
         private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_isInitialized) return;
@@ -662,19 +660,6 @@ namespace Attendify.Views.UserControls
             if (SearchBox?.Text != searchText) return;
 
             // Apply client-side filters
-            ApplyAttendanceFilters();
-        }
-
-        // Update your other event handlers to use client-side filtering too:
-        private void StatusFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_isInitialized) return;
-            ApplyAttendanceFilters();
-        }
-
-        private void DepartmentFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_isInitialized) return;
             ApplyAttendanceFilters();
         }
 
@@ -695,6 +680,9 @@ namespace Attendify.Views.UserControls
 
                 Console.WriteLine($"📅 Date filter changed to: {_selectedDate}");
 
+                // Show loading overlay for date changes
+                ShowInitialLoadingOverlay();
+
                 // Show loading state
                 if (DateMessageText != null)
                 {
@@ -705,15 +693,26 @@ namespace Attendify.Views.UserControls
 
                 await LoadAttendanceAsync();
                 await LoadStatisticsAsync();
+
+                HideInitialLoadingOverlay();
             }
         }
 
-
-
-
-        private async void StatusCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void StatusFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!_isInitialized || _isLoading) return;
+            if (!_isInitialized) return;
+            ApplyAttendanceFilters();
+        }
+
+        private void DepartmentFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_isInitialized) return;
+            ApplyAttendanceFilters();
+        }
+
+        private void StatusCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isInitialized) return;
 
             // Reset all cards
             ResetStatusCards();
@@ -768,7 +767,7 @@ namespace Attendify.Views.UserControls
                     });
                 }
 
-                await LoadAttendanceAsync();
+                ApplyAttendanceFilters();
             }
         }
 
@@ -797,6 +796,9 @@ namespace Attendify.Views.UserControls
             button.Content = "⏳";
             button.IsEnabled = false;
 
+            // Show loading overlay
+            ShowInitialLoadingOverlay();
+
             try
             {
                 // Clear filters
@@ -824,12 +826,14 @@ namespace Attendify.Views.UserControls
             finally
             {
                 // Restore button state
-                await Task.Delay(600); // Wait for animation to complete
+                await Task.Delay(600);
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     button.Content = "⟳";
                     button.IsEnabled = true;
                 });
+
+                HideInitialLoadingOverlay();
             }
         }
 
@@ -851,7 +855,7 @@ namespace Attendify.Views.UserControls
         public string Position { get; set; } = "";
         public string Date { get; set; } = "";
         public string Status { get; set; } = "";
-        public string StatusColor { get; set; } = ""; 
+        public string StatusColor { get; set; } = ""; // Hex color string from API
         public string CheckInTime { get; set; } = "";
     }
 
@@ -867,8 +871,8 @@ namespace Attendify.Views.UserControls
         public string Position { get; set; } = "";
         public string Date { get; set; } = "";
         public string Status { get; set; } = "";
-        public string StatusColor { get; set; } = ""; 
-        public Brush StatusBrush { get; set; } = Brushes.Gray; 
+        public string StatusColor { get; set; } = ""; // Hex color string from API
+        public Brush StatusBrush { get; set; } = Brushes.Gray; // Brush property for WPF
         public string CheckInTime { get; set; } = "";
     }
 

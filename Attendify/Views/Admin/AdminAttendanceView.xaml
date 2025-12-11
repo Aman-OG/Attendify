@@ -11,6 +11,36 @@
 
     <UserControl.Resources>
 
+        <!-- Loading Spinner Style -->
+        <Style x:Key="LoadingSpinnerStyle" TargetType="Control">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Viewbox Width="24" Height="24">
+                            <Grid>
+                                <Ellipse Stroke="#00A6FB" StrokeThickness="3" Opacity="0.3"/>
+                                <Path Data="M1,0.5 A0.5,0.5 0 0,1 0.5,1" Stroke="#00A6FB" StrokeThickness="3">
+                                    <Path.RenderTransform>
+                                        <RotateTransform Angle="0" CenterX="0.5" CenterY="0.5"/>
+                                    </Path.RenderTransform>
+                                    <Path.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
+                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Path.Triggers>
+                                </Path>
+                            </Grid>
+                        </Viewbox>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
             <Grid>
@@ -250,7 +280,6 @@
             </Setter>
         </Style>
 
-   
         <!-- DatePicker Style - WORKING VERSION -->
         <Style x:Key="GlassDatePicker" TargetType="DatePicker">
             <Setter Property="Background" Value="#20FFFFFF"/>
@@ -266,7 +295,6 @@
             <Setter Property="SelectedDateFormat" Value="Short"/>
             <Setter Property="Focusable" Value="True"/>
             <Setter Property="IsEnabled" Value="True"/>
-
             <!-- Disable future dates -->
             <Setter Property="DisplayDateEnd" Value="{x:Static sys:DateTime.Today}"/>
         </Style>
@@ -278,6 +306,24 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+
+        <!-- Loading Overlay (for initial load only) -->
+        <Border x:Name="InitialLoadingOverlay" 
+                Grid.RowSpan="3" 
+                Background="#80000000"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                Visibility="Collapsed"
+                Panel.ZIndex="1000">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Control Style="{StaticResource LoadingSpinnerStyle}" Width="50" Height="50"/>
+                <TextBlock Text="Loading Attendance..." 
+                           Foreground="White" 
+                           FontSize="16" 
+                           FontWeight="Bold"
+                           Margin="0,15,0,0"/>
+            </StackPanel>
+        </Border>
 
         <!-- Search and Filter Section -->
         <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
@@ -357,8 +403,6 @@
             VerticalAlignment="Center"
             SelectedDate="{x:Static sys:DateTime.Today}"
             SelectedDateChanged="DateFilter_SelectedDateChanged"/>
-
- 
 
                 <!-- Department Filter -->
                 <ComboBox Grid.Column="2"
@@ -490,19 +534,17 @@
                                    FontWeight="Bold"
                                    VerticalAlignment="Center"/>
 
-
-                        <!-- Add this TextBlock for messages -->
+                        <!-- Date Message Text -->
                         <TextBlock x:Name="DateMessageText"
-          Grid.Column="1"
-          Text=""
-          Foreground="#FF6B8E23"
-          FontStyle="Italic"
-          Margin="160,0,0,0"
-          VerticalAlignment="Center"
-          Visibility="Collapsed"/>
+                                   Grid.Column="1"
+                                   Text=""
+                                   Foreground="#FF6B8E23"
+                                   FontStyle="Italic"
+                                   Margin="160,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Visibility="Collapsed"/>
 
-                        
-                        
+                        <!-- Refresh Button -->
                         <Button Grid.Column="1"
                                 x:Name="BtnRefresh"
                                 Content="⟳"

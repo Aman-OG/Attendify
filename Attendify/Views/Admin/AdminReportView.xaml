@@ -9,6 +9,17 @@
              Background="Transparent">
 
     <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- Loading Overlay Style -->
+        <Style x:Key="LoadingOverlayStyle" TargetType="Border">
+            <Setter Property="Background" Value="#80000000"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Panel.ZIndex" Value="1000"/>
+        </Style>
+
         <!-- Glass container style -->
         <Style x:Key="GlassRoundedBorder" TargetType="Border">
             <Setter Property="CornerRadius" Value="10"/>
@@ -167,13 +178,28 @@
                             Click="ApplyFilter_Click"/>
                 </StackPanel>
             </Border>
-
+            <!-- Add Loading Overlay -->
+            <Border x:Name="LoadingOverlay" 
+        Grid.RowSpan="3" 
+        Background="#80000000"
+        VerticalAlignment="Stretch"
+        HorizontalAlignment="Stretch"
+        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+        Panel.ZIndex="1000">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="10" Margin="0,0,0,10"/>
+                    <TextBlock Text="{Binding LoadingMessage}" 
+                   Foreground="White" 
+                   FontSize="14" 
+                   FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
             <!-- KPI Cards -->
             <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,25">
                 <!-- Total Employees -->
                 <Border Style="{StaticResource KpiCardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="142" 
+                        <TextBlock Text="{Binding TotalEmployees}"
                                    FontSize="24" 
                                    FontWeight="Bold" 
                                    Foreground="#00A6FB" 
@@ -190,7 +216,7 @@
                 <!-- Today's Attendance -->
                 <Border Style="{StaticResource KpiCardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="89%" 
+                        <TextBlock Text="{Binding TodayAttendancePercentage, StringFormat={}{0}%}"
                                    FontSize="24" 
                                    FontWeight="Bold" 
                                    Foreground="#2FBF4C" 
@@ -207,7 +233,7 @@
                 <!-- Pending Leaves -->
                 <Border Style="{StaticResource KpiCardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="18" 
+                        <TextBlock Text="{Binding PendingLeaves}"  
                                    FontSize="24" 
                                    FontWeight="Bold" 
                                    Foreground="#E3C63A" 
@@ -224,7 +250,7 @@
                 <!-- Attendance Rate -->
                 <Border Style="{StaticResource KpiCardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="94%" 
+                        <TextBlock Text="{Binding AttendanceRate, StringFormat={}{0}%}"
                                    FontSize="24" 
                                    FontWeight="Bold" 
                                    Foreground="#A95315" 
@@ -331,22 +357,22 @@
                         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="📄 Export Attendance Report (PDF)" 
                                     Style="{StaticResource ExportButtonStyle}"
-                                    Click="ExportAttendancePdf_Click"
+                                     Command="{Binding ExportAttendancePdfCommand}"
                                     Margin="5"/>
 
                             <Button Content="📊 Export Leave Summary (Excel)" 
                                     Style="{StaticResource ExportButtonStyle}"
-                                    Click="ExportLeaveExcel_Click"
+                                    Command="{Binding ExportLeaveExcelCommand}"
                                     Margin="5"/>
 
                             <Button Content="👥 Export Employee List (CSV)" 
                                     Style="{StaticResource ExportButtonStyle}"
-                                    Click="ExportEmployeeCsv_Click"
+                                    Command="{Binding ExportEmployeeCsvCommand}"
                                     Margin="5"/>
 
                             <Button Content="📈 Export Analytics (PDF)" 
                                     Style="{StaticResource ExportButtonStyle}"
-                                    Click="ExportAnalyticsPdf_Click"
+                                    Command="{Binding ExportAnalyticsPdfCommand}"
                                     Margin="5"/>
                         </WrapPanel>
 
