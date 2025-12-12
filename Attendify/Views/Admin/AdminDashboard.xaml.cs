@@ -14,24 +14,134 @@ namespace Attendify.Views
         private DispatcherTimer _timer;
         private Button _currentSelectedButton;
         private AdminDashboardViewModel _viewModel;
+        private EmployeeInfo _currentEmployee; // Changed from EmployeeData to EmployeeInfo
 
+        private static readonly string[] _profileColors =
+        {
+            "#D93A3A", // Red
+            "#3A7BD9", // Blue
+            "#3AD952", // Green
+            "#D9A63A", // Orange
+            "#8A3AD9", // Purple
+            "#D93A99", // Pink
+            "#3AD9C4", // Teal
+            "#D9783A"  // Brown
+        };
+
+        // EmployeeInfo class - NOT nested inside AdminDashboard
+        public class EmployeeInfo
+        {
+            public int EmployeeID { get; set; }
+            public string EmpCode { get; set; } = null!;
+            public string FirstName { get; set; } = null!;
+            public string? MiddleName { get; set; }
+            public string LastName { get; set; } = null!;
+            public string? Department { get; set; }
+            public string? Position { get; set; }
+            public string Email { get; set; } = null!;
+            public string Role { get; set; } = null!;
+        }
+
+        // Default constructor (for backward compatibility)
         public AdminDashboard()
         {
             InitializeComponent();
+            InitializeDashboard(null);
+        }
 
-            // Initialize ViewModel
-            _viewModel = new AdminDashboardViewModel();
-            DataContext = _viewModel;
+        // New constructor with employee data
+        public AdminDashboard(EmployeeInfo employee)
+        {
+            InitializeComponent();
+            InitializeDashboard(employee);
+        }
 
-            // Set profile initial
-            ProfileInitial.Text = (ProfileName.Text.Length > 0) ? ProfileName.Text.Substring(0, 1).ToUpper() : "A";
+        private void InitializeDashboard(EmployeeInfo employee)
+        {
+            try
+            {
+                _currentEmployee = employee;
 
-            // Initialize timer for clock & shift
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += Timer_Tick;
-            _timer.Start();
+                // Initialize ViewModel
+                _viewModel = new AdminDashboardViewModel();
+                DataContext = _viewModel;
 
-            Loaded += AdminDashboard_Loaded;
+                // Set profile information
+                if (_currentEmployee != null)
+                {
+                    // Build full name: First Name + Middle Name (skip Last Name)
+                    string fullName = _currentEmployee.FirstName;
+
+                    if (!string.IsNullOrWhiteSpace(_currentEmployee.MiddleName))
+                    {
+                        fullName += " " + _currentEmployee.MiddleName;
+                    }
+
+                    fullName = fullName.Trim();
+                    ProfileName.Text = string.IsNullOrEmpty(fullName) ? "Administrator" : fullName;
+
+                    // Set profile initial (use first letter of first name)
+                    string initial = _currentEmployee.FirstName?.Length > 0
+                        ? _currentEmployee.FirstName.Substring(0, 1).ToUpper()
+                        : (_currentEmployee.MiddleName?.Length > 0 ? _currentEmployee.MiddleName.Substring(0, 1).ToUpper() : "A");
+                    ProfileInitial.Text = initial;
+
+                    // Set random profile color
+                    SetProfileColor(initial);
+
+                    // Update account button to show role
+                    AccountBtn.Content = $"{_currentEmployee.Role} ▾";
+
+                    // Update window title
+                    this.Title = $"Admin Dashboard - {fullName}";
+                }
+                else
+                {
+                    // Fallback values
+                    ProfileInitial.Text = "A";
+                    ProfileName.Text = "Admin";
+                    SetProfileColor("A");
+                    AccountBtn.Content = "Admin ▾";
+                }
+                // Initialize timer for clock & shift
+                _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+                _timer.Tick += Timer_Tick;
+                _timer.Start();
+
+                Loaded += AdminDashboard_Loaded;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing dashboard: {ex.Message}",
+                    "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SetProfileColor(string initial)
+        {
+            // Create a hash from the initial to get consistent color
+            int hash = 0;
+            if (!string.IsNullOrEmpty(initial))
+            {
+                foreach (char c in initial)
+                {
+                    hash = (hash * 31 + c) % _profileColors.Length;
+                }
+            }
+
+            // Ensure positive index
+            int colorIndex = Math.Abs(hash) % _profileColors.Length;
+
+            try
+            {
+                Color color = (Color)ColorConverter.ConvertFromString(_profileColors[colorIndex]);
+                ProfileInitial.Background = new SolidColorBrush(color);
+            }
+            catch
+            {
+                // Fallback to blue if color conversion fails
+                ProfileInitial.Background = new SolidColorBrush(Color.FromRgb(0, 166, 251));
+            }
         }
 
         private void AdminDashboard_Loaded(object sender, RoutedEventArgs e)
@@ -189,16 +299,73 @@ namespace Attendify.Views
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
         {
             var menu = new ContextMenu();
+
+            // Add employee info at the top if available
+            if (_currentEmployee != null)
+            {
+                // Build full name: First Name + Middle Name
+                string fullName = _currentEmployee.FirstName;
+                if (!string.IsNullOrWhiteSpace(_currentEmployee.MiddleName))
+                {
+                    fullName += " " + _currentEmployee.MiddleName;
+                }
+                fullName = fullName.Trim();
+
+                var infoHeader = new MenuItem
+                {
+                    Header = fullName,
+                    FontWeight = FontWeights.Bold,
+                    IsEnabled = false
+                };
+
+                var roleInfo = new MenuItem
+                {
+                    Header = $"Role: {_currentEmployee.Role}",
+                    IsEnabled = false,
+                    FontSize = 12
+                };
+
+                var emailInfo = new MenuItem
+                {
+                    Header = $"Email: {_currentEmployee.Email}",
+                    IsEnabled = false,
+                    FontSize = 12
+                };
+
+                menu.Items.Add(infoHeader);
+                menu.Items.Add(roleInfo);
+                menu.Items.Add(emailInfo);
+                menu.Items.Add(new Separator());
+            }
+
+            var miProfile = new MenuItem { Header = "My Profile" };
+            miProfile.Click += (s, ev) =>
+            {
+                MessageBox.Show("Profile feature coming soon!", "Profile",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            };
+
             var miSettings = new MenuItem { Header = "Settings" };
             miSettings.Click += (s, ev) =>
             {
                 SetSelectedButton(BtnSettings);
                 ShowSettingsView();
             };
-            var miLogout = new MenuItem { Header = "Log out" };
-            miLogout.Click += (s, ev) => Application.Current.Shutdown();
+
+            menu.Items.Add(miProfile);
             menu.Items.Add(miSettings);
+            menu.Items.Add(new Separator());
+
+            var miLogout = new MenuItem { Header = "Log out" };
+            miLogout.Click += (s, ev) =>
+            {
+                // Go back to login page
+                LoginPage loginPage = new LoginPage();
+                loginPage.Show();
+                this.Close();
+            };
             menu.Items.Add(miLogout);
+
             menu.PlacementTarget = AccountBtn;
             menu.IsOpen = true;
         }

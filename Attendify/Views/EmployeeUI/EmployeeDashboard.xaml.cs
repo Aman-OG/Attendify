@@ -1,4 +1,4 @@
-﻿using Attendify.Views.Employee;
+﻿using Attendify.ViewModels;
 using Attendify.Views.UserControls;
 using System;
 using System.Windows;
@@ -14,24 +14,163 @@ namespace Attendify.Views.Employee
         private DispatcherTimer _timer;
         private Button _currentSelectedButton;
         private EmployeeDashboardViewModel _viewModel;
+        private EmployeeInfo _currentEmployee;
 
+        private static readonly string[] _profileColors =
+        {
+            "#D93A3A", // Red
+            "#3A7BD9", // Blue
+            "#3AD952", // Green
+            "#D9A63A", // Orange
+            "#8A3AD9", // Purple
+            "#D93A99", // Pink
+            "#3AD9C4", // Teal
+            "#D9783A"  // Brown
+        };
+
+        // EmployeeInfo class (same as in AdminDashboard but in this namespace)
+        public class EmployeeInfo
+        {
+            public int EmployeeID { get; set; }
+            public string EmpCode { get; set; } = null!;
+            public string FirstName { get; set; } = null!;
+            public string? MiddleName { get; set; }
+            public string LastName { get; set; } = null!;
+            public string? Department { get; set; }
+            public string? Position { get; set; }
+            public string Email { get; set; } = null!;
+            public string Role { get; set; } = null!;
+        }
+
+        // Default constructor
         public EmployeeDashboard()
         {
             InitializeComponent();
+            InitializeDashboard(null);
+        }
 
-            // Initialize ViewModel
-            _viewModel = new EmployeeDashboardViewModel();
-            DataContext = _viewModel;
+        // Constructor with employee data from this class
+        public EmployeeDashboard(EmployeeInfo employee)
+        {
+            InitializeComponent();
+            InitializeDashboard(employee);
+        }
 
-            // Set profile initial
-            ProfileInitial.Text = (ProfileName.Text.Length > 0) ? ProfileName.Text.Substring(0, 1).ToUpper() : "E";
+        // Constructor with employee data from AdminDashboard
+        public EmployeeDashboard(Attendify.Views.AdminDashboard.EmployeeInfo adminEmployee)
+        {
+            InitializeComponent();
 
-            // Initialize timer for clock & shift
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += Timer_Tick;
-            _timer.Start();
+            // Convert AdminDashboard.EmployeeInfo to this EmployeeInfo
+            var employeeInfo = new EmployeeInfo
+            {
+                EmployeeID = adminEmployee.EmployeeID,
+                EmpCode = adminEmployee.EmpCode,
+                FirstName = adminEmployee.FirstName,
+                MiddleName = adminEmployee.MiddleName,
+                LastName = adminEmployee.LastName,
+                Department = adminEmployee.Department,
+                Position = adminEmployee.Position,
+                Email = adminEmployee.Email,
+                Role = adminEmployee.Role
+            };
 
-            Loaded += EmployeeDashboard_Loaded;
+            InitializeDashboard(employeeInfo);
+        }
+
+        private void InitializeDashboard(EmployeeInfo employee)
+        {
+            try
+            {
+                _currentEmployee = employee;
+
+                // Initialize ViewModel
+                _viewModel = new EmployeeDashboardViewModel();
+                DataContext = _viewModel;
+
+                // Set profile information
+                if (_currentEmployee != null)
+                {
+                    // Build full name: First Name + Middle Name (skip Last Name)
+                    string fullName = _currentEmployee.FirstName;
+
+                    if (!string.IsNullOrWhiteSpace(_currentEmployee.MiddleName))
+                    {
+                        fullName += " " + _currentEmployee.MiddleName;
+                    }
+
+                    fullName = fullName.Trim();
+                    ProfileName.Text = string.IsNullOrEmpty(fullName) ? "Employee" : fullName;
+
+                    // Set profile initial
+                    string initial = _currentEmployee.FirstName?.Length > 0
+                        ? _currentEmployee.FirstName.Substring(0, 1).ToUpper()
+                        : (_currentEmployee.MiddleName?.Length > 0 ? _currentEmployee.MiddleName.Substring(0, 1).ToUpper() : "E");
+                    ProfileInitial.Text = initial;
+
+                    // Set profile color
+                    SetProfileColor(initial);
+
+                    // Update account button to show role
+                    AccountBtn.Content = $"{_currentEmployee.Role} ▾";
+
+                    // Update window title
+                    this.Title = $"Employee Dashboard - {fullName}";
+
+                    // Update ViewModel with employee data
+                    _viewModel.EmployeeName = _currentEmployee.FirstName;
+                    _viewModel.Department = _currentEmployee.Department ?? "";
+                    _viewModel.Position = _currentEmployee.Position ?? "";
+                    _viewModel.FullName = fullName;
+                }
+                else
+                {
+                    // Fallback values
+                    ProfileInitial.Text = "E";
+                    ProfileName.Text = "Employee";
+                    SetProfileColor("E");
+                    AccountBtn.Content = "Employee ▾";
+                }
+
+                // Initialize timer for clock & shift
+                _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+                _timer.Tick += Timer_Tick;
+                _timer.Start();
+
+                Loaded += EmployeeDashboard_Loaded;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing dashboard: {ex.Message}",
+                    "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SetProfileColor(string initial)
+        {
+            // Create a hash from the initial to get consistent color
+            int hash = 0;
+            if (!string.IsNullOrEmpty(initial))
+            {
+                foreach (char c in initial)
+                {
+                    hash = (hash * 31 + c) % _profileColors.Length;
+                }
+            }
+
+            // Ensure positive index
+            int colorIndex = Math.Abs(hash) % _profileColors.Length;
+
+            try
+            {
+                Color color = (Color)ColorConverter.ConvertFromString(_profileColors[colorIndex]);
+                ProfileInitial.Background = new SolidColorBrush(color);
+            }
+            catch
+            {
+                // Fallback to accent blue if color conversion fails
+                ProfileInitial.Background = new SolidColorBrush(Color.FromRgb(0, 166, 251));
+            }
         }
 
         private void EmployeeDashboard_Loaded(object sender, RoutedEventArgs e)
@@ -202,21 +341,61 @@ namespace Attendify.Views.Employee
         {
             var menu = new ContextMenu();
 
+            // Add employee info at the top if available
+            if (_currentEmployee != null)
+            {
+                // Build full name: First Name + Middle Name
+                string fullName = _currentEmployee.FirstName;
+                if (!string.IsNullOrWhiteSpace(_currentEmployee.MiddleName))
+                {
+                    fullName += " " + _currentEmployee.MiddleName;
+                }
+                fullName = fullName.Trim();
+
+                var infoHeader = new MenuItem
+                {
+                    Header = fullName,
+                    FontWeight = FontWeights.Bold,
+                    IsEnabled = false
+                };
+
+                var roleInfo = new MenuItem
+                {
+                    Header = $"Role: {_currentEmployee.Role}",
+                    IsEnabled = false,
+                    FontSize = 12
+                };
+
+                var deptInfo = new MenuItem
+                {
+                    Header = $"Department: {_currentEmployee.Department}",
+                    IsEnabled = false,
+                    FontSize = 12
+                };
+
+                menu.Items.Add(infoHeader);
+                menu.Items.Add(roleInfo);
+                menu.Items.Add(deptInfo);
+                menu.Items.Add(new Separator());
+            }
+
             var miProfile = new MenuItem { Header = "My Profile" };
             miProfile.Click += (s, ev) =>
             {
-                // Navigate to profile view
-                SetSelectedButton(BtnHome); // Profile is not in sidebar, so reset to home
-                ShowHomeView();
+                MessageBox.Show("Profile feature coming soon!", "Profile",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             };
 
             var miSettings = new MenuItem { Header = "Settings" };
             miSettings.Click += (s, ev) =>
             {
-                // Could open settings dialog or navigate to settings view
                 MessageBox.Show("Settings feature coming soon!", "Settings",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             };
+
+            menu.Items.Add(miProfile);
+            menu.Items.Add(miSettings);
+            menu.Items.Add(new Separator());
 
             var miLogout = new MenuItem { Header = "Log out" };
             miLogout.Click += (s, ev) =>
@@ -226,19 +405,22 @@ namespace Attendify.Views.Employee
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    // Close this window and show login/main window
-                    var mainWindow = new MainWindow(); // Or your login window
-                    mainWindow.Show();
+                    // Go back to login page
+                    LoginPage loginPage = new LoginPage();
+                    loginPage.Show();
                     this.Close();
                 }
             };
-
-            menu.Items.Add(miProfile);
-            menu.Items.Add(miSettings);
-            menu.Items.Add(new Separator());
             menu.Items.Add(miLogout);
+
             menu.PlacementTarget = AccountBtn;
             menu.IsOpen = true;
+        }
+
+        // Public method to set employee data after creation
+        public void SetEmployeeData(EmployeeInfo employee)
+        {
+            InitializeDashboard(employee);
         }
     }
 }

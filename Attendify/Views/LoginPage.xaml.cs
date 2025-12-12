@@ -130,38 +130,50 @@ namespace Attendify
             {
                 var loginResponse = await AuthenticateUserAsync(email, password);
 
-                if (loginResponse != null && loginResponse.Success)
+                if (loginResponse != null && loginResponse.Success && loginResponse.Employee != null)
                 {
-                    // Create dashboard with employee data
-                    if (loginResponse.Employee != null)
+                    string role = loginResponse.Role?.ToLower() ?? loginResponse.Employee.Role?.ToLower() ?? "";
+
+                    // Create EmployeeInfo object for AdminDashboard
+                    Attendify.Views.AdminDashboard.EmployeeInfo adminEmployeeInfo = new Attendify.Views.AdminDashboard.EmployeeInfo()
                     {
-                        switch (loginResponse.Role?.ToLower())
-                        {
-                            case "admin":
-                            case "administrator":
-                            case "superadmin":
-                                AdminDashboard adminDashboard = new AdminDashboard(loginResponse.Employee);
-                                adminDashboard.Show();
-                                this.Close();
-                                break;
+                        EmployeeID = loginResponse.Employee.EmployeeID,
+                        FirstName = loginResponse.Employee.FirstName,
+                        LastName = loginResponse.Employee.LastName,
+                        Email = loginResponse.Employee.Email,
+                        Role = loginResponse.Role ?? loginResponse.Employee.Role,
+                        EmpCode = loginResponse.Employee.EmpCode,
+                        Department = loginResponse.Employee.Department,
+                        Position = loginResponse.Employee.Position,
+                        MiddleName = loginResponse.Employee.MiddleName
+                    };
 
-                            case "employee":
-                            case "user":
-                            case "staff":
-                            case "member":
-                                EmployeeDashboard employeeDashboard = new EmployeeDashboard(loginResponse.Employee);
-                                employeeDashboard.Show();
-                                this.Close();
-                                break;
-
-                            default:
-                                ShowErrorMessage($"User role '{loginResponse.Role}' not recognized.");
-                                break;
-                        }
+                    // Navigate based on role
+                    if (role.Contains("admin"))
+                    {
+                        AdminDashboard adminDashboard = new AdminDashboard(adminEmployeeInfo);
+                        adminDashboard.Show();
+                        this.Close();
                     }
                     else
                     {
-                        ShowErrorMessage("No employee data received.");
+                        // For EmployeeDashboard, we need to convert or create EmployeeInfo
+                        EmployeeDashboard.EmployeeInfo employeeInfo = new EmployeeDashboard.EmployeeInfo()
+                        {
+                            EmployeeID = loginResponse.Employee.EmployeeID,
+                            FirstName = loginResponse.Employee.FirstName,
+                            LastName = loginResponse.Employee.LastName,
+                            Email = loginResponse.Employee.Email,
+                            Role = loginResponse.Role ?? loginResponse.Employee.Role,
+                            EmpCode = loginResponse.Employee.EmpCode,
+                            Department = loginResponse.Employee.Department,
+                            Position = loginResponse.Employee.Position,
+                            MiddleName = loginResponse.Employee.MiddleName
+                        };
+
+                        EmployeeDashboard employeeDashboard = new EmployeeDashboard(employeeInfo);
+                        employeeDashboard.Show();
+                        this.Close();
                     }
                 }
                 else
