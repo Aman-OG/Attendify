@@ -10,23 +10,19 @@
         <BlurEffect x:Key="blurEffect" Radius="12"/>
     </Window.Resources>
 
-
     <Grid>
-
-      
-
         <!-- Background Image -->
         <Image Source="/Assets/Images/login.png" Stretch="Fill"/>
 
         <!-- Logo -->
         <StackPanel Orientation="Horizontal" Margin="40,25,0,0" VerticalAlignment="Top">
             <TextBlock Text="Attendify"
-                 VerticalAlignment="Center"
-                 Margin="10,0,0,0"
-                 FontSize="26"
+                       VerticalAlignment="Center"
+                       Margin="10,0,0,0"
+                       FontSize="26"
                        FontFamily="Montserrat"
-                 FontWeight="Bold"
-                 Foreground="#00A6FB"/>
+                       FontWeight="Bold"
+                       Foreground="#00A6FB"/>
         </StackPanel>
 
         <!-- CENTER CARD -->
@@ -53,7 +49,7 @@
                                HorizontalAlignment="Center"
                                Margin="0 0 0 35"/>
 
-                    <!-- USERNAME -->
+                    <!-- EMAIL (Changed from Username) -->
                     <Border Background="#90FFFFFF"
                             CornerRadius="12"
                             Height="40"
@@ -68,7 +64,7 @@
                                      TextChanged="UsernameBox_TextChanged"/>
 
                             <TextBlock x:Name="UserPlaceholder"
-                                       Text="Username"
+                                       Text="Email"
                                        Foreground="#555"
                                        Margin="10,10,0,0"
                                        IsHitTestVisible="False"/>
@@ -97,28 +93,27 @@
                     </Border>
 
                     <Border x:Name="LoginButton"
-        Background="#0C2B38"
-        CornerRadius="15"
-        Height="40"
+                            Background="#0C2B38"
+                            CornerRadius="15"
+                            Height="40"
                             Width="150"
-        Cursor="Hand"
-        Margin="0 0 0 20"
-        MouseEnter="LoginButton_MouseEnter"
-        MouseLeave="LoginButton_MouseLeave"
-        MouseDown="Login_Click">
+                            Cursor="Hand"
+                            Margin="0 0 0 20"
+                            MouseEnter="LoginButton_MouseEnter"
+                            MouseLeave="LoginButton_MouseLeave"
+                            MouseDown="Login_Click">
 
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="1" ScaleY="1"/>
                         </Border.RenderTransform>
 
                         <TextBlock Text="Log in"
-               VerticalAlignment="Center"
-               HorizontalAlignment="Center"
-               Foreground="White"
-               FontSize="18"
-               FontWeight="SemiBold"/>
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Foreground="White"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"/>
                     </Border>
-
 
                     <!-- FORGOT PASSWORD BUTTON -->
                     <Button Content="Forgot password?"
