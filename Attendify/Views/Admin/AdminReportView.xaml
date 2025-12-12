@@ -122,10 +122,10 @@
         <!-- Simple DatePicker Style that works -->
         <Style x:Key="ModernDatePicker" TargetType="DatePicker">
             <Setter Property="Background" Value="#20FFFFFF"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Height" Value="25"/>
+            <Setter Property="Height" Value="35"/>
             <Setter Property="Width" Value="140"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="12"/>
@@ -160,7 +160,7 @@
                     <DatePicker x:Name="StartDatePicker" 
                                 Style="{StaticResource ModernDatePicker}"
                                 Margin="0,0,10,0"
-                                Foreground="black" />
+                                Foreground="Black" />
 
                     <TextBlock Text="to" 
                                Foreground="#80FFFFFF" 
@@ -171,29 +171,26 @@
                     <DatePicker x:Name="EndDatePicker" 
                                 Style="{StaticResource ModernDatePicker}"
                                 Margin="0,0,20,0"
-                                Foreground="black" />
+                                Foreground="Black" />
 
                     <Button Content="🔍 Apply Filter" 
                             Style="{StaticResource RoundedButtonStyle}"
                             Click="ApplyFilter_Click"/>
                 </StackPanel>
             </Border>
-            <!-- Add Loading Overlay -->
-            <Border x:Name="LoadingOverlay" 
-        Grid.RowSpan="3" 
-        Background="#80000000"
-        VerticalAlignment="Stretch"
-        HorizontalAlignment="Stretch"
-        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-        Panel.ZIndex="1000">
+
+            <!-- Loading Overlay -->
+            <Border Style="{StaticResource LoadingOverlayStyle}"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" Width="200" Height="10" Margin="0,0,0,10"/>
                     <TextBlock Text="{Binding LoadingMessage}" 
-                   Foreground="White" 
-                   FontSize="14" 
-                   FontWeight="Bold"/>
+                               Foreground="White" 
+                               FontSize="14" 
+                               FontWeight="Bold"/>
                 </StackPanel>
             </Border>
+
             <!-- KPI Cards -->
             <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,25">
                 <!-- Total Employees -->
@@ -280,13 +277,13 @@
                 <!-- Attendance Trend Line Chart -->
                 <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource GlassRoundedBorder}" Margin="5">
                     <StackPanel>
-                        <TextBlock Text="📈 Monthly Attendance Trend" 
+                        <TextBlock Text="📈 Weekly Attendance Trend" 
                                    FontSize="16" 
                                    FontWeight="Bold" 
                                    Foreground="White" 
                                    Margin="0,0,0,10"/>
                         <oxy:PlotView Model="{Binding AttendanceTrendModel}" 
-                                    Style="{StaticResource OxyPlotChartStyle}"/>
+                                      Style="{StaticResource OxyPlotChartStyle}"/>
                     </StackPanel>
                 </Border>
 
@@ -299,7 +296,7 @@
                                    Foreground="White" 
                                    Margin="0,0,0,10"/>
                         <oxy:PlotView Model="{Binding LeaveDistributionModel}" 
-                                    Style="{StaticResource OxyPlotChartStyle}"/>
+                                      Style="{StaticResource OxyPlotChartStyle}"/>
                     </StackPanel>
                 </Border>
 
@@ -312,39 +309,50 @@
                                    Foreground="White" 
                                    Margin="0,0,0,10"/>
                         <oxy:PlotView Model="{Binding DepartmentLeaveModel}" 
-                                    Style="{StaticResource OxyPlotChartStyle}"/>
+                                      Style="{StaticResource OxyPlotChartStyle}"/>
                     </StackPanel>
                 </Border>
+
                 <!-- Performance Gauge -->
                 <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource GlassRoundedBorder}" Margin="5">
                     <StackPanel>
                         <TextBlock Text="🎯 Performance Overview" 
-                   FontSize="16" 
-                   FontWeight="Bold" 
-                   Foreground="White" 
-                   Margin="0,0,0,10"/>
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Foreground="White" 
+                                   Margin="0,0,0,10"/>
 
                         <!-- Gauge with clear labels -->
                         <Grid Height="120" Margin="0,0,0,15">
                             <oxy:PlotView Model="{Binding PerformanceGaugeModel}" 
-                        Background="Transparent"/>
+                                          Background="Transparent"/>
                         </Grid>
 
-                        <!-- Performance Stats with clear percentage breakdown -->
+                        <!-- Performance Stats with actual data -->
                         <StackPanel>
-                            <TextBlock Text="📋 Attendance Breakdown" 
-                       FontSize="14" 
-                       FontWeight="SemiBold" 
-                       Foreground="White" 
-                       Margin="0,0,0,10"/>
-                            <TextBlock Text="• Present: 85%&#x0a;• Absent: 15%&#x0a;• Late Arrivals: 8%&#x0a;" 
-                       FontSize="12" 
-                       Foreground="#CCCCCC" 
-                       TextWrapping="Wrap"
-                       LineHeight="18"/>
+                            <TextBlock Text="📋 Performance Breakdown" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <TextBlock FontSize="12" 
+                                       Foreground="#CCCCCC" 
+                                       TextWrapping="Wrap"
+                                       LineHeight="18">
+                                <Run Text="• Attendance Rate: "/>
+                                <Run Text="{Binding AttendanceRate, StringFormat={}{0}%}"/>
+                                <LineBreak/>
+                                <Run Text="• Today's Attendance: "/>
+                                <Run Text="{Binding TodayAttendancePercentage, StringFormat={}{0}%}"/>
+                                <LineBreak/>
+                                <Run Text="• Pending Leaves: "/>
+                                <Run Text="{Binding PendingLeaves}"/>
+                            </TextBlock>
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
                 <!-- Export Reports -->
                 <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource GlassRoundedBorder}" Margin="5">
                     <StackPanel>
@@ -357,7 +365,7 @@
                         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="📄 Export Attendance Report (PDF)" 
                                     Style="{StaticResource ExportButtonStyle}"
-                                     Command="{Binding ExportAttendancePdfCommand}"
+                                    Command="{Binding ExportAttendancePdfCommand}"
                                     Margin="5"/>
 
                             <Button Content="📊 Export Leave Summary (Excel)" 
@@ -376,7 +384,7 @@
                                     Margin="5"/>
                         </WrapPanel>
 
-                        <!-- Summary Stats -->
+                        <!-- Quick Summary with actual data -->
                         <StackPanel Margin="0,20,0,0">
                             <TextBlock Text="📋 Quick Summary" 
                                        FontSize="14" 
@@ -384,11 +392,25 @@
                                        Foreground="White" 
                                        Margin="0,0,0,10"/>
 
-                            <TextBlock Text="• Period: Last 30 days&#x0a;• Average Daily Attendance: 92%&#x0a;• Total Leave Requests: 45&#x0a;• Most Active Department: HR (12 leaves)&#x0a;• Best Attendance: IT Department (98%)" 
-                                       FontSize="12" 
+                            <TextBlock FontSize="12" 
                                        Foreground="#CCCCCC" 
                                        TextWrapping="Wrap"
-                                       LineHeight="18"/>
+                                       LineHeight="18">
+                                <Run Text="• Period: "/>
+                                <Run Text="{Binding Period}"/>
+                                <LineBreak/>
+                                <Run Text="• Average Daily Attendance: "/>
+                                <Run Text="{Binding AverageDailyAttendance, StringFormat={}{0}%}"/>
+                                <LineBreak/>
+                                <Run Text="• Total Leave Requests: "/>
+                                <Run Text="{Binding TotalLeaveRequests}"/>
+                                <LineBreak/>
+                                <Run Text="• Most Active Department: "/>
+                                <Run Text="{Binding MostActiveDepartment}"/>
+                                <LineBreak/>
+                                <Run Text="• Best Attendance Department: "/>
+                                <Run Text="{Binding BestAttendanceDepartment}"/>
+                            </TextBlock>
                         </StackPanel>
                     </StackPanel>
                 </Border>

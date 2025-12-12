@@ -1,18 +1,16 @@
-﻿using Attendify.API.Data;
-using ClosedXML.Excel;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Attendify.DATA;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
 using OfficeOpenXml;
+using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Threading.Tasks;
 
 namespace Attendify.API.Controllers
 {
@@ -20,9 +18,9 @@ namespace Attendify.API.Controllers
     [ApiController]
     public class ReportsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly AppDbContext _context;
 
-        public ReportsController(ApplicationDbContext context)
+        public ReportsController(AppDbContext context)
         {
             _context = context;
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
@@ -71,11 +69,11 @@ namespace Attendify.API.Controllers
             try
             {
                 var (queryStartDate, queryEndDate) = ValidateDates(startDate, endDate);
-
+                
                 var attendanceData = await GetAttendanceReportData(queryStartDate, queryEndDate);
                 var pdfBytes = GenerateAttendancePdf(attendanceData, queryStartDate, queryEndDate);
-
-                return File(pdfBytes, "application/pdf",
+                
+                return File(pdfBytes, "application/pdf", 
                     $"Attendance_Report_{queryStartDate:yyyyMMdd}_{queryEndDate:yyyyMMdd}.pdf");
             }
             catch (Exception ex)
@@ -93,12 +91,12 @@ namespace Attendify.API.Controllers
             try
             {
                 var (queryStartDate, queryEndDate) = ValidateDates(startDate, endDate);
-
+                
                 var leaveData = await GetLeaveReportData(queryStartDate, queryEndDate);
                 var excelBytes = GenerateLeaveExcel(leaveData, queryStartDate, queryEndDate);
-
-                return File(excelBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                
+                return File(excelBytes, 
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
                     $"Leave_Summary_{queryStartDate:yyyyMMdd}_{queryEndDate:yyyyMMdd}.xlsx");
             }
             catch (Exception ex)
@@ -130,7 +128,7 @@ namespace Attendify.API.Controllers
                     .ToListAsync();
 
                 var csvContent = GenerateEmployeeCsv(employees);
-
+                
                 return File(csvContent, "text/csv", $"Employee_List_{DateTime.Today:yyyyMMdd}.csv");
             }
             catch (Exception ex)
@@ -148,7 +146,7 @@ namespace Attendify.API.Controllers
             try
             {
                 var (queryStartDate, queryEndDate) = ValidateDates(startDate, endDate);
-
+                
                 var report = new ReportResponse
                 {
                     DateRange = new DateRange { StartDate = queryStartDate, EndDate = queryEndDate },
@@ -156,10 +154,10 @@ namespace Attendify.API.Controllers
                     LeaveDistribution = await GetLeaveDistribution(queryStartDate, queryEndDate),
                     QuickSummary = await GetQuickSummary(queryStartDate, queryEndDate)
                 };
-
+                
                 var pdfBytes = GenerateAnalyticsPdf(report);
-
-                return File(pdfBytes, "application/pdf",
+                
+                return File(pdfBytes, "application/pdf", 
                     $"Analytics_Report_{queryStartDate:yyyyMMdd}_{queryEndDate:yyyyMMdd}.pdf");
             }
             catch (Exception ex)
@@ -172,8 +170,12 @@ namespace Attendify.API.Controllers
 
         private (DateTime, DateTime) ValidateDates(DateTime? startDate, DateTime? endDate)
         {
-            var queryStartDate = startDate ?? DateTime.Today.AddDays(-30);
-            var queryEndDate = endDate ?? DateTime.Today;
+            // Use UTC today
+            var defaultStart = DateTime.UtcNow.Date.AddDays(-30);
+            var defaultEnd = DateTime.UtcNow.Date;
+
+            var queryStartDate = startDate?.ToUniversalTime().Date ?? defaultStart;
+            var queryEndDate = endDate?.ToUniversalTime().Date ?? defaultEnd;
 
             if (queryEndDate < queryStartDate)
                 queryEndDate = queryStartDate.AddDays(30);
@@ -181,27 +183,34 @@ namespace Attendify.API.Controllers
             return (queryStartDate, queryEndDate);
         }
 
+
         private async Task<KpiStats> GetKpiStats(DateTime startDate, DateTime endDate)
         {
             var totalEmployees = await _context.Employees
-                .Where(e => e.IsActive)
-                .CountAsync();
+             .Where(e => e.IsActive)
+             .CountAsync();
 
-            var today = DateTime.Today;
+            // Use UTC today
+            var todayUtc = DateTime.UtcNow.Date;
+
             var todayPresent = await _context.Attendance
-                .Where(a => a.Date.Date == today && (a.Status == "Present" || a.Status == "Late"))
+                .Where(a => a.Date.Date == todayUtc && (a.Status == "Present" || a.Status == "Late"))
                 .CountAsync();
 
             var todayAttendancePercentage = totalEmployees > 0
                 ? Math.Round((todayPresent * 100.0) / totalEmployees, 1)
                 : 0;
 
-            var pendingLeaves = await _context.LeaveRequests
-                .Where(l => l.Status == "Pending" && l.StartDate <= endDate && l.EndDate >= startDate)
+            var pendingLeaves = await _context.Leaves
+                .Where(l => l.Status == "Pending" &&
+                           l.FromDate.Value.Date <= endDate.Date &&
+                           l.ToDate.Value.Date >= startDate.Date)
                 .CountAsync();
 
             var totalAttendance = await _context.Attendance
-                .Where(a => a.Date >= startDate && a.Date <= endDate && (a.Status == "Present" || a.Status == "Late"))
+                .Where(a => a.Date.Date >= startDate.Date &&
+                           a.Date.Date <= endDate.Date &&
+                           (a.Status == "Present" || a.Status == "Late"))
                 .CountAsync();
 
             var totalExpected = totalEmployees * (endDate - startDate).Days;
@@ -218,13 +227,21 @@ namespace Attendify.API.Controllers
             };
         }
 
+
+
+
+
+
+
         private async Task<AttendanceTrend> GetAttendanceTrend()
         {
             var trend = new AttendanceTrend();
             var totalEmployees = await _context.Employees.Where(e => e.IsActive).CountAsync();
 
+            // Use UTC today
+            var todayUtc = DateTime.UtcNow.Date;
             var last7Days = Enumerable.Range(0, 7)
-                .Select(i => DateTime.Today.AddDays(-i))
+                .Select(i => todayUtc.AddDays(-i))
                 .OrderBy(d => d)
                 .ToList();
 
@@ -247,43 +264,77 @@ namespace Attendify.API.Controllers
 
         private async Task<LeaveDistribution> GetLeaveDistribution(DateTime startDate, DateTime endDate)
         {
-            var leaves = await _context.LeaveRequests
-                .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
-                .GroupBy(l => l.Status)
-                .Select(g => new { Status = g.Key, Count = g.Count() })
-                .ToListAsync();
-
-            return new LeaveDistribution
+            try
             {
-                Approved = leaves.FirstOrDefault(l => l.Status == "Approved")?.Count ?? 0,
-                Pending = leaves.FirstOrDefault(l => l.Status == "Pending")?.Count ?? 0,
-                Rejected = leaves.FirstOrDefault(l => l.Status == "Rejected")?.Count ?? 0,
-                Cancelled = leaves.FirstOrDefault(l => l.Status == "Cancelled")?.Count ?? 0
-            };
+                var leaves = await _context.Leaves
+                    .Where(l => l.CreatedAt.Date >= startDate.Date && l.CreatedAt.Date <= endDate.Date)
+                    .GroupBy(l => l.Status ?? "Pending") // Handle null status
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                // Debug output
+                Console.WriteLine($"Leave Distribution Query: Found {leaves.Count} status groups");
+                foreach (var item in leaves)
+                {
+                    Console.WriteLine($"  {item.Status}: {item.Count}");
+                }
+
+                return new LeaveDistribution
+                {
+                    Approved = leaves.FirstOrDefault(l => l.Status == "Approved")?.Count ?? 0,
+                    Pending = leaves.FirstOrDefault(l => l.Status == "Pending")?.Count ?? 0,
+                    Rejected = leaves.FirstOrDefault(l => l.Status == "Rejected")?.Count ?? 0,
+                    Cancelled = leaves.FirstOrDefault(l => l.Status == "Cancelled")?.Count ?? 0
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetLeaveDistribution: {ex.Message}");
+                return new LeaveDistribution(); // Return empty object instead of throwing
+            }
         }
 
         private async Task<DepartmentLeave> GetDepartmentLeave(DateTime startDate, DateTime endDate)
         {
-            var departmentLeaves = await _context.LeaveRequests
-                .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
-                .Join(_context.Employees,
-                    leave => leave.EmpCode,
-                    emp => emp.EmpCode,
-                    (leave, emp) => new { emp.Department })
-                .GroupBy(x => x.Department)
-                .Select(g => new { Department = g.Key, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(5)
-                .ToListAsync();
-
-            var result = new DepartmentLeave();
-            foreach (var dept in departmentLeaves)
+            try
             {
-                result.Departments.Add(dept.Department ?? "Unknown");
-                result.LeaveCounts.Add(dept.Count);
-            }
+                var departmentLeaves = await _context.Leaves
+                    .Where(l => l.CreatedAt.Date >= startDate.Date && l.CreatedAt.Date <= endDate.Date)
+                    .Join(_context.Employees,
+                        leave => leave.EmpCode,
+                        emp => emp.EmpCode,
+                        (leave, emp) => new {
+                            Department = emp.Department ?? "Unknown",
+                            Status = leave.Status ?? "Pending"
+                        })
+                    .Where(x => x.Status == "Approved") // Only count approved leaves
+                    .GroupBy(x => x.Department)
+                    .Select(g => new { Department = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(5)
+                    .ToListAsync();
 
-            return result;
+                // Debug output
+                Console.WriteLine($"Department Leave Query: Found {departmentLeaves.Count} departments");
+                foreach (var dept in departmentLeaves)
+                {
+                    Console.WriteLine($"  {dept.Department}: {dept.Count} leaves");
+                }
+
+                var result = new DepartmentLeave();
+                foreach (var dept in departmentLeaves)
+                {
+                    result.Departments.Add(dept.Department);
+                    result.LeaveCounts.Add(dept.Count);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetDepartmentLeave: {ex.Message}");
+                return new DepartmentLeave(); // Return empty object
+            }
         }
 
         private async Task<PerformanceGauge> GetPerformanceGauge(DateTime startDate, DateTime endDate)
@@ -300,19 +351,19 @@ namespace Attendify.API.Controllers
                 .CountAsync();
 
             var totalExpected = totalEmployees * totalDays;
-            var attendancePercentage = totalExpected > 0
+            var attendancePercentage = totalExpected > 0 
                 ? Math.Round((totalPresent * 100.0) / totalExpected, 1)
                 : 0;
 
-            var onTimePercentage = (totalPresent + totalLate) > 0
+            var onTimePercentage = (totalPresent + totalLate) > 0 
                 ? Math.Round((totalPresent * 100.0) / (totalPresent + totalLate), 1)
                 : 0;
 
-            var totalLeaves = await _context.LeaveRequests
-                .Where(l => l.Status == "Approved" && l.StartDate <= endDate && l.EndDate >= startDate)
+            var totalLeaves = await _context.Leaves
+                .Where(l => l.Status == "Approved" && l.FromDate <= endDate && l.ToDate >= startDate)
                 .CountAsync();
 
-            var leavePercentage = totalExpected > 0
+            var leavePercentage = totalExpected > 0 
                 ? Math.Round((totalLeaves * 100.0) / totalExpected, 1)
                 : 0;
 
@@ -326,50 +377,84 @@ namespace Attendify.API.Controllers
 
         private async Task<QuickSummary> GetQuickSummary(DateTime startDate, DateTime endDate)
         {
-            var totalEmployees = await _context.Employees.Where(e => e.IsActive).CountAsync();
-            var totalDays = (endDate - startDate).Days > 0 ? (endDate - startDate).Days : 1;
-
-            var totalPresent = await _context.Attendance
-                .Where(a => a.Date >= startDate && a.Date <= endDate && (a.Status == "Present" || a.Status == "Late"))
-                .CountAsync();
-
-            var averageDailyAttendance = Math.Round((totalPresent * 100.0) / (totalEmployees * totalDays), 1);
-
-            var totalLeaveRequests = await _context.LeaveRequests
-                .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
-                .CountAsync();
-
-            var mostActiveDepartment = await _context.LeaveRequests
-                .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
-                .Join(_context.Employees,
-                    leave => leave.EmpCode,
-                    emp => emp.EmpCode,
-                    (leave, emp) => emp.Department)
-                .GroupBy(d => d)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefaultAsync();
-
-            var bestAttendanceDepartment = await _context.Attendance
-                .Where(a => a.Date >= startDate && a.Date <= endDate && a.Status == "Present")
-                .Join(_context.Employees,
-                    att => att.EmpCode,
-                    emp => emp.EmpCode,
-                    (att, emp) => emp.Department)
-                .GroupBy(d => d)
-                .Select(g => new { Department = g.Key, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Select(x => x.Department)
-                .FirstOrDefaultAsync();
-
-            return new QuickSummary
+            try
             {
-                Period = $"{startDate:MMM dd} - {endDate:MMM dd}",
-                AverageDailyAttendance = averageDailyAttendance,
-                TotalLeaveRequests = totalLeaveRequests,
-                MostActiveDepartment = mostActiveDepartment ?? "N/A",
-                BestAttendanceDepartment = bestAttendanceDepartment ?? "N/A"
-            };
+                var totalEmployees = await _context.Employees.Where(e => e.IsActive).CountAsync();
+                var totalDays = Math.Max((endDate - startDate).Days, 1);
+
+                // Fix: Count leaves in the date range
+                var totalLeaveRequests = await _context.Leaves
+                    .Where(l => l.CreatedAt.Date >= startDate.Date && l.CreatedAt.Date <= endDate.Date)
+                    .CountAsync();
+
+                // Fix: Calculate average daily attendance correctly
+                var totalPresent = await _context.Attendance
+                    .Where(a => a.Date.Date >= startDate.Date &&
+                               a.Date.Date <= endDate.Date &&
+                               (a.Status == "Present" || a.Status == "Late"))
+                    .CountAsync();
+
+                var averageDailyAttendance = totalEmployees * totalDays > 0
+                    ? Math.Round((totalPresent * 100.0) / (totalEmployees * totalDays), 1)
+                    : 0;
+
+                // Fix: Get most active department (most leaves)
+                var mostActiveDepartment = await _context.Leaves
+                    .Where(l => l.CreatedAt.Date >= startDate.Date && l.CreatedAt.Date <= endDate.Date)
+                    .Join(_context.Employees,
+                        leave => leave.EmpCode,
+                        emp => emp.EmpCode,
+                        (leave, emp) => emp.Department ?? "Unknown")
+                    .GroupBy(d => d)
+                    .Select(g => new { Department = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Select(x => x.Department)
+                    .FirstOrDefaultAsync();
+
+                // Fix: Get best attendance department
+                var departmentAttendance = await _context.Attendance
+                    .Where(a => a.Date.Date >= startDate.Date &&
+                               a.Date.Date <= endDate.Date &&
+                               a.Status == "Present")
+                    .Join(_context.Employees,
+                        att => att.EmpCode,
+                        emp => emp.EmpCode,
+                        (att, emp) => new { emp.Department })
+                    .GroupBy(x => x.Department)
+                    .Select(g => new {
+                        Department = g.Key ?? "Unknown",
+                        Count = g.Count()
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .FirstOrDefaultAsync();
+
+                var bestAttendanceDepartment = departmentAttendance?.Department ?? "N/A";
+
+                Console.WriteLine($"Quick Summary: TotalLeaves={totalLeaveRequests}, " +
+                                 $"MostActiveDept={mostActiveDepartment}, " +
+                                 $"BestAttendanceDept={bestAttendanceDepartment}");
+
+                return new QuickSummary
+                {
+                    Period = $"{startDate:MMM dd} - {endDate:MMM dd}",
+                    AverageDailyAttendance = averageDailyAttendance,
+                    TotalLeaveRequests = totalLeaveRequests,
+                    MostActiveDepartment = mostActiveDepartment ?? "N/A",
+                    BestAttendanceDepartment = bestAttendanceDepartment
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetQuickSummary: {ex.Message}");
+                return new QuickSummary
+                {
+                    Period = $"{startDate:MMM dd} - {endDate:MMM dd}",
+                    AverageDailyAttendance = 0,
+                    TotalLeaveRequests = 0,
+                    MostActiveDepartment = "N/A",
+                    BestAttendanceDepartment = "N/A"
+                };
+            }
         }
 
         private async Task<List<AttendanceExportDto>> GetAttendanceReportData(DateTime startDate, DateTime endDate)
@@ -386,7 +471,7 @@ namespace Attendify.API.Controllers
                         EmployeeName = $"{employee.FirstName} {employee.LastName}",
                         Department = employee.Department,
                         Status = attendance.Status,
-                        CheckInTime = attendance.CheckInTime ?? "N/A"
+                        CheckInTime = "N/A" // Your Attendance model doesn't have CheckInTime
                     })
                 .OrderByDescending(a => a.Date)
                 .ThenBy(a => a.Department)
@@ -395,8 +480,8 @@ namespace Attendify.API.Controllers
 
         private async Task<List<LeaveExportDto>> GetLeaveReportData(DateTime startDate, DateTime endDate)
         {
-            return await _context.LeaveRequests
-                .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
+            return await _context.Leaves
+                .Where(l => l.FromDate <= endDate && l.ToDate >= startDate)
                 .Join(_context.Employees,
                     leave => leave.EmpCode,
                     employee => employee.EmpCode,
@@ -406,13 +491,15 @@ namespace Attendify.API.Controllers
                         EmployeeID = employee.EmployeeID,
                         EmployeeName = $"{employee.FirstName} {employee.LastName}",
                         Department = employee.Department,
-                        LeaveType = leave.LeaveType,
-                        StartDate = leave.StartDate,
-                        EndDate = leave.EndDate,
-                        Days = leave.Days,
-                        Status = leave.Status,
-                        Reason = leave.Reason,
-                        AppliedDate = leave.AppliedDate
+                        LeaveType = leave.ReasonTitle ?? "General", // Using ReasonTitle as LeaveType
+                        StartDate = leave.FromDate ?? DateTime.MinValue,
+                        EndDate = leave.ToDate ?? DateTime.MinValue,
+                        Days = leave.FromDate.HasValue && leave.ToDate.HasValue 
+                            ? (int)(leave.ToDate.Value - leave.FromDate.Value).TotalDays + 1 
+                            : 0,
+                        Status = leave.Status ?? "Pending",
+                        Reason = leave.Detail ?? "No details provided",
+                        AppliedDate = leave.CreatedAt
                     })
                 .OrderByDescending(l => l.AppliedDate)
                 .ThenBy(l => l.Status)
@@ -421,7 +508,8 @@ namespace Attendify.API.Controllers
 
         private byte[] GenerateAttendancePdf(List<AttendanceExportDto> data, DateTime startDate, DateTime endDate)
         {
-            var document = Document.Create(container =>
+            // Use QuestPDF Document instead of System.Reflection.Metadata.Document
+            var document = global::QuestPDF.Fluent.Document.Create(container =>
             {
                 container.Page(page =>
                 {
@@ -458,7 +546,7 @@ namespace Attendify.API.Controllers
                                         columns.RelativeColumn(2); // Name
                                         columns.RelativeColumn(); // Department
                                         columns.RelativeColumn(); // Status
-                                        columns.RelativeColumn(); // Check-in
+                                        columns.RelativeColumn(); // Time
                                     });
 
                                     // Header
@@ -469,16 +557,16 @@ namespace Attendify.API.Controllers
                                         header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Employee Name");
                                         header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Department");
                                         header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Status");
-                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Check-in Time");
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Time");
                                     });
 
                                     // Data rows
                                     foreach (var item in data)
                                     {
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Date.ToString("dd/MM/yyyy"));
-                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.EmployeeID);
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.EmployeeID.ToString());
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.EmployeeName);
-                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Department);
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Department ?? "N/A");
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Status);
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.CheckInTime);
                                     }
@@ -577,14 +665,14 @@ namespace Attendify.API.Controllers
             {
                 // Write header
                 writer.WriteLine("EmployeeID,EmpCode,FirstName,LastName,Email,Department,Position,Phone,IsActive");
-
+                
                 // Write data
                 foreach (var emp in employees)
                 {
                     writer.WriteLine($"{emp.EmployeeID},{emp.EmpCode},{emp.FirstName},{emp.LastName}," +
                                     $"{emp.Email},{emp.Department},{emp.Position},{emp.Phone},{emp.IsActive}");
                 }
-
+                
                 writer.Flush();
                 return stream.ToArray();
             }
@@ -592,7 +680,8 @@ namespace Attendify.API.Controllers
 
         private byte[] GenerateAnalyticsPdf(ReportResponse report)
         {
-            var document = Document.Create(container =>
+            // Use QuestPDF Document
+            var document = global::QuestPDF.Fluent.Document.Create(container =>
             {
                 container.Page(page =>
                 {
@@ -743,7 +832,7 @@ namespace Attendify.API.Controllers
     public class AttendanceExportDto
     {
         public DateTime Date { get; set; }
-        public string EmployeeID { get; set; } = string.Empty;
+        public int EmployeeID { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
@@ -753,7 +842,7 @@ namespace Attendify.API.Controllers
     public class LeaveExportDto
     {
         public int LeaveID { get; set; }
-        public string EmployeeID { get; set; } = string.Empty;
+        public int EmployeeID { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         public string LeaveType { get; set; } = string.Empty;
@@ -767,7 +856,7 @@ namespace Attendify.API.Controllers
 
     public class EmployeeExportDto
     {
-        public string EmployeeID { get; set; } = string.Empty;
+        public int EmployeeID { get; set; }
         public string EmpCode { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;

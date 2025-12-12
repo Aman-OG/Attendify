@@ -22,7 +22,12 @@ namespace Attendify.Views.UserControls
             EndDatePicker.SelectedDate = _viewModel.EndDate;
 
             // Load initial data
-            Loaded += async (s, e) => await _viewModel.LoadReportsAsync();
+            Loaded += async (s, e) => await LoadInitialDataAsync();
+        }
+
+        private async Task LoadInitialDataAsync()
+        {
+            await _viewModel.LoadReportsAsync();
         }
 
         private async void ApplyFilter_Click(object sender, RoutedEventArgs e)
@@ -45,26 +50,6 @@ namespace Attendify.Views.UserControls
             _viewModel.EndDate = EndDatePicker.SelectedDate.Value;
 
             await _viewModel.LoadReportsAsync();
-        }
-
-        private async void ExportAttendancePdf_Click(object sender, RoutedEventArgs e)
-        {
-            await _viewModel.ExportAttendancePdfAsync();
-        }
-
-        private async void ExportLeaveExcel_Click(object sender, RoutedEventArgs e)
-        {
-            await _viewModel.ExportLeaveExcelAsync();
-        }
-
-        private async void ExportEmployeeCsv_Click(object sender, RoutedEventArgs e)
-        {
-            await _viewModel.ExportEmployeeCsvAsync();
-        }
-
-        private async void ExportAnalyticsPdf_Click(object sender, RoutedEventArgs e)
-        {
-            await _viewModel.ExportAnalyticsPdfAsync();
         }
     }
 }
