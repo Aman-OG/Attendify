@@ -257,34 +257,7 @@ Foreground="#00A6FB"
                 </ContentControl>
             </Grid>
 
-            <!-- Quick Actions -->
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Quick Actions" 
-                               Foreground="#00A6FB" 
-                               FontSize="18" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,15"/>
-
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Content="📝 Clock In/Out" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="10"
-                                Padding="20,12"
-                                Click="ClockInOut_Click"/>
-                        <Button Content="📋 Request Leave" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="10"
-                                Padding="20,12"
-                                Click="RequestLeave_Click"/>
-                        <Button Content="📊 View Schedule" 
-                                Style="{StaticResource ModernButton}"
-                                Margin="10"
-                                Padding="20,12"
-                                Click="ViewSchedule_Click"/>
-                    </StackPanel>
-                </StackPanel>
-            </ContentControl>
+          
 
             <!-- Recent Admin Messages -->
             <ContentControl Template="{StaticResource GlassContainerTemplate}">
