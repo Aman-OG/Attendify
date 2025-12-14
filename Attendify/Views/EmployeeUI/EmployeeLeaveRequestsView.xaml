@@ -3,17 +3,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Attendify.Views.Employee"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="800"
+             d:DesignHeight="600" d:DesignWidth="900"
              Background="Transparent">
 
     <UserControl.Resources>
+        <!-- Glass container style -->
+        <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
+            <Grid>
+                <Border CornerRadius="10">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#03FFFFFF" Offset="0" />
+                            <GradientStop Color="#01FFFFFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="18" Opacity="0.18" ShadowDepth="2"/>
+                    </Border.Effect>
+                </Border>
+                <Border CornerRadius="10" Padding="12" Background="#22FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1">
+                    <ContentPresenter />
+                </Border>
+            </Grid>
+        </ControlTemplate>
+
         <!-- Modern Button Style -->
         <Style x:Key="ModernButton" TargetType="Button">
-            <Setter Property="Background" Value="#38b000"/>
+            <Setter Property="Background" Value="#00A6FB"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -28,10 +50,14 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2d8c00"/>
+                                <Setter TargetName="border" Property="Background" Value="#0088CC"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#237300"/>
+                                <Setter TargetName="border" Property="Background" Value="#006699"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="#666666"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -42,30 +68,17 @@
         <!-- Secondary Button Style -->
         <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#dddf00"/>
-            <Setter Property="BorderBrush" Value="#dddf00"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#00A6FB"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- Glass container style -->
-        <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
-            <Grid>
-                <Border x:Name="MainBorder" CornerRadius="10">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#33FFFFFF" Offset="0" />
-                            <GradientStop Color="#13FFFFFF" Offset="1" />
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="18" Opacity="0.18" ShadowDepth="2"/>
-                    </Border.Effect>
-                </Border>
-                <Border CornerRadius="10" Padding="12" Background="#22FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1">
-                    <ContentPresenter />
-                </Border>
-            </Grid>
-        </ControlTemplate>
+        <!-- Small Action Button Style -->
+        <Style x:Key="SmallActionButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
 
         <!-- DataGrid Style -->
         <Style x:Key="ModernDataGrid" TargetType="DataGrid">
@@ -92,415 +105,431 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#20dddf00"/>
+                    <Setter Property="Background" Value="#2000A6FB"/>
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#40dddf00"/>
+                    <Setter Property="Background" Value="#4000A6FB"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
-        <!-- DataGrid Column Header Style -->
-        <Style x:Key="GlassColumnHeaderStyle" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#00A6FB"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Height" Value="40"/>
+        <!-- TextBox Style -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-
-        <!-- Small Action Button Style -->
-        <Style x:Key="SmallActionButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Margin" Value="2"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <Border x:Name="border" 
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8">
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              VerticalAlignment="Center"
+                                              Background="Transparent"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#00A6FB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- BooleanToVisibility Converter -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
     </UserControl.Resources>
 
-    <Grid>
-        <!-- Main Content -->
-        <ScrollViewer x:Name="MainScrollViewer" VerticalScrollBarVisibility="Auto" Padding="10">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
             <StackPanel>
-                <!-- Header Section -->
-                <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="Leave Requests" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="24" 
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
-                        <TextBlock Text="Request time off and track your leave applications" 
-                                   Foreground="White" 
-                                   FontSize="14"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </ContentControl>
+                <TextBlock Text="Leave Requests" 
+                           Foreground="#00A6FB" 
+                           FontSize="24" 
+                           FontWeight="Bold"
+                           Margin="0,0,0,5"/>
+                <TextBlock Text="Request time off and track your leave applications" 
+                           Foreground="White" 
+                           FontSize="14"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </ContentControl>
 
-                <!-- Quick Stats -->
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
 
-                    <!-- Pending Requests -->
-                    <ContentControl Grid.Column="0" Template="{StaticResource GlassContainerTemplate}" Margin="10">
-                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="⏳ Pending" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="14" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="1" 
-                                       Foreground="#FF9800" 
-                                       FontSize="24" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </ContentControl>
+            <!-- Leave History Section -->
+            <ContentControl Grid.Column="0" Template="{StaticResource GlassContainerTemplate}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                    <!-- Approved Requests -->
-                    <ContentControl Grid.Column="1" Template="{StaticResource GlassContainerTemplate}" Margin="10">
-                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="✅ Approved" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="14" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="5" 
-                                       Foreground="#38b000" 
-                                       FontSize="24" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </ContentControl>
+                    <!-- Quick Stats -->
+                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Rejected Requests -->
-                    <ContentControl Grid.Column="2" Template="{StaticResource GlassContainerTemplate}" Margin="10">
-                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="❌ Rejected" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="14" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="2" 
-                                       Foreground="#FF6B6B" 
-                                       FontSize="24" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </ContentControl>
+                        <!-- Pending Requests -->
+                        <ContentControl Grid.Column="0" Template="{StaticResource GlassContainerTemplate}" Margin="5">
+                            <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="⏳ Pending" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock x:Name="PendingCount" 
+                                           Text="0" 
+                                           Foreground="#FF9800" 
+                                           FontSize="24" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ContentControl>
 
-                    <!-- Request Leave Button -->
-                    <Button Grid.Column="3" 
-                            Content="+ Request Leave" 
-                            Style="{StaticResource ModernButton}"
-                            Margin="10"
-                            Padding="20,12"
-                            Click="RequestLeave_Click"
-                            VerticalAlignment="Center"/>
+                        <!-- Approved Requests -->
+                        <ContentControl Grid.Column="1" Template="{StaticResource GlassContainerTemplate}" Margin="5">
+                            <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="✅ Approved" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock x:Name="ApprovedCount" 
+                                           Text="0" 
+                                           Foreground="#38b000" 
+                                           FontSize="24" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ContentControl>
+
+                        <!-- Rejected Requests -->
+                        <ContentControl Grid.Column="2" Template="{StaticResource GlassContainerTemplate}" Margin="5">
+                            <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="❌ Rejected" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock x:Name="RejectedCount" 
+                                           Text="0" 
+                                           Foreground="#FF6B6B" 
+                                           FontSize="24" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ContentControl>
+                    </Grid>
+
+                    <!-- Request Button -->
+                    <Border Grid.Row="1" 
+                            Background="#20FFFFFF" 
+                            CornerRadius="8" 
+                            BorderBrush="#40FFFFFF" 
+                            BorderThickness="1" 
+                            Margin="0,0,0,15"
+                            Height="40">
+                        <Button Content="+ Request Leave" 
+                                Style="{StaticResource ModernButton}"
+                                HorizontalAlignment="Right"
+                                Margin="5"
+                                Padding="20,0"
+                                Click="RequestLeave_Click"/>
+                    </Border>
+
+                    <!-- Leave History Table -->
+                    <DataGrid Grid.Row="2"
+                              x:Name="LeaveHistoryGrid"
+                              Style="{StaticResource ModernDataGrid}"
+                              RowStyle="{StaticResource DataGridRowStyle}"
+                              AutoGenerateColumns="False"
+                              SelectionChanged="LeaveHistoryGrid_SelectionChanged">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="From" Binding="{Binding FromDate}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="To" Binding="{Binding ToDate}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Reason" Binding="{Binding ReasonTitle}" Width="*"/>
+
+                            <DataGridTemplateColumn Header="Status" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding StatusColor}" 
+                                                CornerRadius="10" 
+                                                Padding="8,4"
+                                                HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}" 
+                                                       Foreground="White" 
+                                                       FontWeight="SemiBold"
+                                                       FontSize="11"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Actions" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="View" 
+                                                    Style="{StaticResource SmallActionButton}"
+                                                    Click="ViewDetails_Click"
+                                                    Tag="{Binding}"/>
+                                            <Button x:Name="BtnCancel" 
+                                                    Content="Cancel" 
+                                                    Style="{StaticResource SmallActionButton}"
+                                                    Click="CancelRequest_Click"
+                                                    Tag="{Binding}"
+                                                    Visibility="{Binding CanCancel, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="Transparent" Padding="10,8">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#00A6FB"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="10,12"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                    </DataGrid>
                 </Grid>
+            </ContentControl>
 
-                <!-- Leave History -->
-                <ContentControl Template="{StaticResource GlassContainerTemplate}">
-                    <StackPanel>
-                        <TextBlock Text="Leave History" 
+            <!-- Leave Form Section -->
+            <ContentControl Grid.Column="2" 
+                            Template="{StaticResource GlassContainerTemplate}"
+                            x:Name="LeaveFormContainer">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10">
+                        <!-- Form Title -->
+                        <TextBlock x:Name="FormTitle" 
+                                   Text="Leave Request Form" 
                                    Foreground="#00A6FB" 
                                    FontSize="18" 
                                    FontWeight="Bold"
                                    Margin="0,0,0,15"/>
 
-                        <DataGrid x:Name="LeaveHistoryGrid"
-                                  Style="{StaticResource ModernDataGrid}"
-                                  RowStyle="{StaticResource DataGridRowStyle}"
-                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                                  AutoGenerateColumns="False"
-                                  Height="300">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="From" Binding="{Binding FromDate}" Width="80"/>
-                                <DataGridTextColumn Header="To" Binding="{Binding ToDate}" Width="80"/>
-                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="100"/>
-                                <DataGridTemplateColumn Header="Status" Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{Binding StatusColor}" 
-                                                    CornerRadius="10" 
-                                                    Padding="5,2"
-                                                    HorizontalAlignment="Left">
-                                                <TextBlock Text="{Binding Status}" 
-                                                           Foreground="White" 
-                                                           FontWeight="SemiBold"
-                                                           FontSize="11"
-                                                           HorizontalAlignment="Center"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Admin Response" Binding="{Binding AdminResponse}" Width="*"/>
-                                <DataGridTemplateColumn Header="Actions" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Content="View" 
-                                                        Style="{StaticResource SmallActionButton}"
-                                                        Click="ViewDetails_Click"
-                                                        Tag="{Binding}"/>
-                                                <Button x:Name="BtnCancel" 
-                                                        Content="Cancel" 
-                                                        Style="{StaticResource SmallActionButton}"
-                                                        Click="CancelRequest_Click"
-                                                        Tag="{Binding}"
-                                                        Visibility="{Binding CanCancel, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </StackPanel>
-                </ContentControl>
-            </StackPanel>
-        </ScrollViewer>
+                        <!-- Leave Request Form -->
+                        <StackPanel x:Name="LeaveRequestForm" Visibility="Visible">
+                            <!-- From Date -->
+                            <TextBlock Text="From Date *" 
+                                       Foreground="White" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <DatePicker x:Name="DatePickerFrom"
+                                        Background="#20FFFFFF"
+                                        Foreground="Black"
+                                        BorderBrush="#40FFFFFF"
+                                        BorderThickness="1"
+                                        Padding="8"
+                                        Height="35"/>
 
-        <!-- New Request Form Overlay -->
-        <Border x:Name="NewRequestOverlay" 
-                Background="#CC000000" 
-                Visibility="Collapsed"
-                Panel.ZIndex="1000">
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" 
-                          Width="500" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Request New Leave" 
-                               Foreground="#dddf00" 
-                               FontSize="20" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,20"/>
+                            <!-- To Date -->
+                            <TextBlock Text="To Date *" 
+                                       Foreground="White" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,10,0,2"/>
+                            <DatePicker x:Name="DatePickerTo"
+                                        Background="#20FFFFFF"
+                                        Foreground="Black"
+                                        BorderBrush="#40FFFFFF"
+                                        BorderThickness="1"
+                                        Padding="8"
+                                        Height="35"/>
 
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                            <!-- Reason Title -->
+                            <TextBlock Text="Reason Title *" 
+                                       Foreground="White" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,10,0,2"/>
+                            <TextBox x:Name="TxtReasonTitle" 
+                                     Style="{StaticResource ModernTextBox}"/>
 
-                        <!-- From Date -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" 
-                                   Text="From Date:" 
-                                   Foreground="White" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,10"
-                                   VerticalAlignment="Center"/>
-                        <DatePicker Grid.Row="0" Grid.Column="1" 
-                                    x:Name="DatePickerFrom"
-                                    Margin="0,0,0,10"
-                                    Background="#20FFFFFF"
-                                    Foreground="White"/>
+                            <!-- Detailed Reason -->
+                            <TextBlock Text="Detailed Reason" 
+                                       Foreground="White" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,10,0,2"/>
+                            <TextBox x:Name="TxtDetailedReason"
+                                     Style="{StaticResource ModernTextBox}"
+                                     Height="100"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"/>
 
-                        <!-- To Date -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" 
-                                   Text="To Date:" 
-                                   Foreground="White" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,10"
-                                   VerticalAlignment="Center"/>
-                        <DatePicker Grid.Row="1" Grid.Column="1" 
-                                    x:Name="DatePickerTo"
-                                    Margin="0,0,0,10"
-                                    Background="#20FFFFFF"
-                                    Foreground="White"/>
+                            <!-- Form Buttons -->
+                            <StackPanel x:Name="NewRequestButtons" 
+                                        Orientation="Horizontal" 
+                                        HorizontalAlignment="Stretch" 
+                                        Margin="0,20,0,0">
+                                <Button x:Name="BtnSubmitRequest" 
+                                        Content="Submit Request" 
+                                        Style="{StaticResource ModernButton}"
+                                        Margin="0,0,10,0"
+                                        Height="35"
+                                        Click="SubmitRequest_Click"/>
+                                <Button x:Name="BtnCancelRequest" 
+                                        Content="Cancel" 
+                                        Style="{StaticResource SecondaryButton}"
+                                        Height="35"
+                                        Click="CancelNewRequest_Click"/>
+                            </StackPanel>
 
-                        <!-- Leave Type -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" 
-                                   Text="Leave Type:" 
-                                   Foreground="White" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,10"
-                                   VerticalAlignment="Center"/>
-                        <ComboBox Grid.Row="2" Grid.Column="1" 
-                                  x:Name="CmbLeaveType"
-                                  Margin="0,0,0,10"
-                                  Background="#20FFFFFF"
-                                  Foreground="White">
-                            <ComboBoxItem Content="Sick Leave"/>
-                            <ComboBoxItem Content="Personal Leave"/>
-                            <ComboBoxItem Content="Emergency Leave"/>
-                            <ComboBoxItem Content="Vacation"/>
-                            <ComboBoxItem Content="Other"/>
-                        </ComboBox>
-
-                        <!-- Reason -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" 
-                                   Text="Reason:" 
-                                   Foreground="White" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,10"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" 
-                                 x:Name="TxtReason"
-                                 Margin="0,0,0,10"
-                                 Background="#20FFFFFF"
-                                 Foreground="White"
-                                 BorderBrush="#40FFFFFF"
-                                 BorderThickness="1"/>
-
-                        <!-- Detailed Reason -->
-                        <TextBlock Grid.Row="4" Grid.Column="0" 
-                                   Text="Detailed Reason:" 
-                                   Foreground="White" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,10"
-                                   VerticalAlignment="Top"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" 
-                                 x:Name="TxtDetailedReason"
-                                 Margin="0,0,0,10"
-                                 Background="#20FFFFFF"
-                                 Foreground="White"
-                                 BorderBrush="#40FFFFFF"
-                                 BorderThickness="1"
-                                 Height="80"
-                                 TextWrapping="Wrap"
-                                 AcceptsReturn="True"
-                                 VerticalScrollBarVisibility="Auto"/>
-
-                        <!-- Buttons -->
-                        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" 
-                                    Orientation="Horizontal" 
-                                    HorizontalAlignment="Right"
-                                    Margin="0,20,0,0">
-                            <Button Content="Cancel" 
-                                    Style="{StaticResource SecondaryButton}"
-                                    Margin="0,0,10,0"
-                                    Click="CancelNewRequest_Click"/>
-                            <Button Content="Submit Request" 
-                                    Style="{StaticResource ModernButton}"
-                                    Click="SubmitRequest_Click"/>
+                            <!-- Required fields note -->
+                            <TextBlock Text="* Required fields" 
+                                       Foreground="#888888" 
+                                       FontSize="11"
+                                       Margin="0,10,0,0"
+                                       FontStyle="Italic"/>
                         </StackPanel>
-                    </Grid>
-                </StackPanel>
+
+                        <!-- View Details Form -->
+                        <StackPanel x:Name="ViewDetailsForm" Visibility="Collapsed">
+                            <!-- From Date -->
+                            <TextBlock Text="From Date" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailFromDate"
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <!-- To Date -->
+                            <TextBlock Text="To Date" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailToDate"
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Reason Title -->
+                            <TextBlock Text="Reason" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailReasonTitle"
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Detailed Reason -->
+                            <TextBlock Text="Detailed Reason" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailDetailedReason"
+                                       Foreground="White" 
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Status -->
+                            <TextBlock Text="Status" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailStatus"
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Admin Response -->
+                            <TextBlock Text="Admin Response" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailAdminResponse"
+                                       Foreground="White" 
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Created At -->
+                            <TextBlock Text="Submitted On" 
+                                       Foreground="#CCCCCC" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,5,0,2"/>
+                            <TextBlock x:Name="DetailCreatedAt"
+                                       Foreground="White" 
+                                       Margin="0,0,0,10"/>
+
+                            <!-- Close Button -->
+                            <Button Content="Close" 
+                                    Style="{StaticResource ModernButton}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,20,0,0"
+                                    Padding="20,8"
+                                    Click="CloseDetails_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </ContentControl>
-        </Border>
-
-        <!-- View Details Overlay -->
-        <Border x:Name="DetailsOverlay" 
-                Background="#CC000000" 
-                Visibility="Collapsed"
-                Panel.ZIndex="1001">
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" 
-                          Width="500" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Leave Request Details" 
-                               Foreground="#dddf00" 
-                               FontSize="20" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,20"/>
-
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- From Date -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" 
-                                   Text="From:" 
-                                   Foreground="#CCCCCC" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,8"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" 
-                                   x:Name="DetailFromDate"
-                                   Foreground="White" 
-                                   Margin="0,0,0,8"/>
-
-                        <!-- To Date -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" 
-                                   Text="To:" 
-                                   Foreground="#CCCCCC" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,8"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" 
-                                   x:Name="DetailToDate"
-                                   Foreground="White" 
-                                   Margin="0,0,0,8"/>
-
-                        <!-- Type -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" 
-                                   Text="Type:" 
-                                   Foreground="#CCCCCC" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,8"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" 
-                                   x:Name="DetailType"
-                                   Foreground="White" 
-                                   Margin="0,0,0,8"/>
-
-                        <!-- Your Message -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" 
-                                   Text="Your Message:" 
-                                   Foreground="#CCCCCC" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,8"
-                                   VerticalAlignment="Top"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" 
-                                   x:Name="DetailMessage"
-                                   Foreground="White" 
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
-
-                        <!-- Admin Response -->
-                        <TextBlock Grid.Row="4" Grid.Column="0" 
-                                   Text="Admin Response:" 
-                                   Foreground="#CCCCCC" 
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,10,8"
-                                   VerticalAlignment="Top"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" 
-                                   x:Name="DetailAdminResponse"
-                                   Foreground="White" 
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
-
-                        <!-- Close Button -->
-                        <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" 
-                                Content="Close" 
-                                Style="{StaticResource ModernButton}"
-                                HorizontalAlignment="Center"
-                                Margin="0,20,0,0"
-                                Padding="20,8"
-                                Click="CloseDetails_Click"/>
-                    </Grid>
-                </StackPanel>
-            </ContentControl>
-        </Border>
+        </Grid>
     </Grid>
 </UserControl>
