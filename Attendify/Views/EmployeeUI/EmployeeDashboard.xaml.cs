@@ -320,7 +320,22 @@ namespace Attendify.Views.Employee
         private void ShowAttendanceView()
         {
             _viewModel.CurrentPageTitle = "My Attendance";
-            MainContentControl.Content = new EmployeeAttendanceView();
+
+            var attendanceView = new EmployeeAttendanceView();
+
+            // Pass the employee code if available
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                attendanceView.SetEmployeeCode(_currentEmployee.EmpCode);
+            }
+            else
+            {
+                // Optional: show a message or disable features
+                MessageBox.Show("Employee information not available.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            MainContentControl.Content = attendanceView;
         }
 
         private void ShowLeaveRequestsView()

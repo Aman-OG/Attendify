@@ -33,18 +33,14 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#237300"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#666666"/>
+                                <Setter Property="Foreground" Value="#AAAAAA"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <!-- Secondary Button Style -->
-        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#dddf00"/>
-            <Setter Property="BorderBrush" Value="#dddf00"/>
-            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
         <!-- Glass container style -->
@@ -53,8 +49,8 @@
                 <Border x:Name="MainBorder" CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#33FFFFFF" Offset="0" />
-                            <GradientStop Color="#13FFFFFF" Offset="1" />
+                            <GradientStop Color="#03FFFFFF" Offset="0" />
+                            <GradientStop Color="#01FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.Effect>
@@ -72,14 +68,6 @@
             <Setter Property="Template" Value="{StaticResource GlassContainerTemplate}"/>
             <Setter Property="Margin" Value="10"/>
             <Setter Property="Height" Value="180"/>
-        </Style>
-
-        <!-- Status Badge Style -->
-        <Style x:Key="StatusBadgeStyle" TargetType="Border">
-            <Setter Property="Background" Value="#40dddf00"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
 
         <!-- DataGrid Style -->
@@ -185,7 +173,7 @@
                                        Margin="0,0,10,8"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" 
                                        x:Name="TxtTodayDate"
-                                       Text="Thursday, Jan 16 2025" 
+                                       Text="Loading..." 
                                        Foreground="White" 
                                        FontSize="14"
                                        FontWeight="SemiBold"
@@ -199,7 +187,7 @@
                                        Margin="0,0,10,8"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" 
                                        x:Name="TxtShiftDetails"
-                                       Text="Morning Shift (08:00 – 14:00)" 
+                                       Text="Loading..." 
                                        Foreground="White" 
                                        FontSize="14"
                                        FontWeight="SemiBold"
@@ -213,7 +201,7 @@
                                        Margin="0,0,10,8"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" 
                                        x:Name="TxtGracePeriod"
-                                       Text="5 min" 
+                                       Text="-- min" 
                                        Foreground="#4CAF50" 
                                        FontSize="14"
                                        FontWeight="SemiBold"
@@ -227,7 +215,7 @@
                                        Margin="0,0,10,8"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" 
                                        x:Name="TxtCurrentTime"
-                                       Text="09:03:12" 
+                                       Text="--:-- --" 
                                        Foreground="#64FF33" 
                                        FontSize="16"
                                        FontWeight="Bold"
@@ -237,15 +225,17 @@
 
                     <!-- Status Section -->
                     <StackPanel Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
-                        <Border Background="#FF6B6B" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
-                            <TextBlock Text="LATE" 
+                        <Border x:Name="StatusBadge" Background="#666666" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
+                            <TextBlock x:Name="StatusText" 
+                                       Text="NOT CHECKED IN" 
                                        Foreground="White" 
                                        FontSize="16"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="23 min behind schedule" 
-                                   Foreground="#FF6B6B" 
+                        <TextBlock x:Name="LateInfo" 
+                                   Text="Waiting for check-in" 
+                                   Foreground="#CCCCCC" 
                                    FontSize="12"
                                    FontWeight="SemiBold"
                                    HorizontalAlignment="Center"/>
@@ -258,10 +248,11 @@
                                 Style="{StaticResource ModernButton}"
                                 Padding="30,15"
                                 FontSize="16"
-                                Click="BtnCheckIn_Click"/>
+                                Click="BtnCheckIn_Click"
+                                IsEnabled="False"/>
 
                         <TextBlock x:Name="TxtCheckedInTime" 
-                                   Text="Checked in at 09:03" 
+                                   Text="" 
                                    Foreground="#38b000" 
                                    FontSize="12"
                                    FontWeight="SemiBold"
@@ -329,7 +320,8 @@
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"
                                    Margin="0,0,0,10"/>
-                        <TextBlock Text="18" 
+                        <TextBlock x:Name="DaysPresentCount" 
+                                   Text="0" 
                                    Foreground="#38b000" 
                                    FontSize="32" 
                                    FontWeight="Bold"
@@ -350,7 +342,8 @@
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"
                                    Margin="0,0,0,10"/>
-                        <TextBlock Text="85%" 
+                        <TextBlock x:Name="OnTimeRateCount" 
+                                   Text="0%" 
                                    Foreground="#4CAF50" 
                                    FontSize="32" 
                                    FontWeight="Bold"
@@ -371,7 +364,8 @@
                                    FontWeight="Bold"
                                    HorizontalAlignment="Center"
                                    Margin="0,0,0,10"/>
-                        <TextBlock Text="3" 
+                        <TextBlock x:Name="LateArrivalsCount" 
+                                   Text="0" 
                                    Foreground="#FF9800" 
                                    FontSize="32" 
                                    FontWeight="Bold"
