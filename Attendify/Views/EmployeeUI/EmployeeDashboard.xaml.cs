@@ -301,10 +301,20 @@ namespace Attendify.Views.Employee
         }
 
         // View Switching Methods
+        // In EmployeeDashboard.xaml.cs, update ShowHomeView() method:
+
         private void ShowHomeView()
         {
             _viewModel.CurrentPageTitle = "Dashboard Overview";
-            MainContentControl.Content = new EmployeeHomeView();
+            var homeView = new EmployeeHomeView();
+
+            // Pass employee code to home view
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                homeView.SetEmployeeCode(_currentEmployee.EmpCode);
+            }
+
+            MainContentControl.Content = homeView;
         }
 
         private void ShowAttendanceView()
