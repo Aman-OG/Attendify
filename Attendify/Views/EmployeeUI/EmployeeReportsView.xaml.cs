@@ -1,306 +1,381 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using OxyPlot;
-using OxyPlot.Series;
-using OxyPlot.Axes;
+using System.Windows.Threading;
 
 namespace Attendify.Views.UserControls
 {
     public partial class EmployeeReportsView : UserControl, INotifyPropertyChanged
     {
-        public PlotModel MonthlyAttendanceModel { get; set; }
-        public PlotModel AttendanceDistributionModel { get; set; }
-        public PlotModel CheckinTimeModel { get; set; }
-        public PlotModel PerformanceGaugeModel { get; set; }
-        public ObservableCollection<MonthlyReport> MonthlyReports { get; set; }
+        private HttpClient _httpClient;
+        private const string ApiBaseUrl = "https://localhost:7129/api";
+        private string _currentEmpCode;
+        private DispatcherTimer _refreshTimer;
+        private bool _isLoading;
 
+        // DTO classes matching API
+        public class EmployeeReportStatsDto
+        {
+            public double AttendanceRate { get; set; }
+            public int DaysPresent { get; set; }
+            public int LateArrivals { get; set; }
+            public int DaysAbsent { get; set; }
+            public int LeavesUsed { get; set; }
+        }
+
+        public class MonthlyReportDto
+        {
+            public string Month { get; set; } = null!;
+            public int Present { get; set; }
+            public int Late { get; set; }
+            public int Absent { get; set; }
+            public int LeavesApproved { get; set; }
+            public double AttendancePercentage { get; set; }
+        }
+
+        public class ApiResponseDto
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = null!;
+            public object? Data { get; set; }
+        }
+
+        // Properties for data binding
+        public List<MonthlyReportDto> MonthlyReports { get; set; } = new List<MonthlyReportDto>();
+
+        // Properties for KPI cards with PropertyChanged
+        private string _attendanceRate = "85%";
+        public string AttendanceRate
+        {
+            get => _attendanceRate;
+            set
+            {
+                if (_attendanceRate != value)
+                {
+                    _attendanceRate = value;
+                    OnPropertyChanged(nameof(AttendanceRate));
+                }
+            }
+        }
+
+        private string _daysPresent = "18";
+        public string DaysPresent
+        {
+            get => _daysPresent;
+            set
+            {
+                if (_daysPresent != value)
+                {
+                    _daysPresent = value;
+                    OnPropertyChanged(nameof(DaysPresent));
+                }
+            }
+        }
+
+        private string _lateArrivals = "6";
+        public string LateArrivals
+        {
+            get => _lateArrivals;
+            set
+            {
+                if (_lateArrivals != value)
+                {
+                    _lateArrivals = value;
+                    OnPropertyChanged(nameof(LateArrivals));
+                }
+            }
+        }
+
+        private string _daysAbsent = "2";
+        public string DaysAbsent
+        {
+            get => _daysAbsent;
+            set
+            {
+                if (_daysAbsent != value)
+                {
+                    _daysAbsent = value;
+                    OnPropertyChanged(nameof(DaysAbsent));
+                }
+            }
+        }
+
+        private string _leavesUsed = "3";
+        public string LeavesUsed
+        {
+            get => _leavesUsed;
+            set
+            {
+                if (_leavesUsed != value)
+                {
+                    _leavesUsed = value;
+                    OnPropertyChanged(nameof(LeavesUsed));
+                }
+            }
+        }
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                if (_isLoading != value)
+                {
+                    _isLoading = value;
+                    OnPropertyChanged(nameof(IsLoading));
+                    UpdateLoadingVisibility();
+                }
+            }
+        }
+
+        // Constructor with empCode parameter
+        public EmployeeReportsView(string empCode)
+        {
+            _currentEmpCode = empCode;
+            Console.WriteLine($"EmployeeReportsView created with EmpCode: {empCode}");
+
+            InitializeComponent();
+            DataContext = this;
+
+            // Start loading data
+            InitializeHttpClient();
+            LoadReportsData();
+
+            // Set up auto-refresh timer
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+            _refreshTimer.Tick += (s, e) => LoadReportsData();
+            _refreshTimer.Start();
+        }
+
+        // Default constructor (for design time)
         public EmployeeReportsView()
         {
             InitializeComponent();
-            InitializeCharts();
-            InitializeMonthlyReports();
             DataContext = this;
-
-            StartDatePicker.SelectedDate = DateTime.Today.AddMonths(-6);
-            EndDatePicker.SelectedDate = DateTime.Today;
+            Console.WriteLine("EmployeeReportsView created without EmpCode (design mode)");
         }
 
-        private void InitializeCharts()
+        private void InitializeHttpClient()
         {
-            MonthlyAttendanceModel = CreateMonthlyAttendanceModel();
-            AttendanceDistributionModel = CreateAttendanceDistributionModel();
-            CheckinTimeModel = CreateCheckinTimeModel();
-            PerformanceGaugeModel = CreateGaugeModel(85);
-        }
-
-        private void InitializeMonthlyReports()
-        {
-            MonthlyReports = new ObservableCollection<MonthlyReport>
+            if (_httpClient == null)
             {
-                new MonthlyReport { Month = "Jan 2025", Present = 18, Late = 4, Absent = 2, LeavesApproved = 1, AttendancePercentage = 85 },
-                new MonthlyReport { Month = "Dec 2024", Present = 20, Late = 2, Absent = 1, LeavesApproved = 0, AttendancePercentage = 95 },
-                new MonthlyReport { Month = "Nov 2024", Present = 19, Late = 3, Absent = 2, LeavesApproved = 1, AttendancePercentage = 90 },
-                new MonthlyReport { Month = "Oct 2024", Present = 17, Late = 5, Absent = 3, LeavesApproved = 2, AttendancePercentage = 80 },
-                new MonthlyReport { Month = "Sep 2024", Present = 21, Late = 1, Absent = 0, LeavesApproved = 0, AttendancePercentage = 100 },
-                new MonthlyReport { Month = "Aug 2024", Present = 18, Late = 4, Absent = 2, LeavesApproved = 1, AttendancePercentage = 85 }
-            };
-        }
-
-        private PlotModel CreateMonthlyAttendanceModel()
-        {
-            var model = new PlotModel
-            {
-                PlotAreaBorderColor = OxyColors.Transparent,
-                Background = OxyColors.Transparent,
-                TextColor = OxyColors.White
-            };
-
-            var categoryAxis = new CategoryAxis
-            {
-                Position = AxisPosition.Bottom,
-                TextColor = OxyColors.White,
-                AxislineColor = OxyColors.White,
-                TicklineColor = OxyColors.White,
-                MajorGridlineColor = OxyColor.FromArgb(40, 255, 255, 255)
-            };
-
-            var valueAxis = new LinearAxis
-            {
-                Position = AxisPosition.Left,
-                Minimum = 0,
-                Maximum = 25,
-                TextColor = OxyColors.White,
-                AxislineColor = OxyColors.White,
-                TicklineColor = OxyColors.White,
-                MajorGridlineColor = OxyColor.FromArgb(40, 255, 255, 255)
-            };
-
-            model.Axes.Add(categoryAxis);
-            model.Axes.Add(valueAxis);
-
-            // Use LineSeries with thick lines to simulate bars
-            var presentSeries = new LineSeries
-            {
-                Title = "Present",
-                Color = OxyColor.Parse("#2FBF4C"),
-                StrokeThickness = 20,
-                MarkerType = MarkerType.None
-            };
-
-            var lateSeries = new LineSeries
-            {
-                Title = "Late",
-                Color = OxyColor.Parse("#E3C63A"),
-                StrokeThickness = 20,
-                MarkerType = MarkerType.None
-            };
-
-            var absentSeries = new LineSeries
-            {
-                Title = "Absent",
-                Color = OxyColor.Parse("#D23C3C"),
-                StrokeThickness = 20,
-                MarkerType = MarkerType.None
-            };
-
-            // Add data points
-            double[] presentData = { 18, 20, 19, 17, 21, 18 };
-            double[] lateData = { 4, 2, 3, 5, 1, 4 };
-            double[] absentData = { 2, 1, 2, 3, 0, 2 };
-
-            for (int i = 0; i < 6; i++)
-            {
-                presentSeries.Points.Add(new DataPoint(i, presentData[i]));
-                lateSeries.Points.Add(new DataPoint(i, lateData[i]));
-                absentSeries.Points.Add(new DataPoint(i, absentData[i]));
+                _httpClient = new HttpClient();
+                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                Console.WriteLine("HttpClient initialized");
             }
-
-            categoryAxis.Labels.Add("Jan");
-            categoryAxis.Labels.Add("Dec");
-            categoryAxis.Labels.Add("Nov");
-            categoryAxis.Labels.Add("Oct");
-            categoryAxis.Labels.Add("Sep");
-            categoryAxis.Labels.Add("Aug");
-
-            model.Series.Add(presentSeries);
-            model.Series.Add(lateSeries);
-            model.Series.Add(absentSeries);
-
-            return model;
         }
 
-        private PlotModel CreateAttendanceDistributionModel()
+        private async void LoadReportsData()
         {
-            var model = new PlotModel
+            try
             {
-                PlotAreaBorderColor = OxyColors.Transparent,
-                Background = OxyColors.Transparent,
-                TextColor = OxyColors.White
-            };
+                IsLoading = true;
+                Console.WriteLine($"Starting to load reports data for: {_currentEmpCode}");
 
-            var pieSeries = new PieSeries
-            {
-                InsideLabelColor = OxyColors.White,
-                InsideLabelPosition = 0.7,
-                FontSize = 12,
-                StrokeThickness = 2,
-                Stroke = OxyColors.White
-            };
+                if (string.IsNullOrEmpty(_currentEmpCode))
+                {
+                    Console.WriteLine("Warning: Employee code is empty, showing sample data");
+                    ShowDefaultKPICards();
+                    ShowSampleMonthlyReport();
+                    IsLoading = false;
+                    return;
+                }
 
-            pieSeries.Slices.Add(new PieSlice("Present", 85) { Fill = OxyColor.Parse("#2FBF4C") });
-            pieSeries.Slices.Add(new PieSlice("Late", 10) { Fill = OxyColor.Parse("#E3C63A") });
-            pieSeries.Slices.Add(new PieSlice("Absent", 5) { Fill = OxyColor.Parse("#D23C3C") });
+                // Load both data in parallel
+                await Task.WhenAll(
+                    LoadEmployeeStats(),
+                    LoadMonthlyReport()
+                );
 
-            model.Series.Add(pieSeries);
-            return model;
-        }
-
-        private PlotModel CreateCheckinTimeModel()
-        {
-            var model = new PlotModel
-            {
-                PlotAreaBorderColor = OxyColors.Transparent,
-                Background = OxyColors.Transparent,
-                TextColor = OxyColors.White
-            };
-
-            var categoryAxis = new CategoryAxis
-            {
-                Position = AxisPosition.Bottom,
-                TextColor = OxyColors.White,
-                AxislineColor = OxyColors.White,
-                TicklineColor = OxyColors.White,
-                MajorGridlineColor = OxyColor.FromArgb(40, 255, 255, 255)
-            };
-
-            var valueAxis = new LinearAxis
-            {
-                Position = AxisPosition.Left,
-                Minimum = 8,
-                Maximum = 10.5,
-                TextColor = OxyColors.White,
-                AxislineColor = OxyColors.White,
-                TicklineColor = OxyColors.White,
-                MajorGridlineColor = OxyColor.FromArgb(40, 255, 255, 255)
-            };
-
-            model.Axes.Add(categoryAxis);
-            model.Axes.Add(valueAxis);
-
-            var lineSeries = new LineSeries
-            {
-                MarkerType = MarkerType.Circle,
-                MarkerSize = 5,
-                MarkerFill = OxyColor.Parse("#00A6FB"),
-                MarkerStroke = OxyColors.White,
-                Color = OxyColor.Parse("#00A6FB"),
-                StrokeThickness = 3
-            };
-
-            lineSeries.Points.Add(new DataPoint(0, 9.1));
-            lineSeries.Points.Add(new DataPoint(1, 8.9));
-            lineSeries.Points.Add(new DataPoint(2, 9.3));
-            lineSeries.Points.Add(new DataPoint(3, 8.8));
-            lineSeries.Points.Add(new DataPoint(4, 9.2));
-            lineSeries.Points.Add(new DataPoint(5, 9.0));
-            lineSeries.Points.Add(new DataPoint(6, 8.7));
-
-            categoryAxis.Labels.Add("Mon");
-            categoryAxis.Labels.Add("Tue");
-            categoryAxis.Labels.Add("Wed");
-            categoryAxis.Labels.Add("Thu");
-            categoryAxis.Labels.Add("Fri");
-            categoryAxis.Labels.Add("Sat");
-            categoryAxis.Labels.Add("Sun");
-
-            model.Series.Add(lineSeries);
-            return model;
-        }
-
-        private PlotModel CreateGaugeModel(double value)
-        {
-            var model = new PlotModel
-            {
-                PlotAreaBorderColor = OxyColors.Transparent,
-                Background = OxyColors.Transparent,
-                TextColor = OxyColors.White
-            };
-
-            var gaugeSeries = new PieSeries
-            {
-                StrokeThickness = 2,
-                Stroke = OxyColors.White,
-                InsideLabelColor = OxyColors.White,
-                FontSize = 12,
-                StartAngle = 270,
-                AngleSpan = 360,
-                InsideLabelFormat = "{1}%"
-            };
-
-            gaugeSeries.Slices.Add(new PieSlice("Present", value) { Fill = OxyColor.Parse("#00A6FB") });
-            gaugeSeries.Slices.Add(new PieSlice("Absent", 100 - value) { Fill = OxyColor.Parse("#333333") });
-
-            model.Series.Add(gaugeSeries);
-            return model;
-        }
-
-        private void ApplyFilter_Click(object sender, RoutedEventArgs e)
-        {
-            if (StartDatePicker.SelectedDate == null || EndDatePicker.SelectedDate == null)
-            {
-                MessageBox.Show("Please select both start and end dates.", "Date Range Required",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                Console.WriteLine("Reports data loaded successfully");
             }
-
-            if (StartDatePicker.SelectedDate > EndDatePicker.SelectedDate)
+            catch (Exception ex)
             {
-                MessageBox.Show("Start date cannot be after end date.", "Invalid Date Range",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                Console.WriteLine($"Error loading reports: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                ShowDefaultKPICards();
+                ShowSampleMonthlyReport();
             }
-
-            InitializeCharts();
-
-            MessageBox.Show($"Filters applied for period: {StartDatePicker.SelectedDate.Value:MMM dd} - {EndDatePicker.SelectedDate.Value:MMM dd}",
-                          "Filter Applied", MessageBoxButton.OK, MessageBoxImage.Information);
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
-        private void ExportAttendancePdf_Click(object sender, RoutedEventArgs e)
+        private async Task LoadEmployeeStats()
         {
-            MessageBox.Show("My attendance report exported as PDF!", "Export Successful",
-                          MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                Console.WriteLine($"Calling API: {ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
+
+                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
+                Console.WriteLine($"API Response Status: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Response JSON: {json}");
+
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var statsJson = apiResponse.Data.ToString();
+                        var stats = JsonSerializer.Deserialize<EmployeeReportStatsDto>(statsJson, options);
+
+                        Console.WriteLine($"Stats received: Rate={stats?.AttendanceRate}, Present={stats?.DaysPresent}");
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            UpdateKPICards(stats);
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"API Response not successful: {apiResponse?.Message}");
+                        Dispatcher.Invoke(() => ShowDefaultKPICards());
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error: {response.StatusCode}, Content: {errorContent}");
+                    Dispatcher.Invoke(() => ShowDefaultKPICards());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in LoadEmployeeStats: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                Dispatcher.Invoke(() => ShowDefaultKPICards());
+            }
         }
 
-        private void ExportMonthlyExcel_Click(object sender, RoutedEventArgs e)
+        private async Task LoadMonthlyReport()
         {
-            MessageBox.Show("Monthly summary exported as Excel!", "Export Successful",
-                          MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                Console.WriteLine($"Calling API: {ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
+
+                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
+                Console.WriteLine($"Monthly Report API Response Status: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var reportsJson = apiResponse.Data.ToString();
+                        var reports = JsonSerializer.Deserialize<List<MonthlyReportDto>>(reportsJson, options);
+
+                        Console.WriteLine($"Monthly reports received: {reports?.Count} months");
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            UpdateMonthlyReportGrid(reports ?? new List<MonthlyReportDto>());
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Monthly Report API Response not successful");
+                        Dispatcher.Invoke(() => ShowSampleMonthlyReport());
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Monthly Report API Error: {response.StatusCode}");
+                    Dispatcher.Invoke(() => ShowSampleMonthlyReport());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in LoadMonthlyReport: {ex.Message}");
+                Dispatcher.Invoke(() => ShowSampleMonthlyReport());
+            }
         }
 
-        private void ExportTimeCsv_Click(object sender, RoutedEventArgs e)
+        private void UpdateKPICards(EmployeeReportStatsDto stats)
         {
-            MessageBox.Show("Time analysis exported as CSV!", "Export Successful",
-                          MessageBoxButton.OK, MessageBoxImage.Information);
+            if (stats == null) return;
+
+            Console.WriteLine($"Updating KPI cards with real data");
+
+            // Update properties that are bound to XAML
+            AttendanceRate = $"{stats.AttendanceRate:F1}%";
+            DaysPresent = stats.DaysPresent.ToString();
+            LateArrivals = stats.LateArrivals.ToString();
+            DaysAbsent = stats.DaysAbsent.ToString();
+            LeavesUsed = stats.LeavesUsed.ToString();
+
+            Console.WriteLine($"KPI Values: {AttendanceRate}, {DaysPresent}, {LateArrivals}, {DaysAbsent}, {LeavesUsed}");
         }
 
+        private void UpdateMonthlyReportGrid(List<MonthlyReportDto> reports)
+        {
+            MonthlyReports = reports;
+            MonthlyReportGrid.ItemsSource = MonthlyReports;
+
+            // Force refresh of the DataGrid
+            MonthlyReportGrid.Items.Refresh();
+            Console.WriteLine($"Monthly report grid updated with {reports.Count} items");
+        }
+
+        private void ShowDefaultKPICards()
+        {
+            Console.WriteLine("Showing default KPI cards (sample data)");
+
+            // Set sample values
+            AttendanceRate = "85%";
+            DaysPresent = "18";
+            LateArrivals = "6";
+            DaysAbsent = "2";
+            LeavesUsed = "3";
+
+            Console.WriteLine($"Sample KPI Values: {AttendanceRate}, {DaysPresent}, {LateArrivals}, {DaysAbsent}, {LeavesUsed}");
+        }
+
+        private void ShowSampleMonthlyReport()
+        {
+            Console.WriteLine("Showing sample monthly report");
+
+            var sampleReports = new List<MonthlyReportDto>
+            {
+                new MonthlyReportDto { Month = "January 2024", Present = 20, Late = 3, Absent = 2, LeavesApproved = 1, AttendancePercentage = 85.7 },
+                new MonthlyReportDto { Month = "February 2024", Present = 18, Late = 4, Absent = 1, LeavesApproved = 2, AttendancePercentage = 82.6 },
+                new MonthlyReportDto { Month = "March 2024", Present = 22, Late = 2, Absent = 0, LeavesApproved = 1, AttendancePercentage = 95.7 },
+                new MonthlyReportDto { Month = "April 2024", Present = 19, Late = 5, Absent = 3, LeavesApproved = 0, AttendancePercentage = 82.6 },
+                new MonthlyReportDto { Month = "May 2024", Present = 21, Late = 3, Absent = 1, LeavesApproved = 2, AttendancePercentage = 91.3 },
+                new MonthlyReportDto { Month = "June 2024", Present = 20, Late = 4, Absent = 2, LeavesApproved = 1, AttendancePercentage = 87.0 }
+            };
+
+            UpdateMonthlyReportGrid(sampleReports);
+        }
+
+        private void UpdateLoadingVisibility()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                LoadingOverlay.Visibility = IsLoading ? Visibility.Visible : Visibility.Collapsed;
+            });
+        }
+
+        // Implement INotifyPropertyChanged for data binding
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
-    public class MonthlyReport
-    {
-        public string Month { get; set; }
-        public int Present { get; set; }
-        public int Late { get; set; }
-        public int Absent { get; set; }
-        public int LeavesApproved { get; set; }
-        public double AttendancePercentage { get; set; }
     }
 }

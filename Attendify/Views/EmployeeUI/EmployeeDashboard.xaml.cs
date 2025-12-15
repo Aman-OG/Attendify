@@ -381,7 +381,23 @@ namespace Attendify.Views.Employee
         private void ShowReportsView()
         {
             _viewModel.CurrentPageTitle = "My Reports";
-            MainContentControl.Content = new EmployeeReportsView();
+
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                Console.WriteLine($"[DEBUG] Creating ReportsView with EmpCode: '{_currentEmployee.EmpCode}'");
+                var reportsView = new EmployeeReportsView(_currentEmployee.EmpCode);
+                MainContentControl.Content = reportsView;
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] ERROR: Employee is null or EmpCode is empty!");
+                Console.WriteLine($"[DEBUG] _currentEmployee is null: {_currentEmployee == null}");
+                if (_currentEmployee != null)
+                    Console.WriteLine($"[DEBUG] EmpCode value: '{_currentEmployee.EmpCode}'");
+
+                var reportsView = new EmployeeReportsView();
+                MainContentControl.Content = reportsView;
+            }
         }
 
         private void ShowNotificationsView()
