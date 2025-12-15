@@ -44,13 +44,7 @@ var app = builder.Build();
 
 
 
-// Add HTTP logging for debugging
-app.Use(async (context, next) =>
-{
-    Console.WriteLine($"API Request: {context.Request.Method} {context.Request.Path}");
-    await next();
-    Console.WriteLine($"API Response: {context.Response.StatusCode}");
-});
+
 
 // Use CORS policy
 app.UseCors("AllowAll");

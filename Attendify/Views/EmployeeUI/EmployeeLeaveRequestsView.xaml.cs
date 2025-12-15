@@ -2,51 +2,105 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using Attendify.DATA.Models;
-using Newtonsoft.Json;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace Attendify.Views.Employee
 {
     public partial class EmployeeLeaveRequestsView : UserControl
     {
         private HttpClient _httpClient;
-        private string _baseUrl = "https://localhost:7129/api/leaves"; // Adjust port as needed
-        private EmployeeModel _currentEmployee;
+        private const string ApiBaseUrl = "https://localhost:7129/api";
+        private string _currentEmpCode;
+        private DispatcherTimer _refreshTimer;
 
-        public EmployeeLeaveRequestsView()
+        // DTO classes matching API
+        public class LeaveResponseDto
+        {
+            public int LeaveId { get; set; }
+            public string FromDate { get; set; } = null!;
+            public string ToDate { get; set; } = null!;
+            public string ReasonTitle { get; set; } = null!;
+            public string? DetailedReason { get; set; }
+            public string Status { get; set; } = null!;
+            public string? AdminResponse { get; set; }
+            public string CreatedAt { get; set; } = null!;
+            public bool CanCancel { get; set; }
+            public string StatusColor { get; set; } = "#FF9800";
+        }
+
+        public class ApiResponseDto
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = null!;
+            public object? Data { get; set; }
+        }
+
+        public class LeaveStatsDto
+        {
+            public int Pending { get; set; }
+            public int Approved { get; set; }
+            public int Rejected { get; set; }
+        }
+
+        public class LeaveRequestDto
+        {
+            public string EmpCode { get; set; } = null!;
+            public DateTime FromDate { get; set; }
+            public DateTime ToDate { get; set; }
+            public string ReasonTitle { get; set; } = null!;
+            public string? DetailedReason { get; set; }
+        }
+
+        public class CancelLeaveDto
+        {
+            public int LeaveId { get; set; }
+        }
+
+        // Constructor with empCode parameter
+        public EmployeeLeaveRequestsView(string empCode)
         {
             InitializeComponent();
+            _currentEmpCode = empCode;
+            Loaded += EmployeeLeaveRequestsView_Loaded;
+        }
+
+        private void EmployeeLeaveRequestsView_Loaded(object sender, RoutedEventArgs e)
+        {
             InitializeHttpClient();
-            Loaded += OnViewLoaded;
+            LoadLeaveData();
+
+            // Set up auto-refresh timer (every 30 seconds)
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            _refreshTimer.Tick += (s, e) => LoadLeaveData();
+            _refreshTimer.Start();
         }
 
         private void InitializeHttpClient()
         {
-            _httpClient = new HttpClient();
-            // Add authorization header if needed
-            // _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (_httpClient == null)
+            {
+                _httpClient = new HttpClient();
+                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            }
         }
 
-        private async void OnViewLoaded(object sender, RoutedEventArgs e)
+        private async void LoadLeaveData()
         {
             try
             {
-                // Load current employee from session/app context
-                // _currentEmployee = App.CurrentEmployee;
                 await LoadLeaveStats();
-                await LoadLeaveHistory();
-                ResetForm();
+                await LoadLeaveRequests();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading leave requests: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading leave data: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -54,301 +108,391 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/stats");
-                response.EnsureSuccessStatusCode();
-
-                var stats = await response.Content.ReadFromJsonAsync<LeaveStats>();
-                if (stats != null)
-                {
-                    PendingCount.Text = stats.PendingCount.ToString();
-                    ApprovedCount.Text = stats.ApprovedCount.ToString();
-                    RejectedCount.Text = stats.RejectedCount.ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading stats: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async Task LoadLeaveHistory()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/my-leaves");
-                response.EnsureSuccessStatusCode();
-
-                var leaves = await response.Content.ReadFromJsonAsync<List<LeaveModel>>();
-                if (leaves != null)
-                {
-                    // Format dates for display
-                    foreach (var leave in leaves)
-                    {
-                        leave.FormattedFromDate = leave.FromDate?.ToString("MMM dd, yyyy") ?? "N/A";
-                        leave.FormattedToDate = leave.ToDate?.ToString("MMM dd, yyyy") ?? "N/A";
-                        leave.FormattedCreatedAt = leave.CreatedAt.ToString("MMM dd, yyyy HH:mm");
-                    }
-
-                    LeaveHistoryGrid.ItemsSource = leaves;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading leave history: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void ResetForm()
-        {
-            DatePickerFrom.SelectedDate = DateTime.Now;
-            DatePickerTo.SelectedDate = DateTime.Now;
-            TxtReasonTitle.Text = string.Empty;
-            TxtDetailedReason.Text = string.Empty;
-
-            // Show new request form
-            LeaveRequestForm.Visibility = Visibility.Visible;
-            ViewDetailsForm.Visibility = Visibility.Collapsed;
-            FormTitle.Text = "Leave Request Form";
-        }
-
-        private async void RequestLeave_Click(object sender, RoutedEventArgs e)
-        {
-            ResetForm();
-        }
-
-        private async void SubmitRequest_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Validation
-                if (!DatePickerFrom.SelectedDate.HasValue || !DatePickerTo.SelectedDate.HasValue)
-                {
-                    MessageBox.Show("Please select both dates", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(TxtReasonTitle.Text))
-                {
-                    MessageBox.Show("Please enter a reason title", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (DatePickerFrom.SelectedDate.Value > DatePickerTo.SelectedDate.Value)
-                {
-                    MessageBox.Show("From date cannot be after To date", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (DatePickerFrom.SelectedDate.Value < DateTime.Now.Date)
-                {
-                    MessageBox.Show("From date cannot be in the past", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var leaveRequest = new LeaveRequestModel
-                {
-                    FromDate = DatePickerFrom.SelectedDate.Value,
-                    ToDate = DatePickerTo.SelectedDate.Value,
-                    ReasonTitle = TxtReasonTitle.Text.Trim(),
-                    Detail = string.IsNullOrWhiteSpace(TxtDetailedReason.Text) ? null : TxtDetailedReason.Text.Trim()
-                };
-
-                // Show loading/processing
-                BtnSubmitRequest.IsEnabled = false;
-                BtnSubmitRequest.Content = "Submitting...";
-
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}", leaveRequest);
+                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeeleave/stats/{_currentEmpCode}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Leave request submitted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    await LoadLeaveStats();
-                    await LoadLeaveHistory();
-                    ResetForm();
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var statsJson = apiResponse.Data.ToString();
+                        var stats = JsonSerializer.Deserialize<LeaveStatsDto>(statsJson, options);
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            PendingCount.Text = stats?.Pending.ToString() ?? "0";
+                            ApprovedCount.Text = stats?.Approved.ToString() ?? "0";
+                            RejectedCount.Text = stats?.Rejected.ToString() ?? "0";
+                        });
+                    }
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    var error = JsonConvert.DeserializeObject<ErrorResponse>(errorContent);
-                    MessageBox.Show(error?.Message ?? "Failed to submit leave request", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Console.WriteLine($"Error loading stats. Status: {response.StatusCode}, Content: {errorContent}");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error submitting request: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine($"Error loading stats: {ex.Message}");
+            }
+        }
+
+        private async Task LoadLeaveRequests()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeeleave/requests/{_currentEmpCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var leavesJson = apiResponse.Data.ToString();
+                        var leaves = JsonSerializer.Deserialize<List<LeaveResponseDto>>(leavesJson, options);
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            UpdateLeaveHistoryGrid(leaves ?? new List<LeaveResponseDto>());
+                        });
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error loading requests. Status: {response.StatusCode}, Content: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading leave requests: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void UpdateLeaveHistoryGrid(List<LeaveResponseDto> leaves)
+        {
+            var gridItems = new List<LeaveGridItem>();
+            foreach (var leave in leaves)
+            {
+                gridItems.Add(new LeaveGridItem
+                {
+                    LeaveId = leave.LeaveId,
+                    FromDate = leave.FromDate,
+                    ToDate = leave.ToDate,
+                    ReasonTitle = leave.ReasonTitle,
+                    Status = leave.Status,
+                    CanCancel = leave.CanCancel,
+                    StatusColor = GetBrushFromColor(leave.StatusColor)
+                });
+            }
+
+            LeaveHistoryGrid.ItemsSource = gridItems;
+        }
+
+        private Brush GetBrushFromColor(string colorHex)
+        {
+            try
+            {
+                return new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
+            }
+            catch
+            {
+                return Brushes.Gray;
+            }
+        }
+
+        private void RequestLeave_Click(object sender, RoutedEventArgs e)
+        {
+            ShowLeaveRequestForm();
+        }
+
+        private void ShowLeaveRequestForm()
+        {
+            FormTitle.Text = "Leave Request Form";
+            LeaveRequestForm.Visibility = Visibility.Visible;
+            ViewDetailsForm.Visibility = Visibility.Collapsed;
+
+            // Clear form fields
+            DatePickerFrom.SelectedDate = DateTime.Today;
+            DatePickerTo.SelectedDate = DateTime.Today;
+            TxtReasonTitle.Text = "";
+            TxtDetailedReason.Text = "";
+
+            // Show new request buttons, hide edit buttons
+            NewRequestButtons.Visibility = Visibility.Visible;
+        }
+
+        private void ShowLeaveDetailsForm(LeaveResponseDto leave)
+        {
+            FormTitle.Text = "Leave Request Details";
+            LeaveRequestForm.Visibility = Visibility.Collapsed;
+            ViewDetailsForm.Visibility = Visibility.Visible;
+
+            // Populate details
+            DetailFromDate.Text = leave.FromDate;
+            DetailToDate.Text = leave.ToDate;
+            DetailReasonTitle.Text = leave.ReasonTitle;
+            DetailDetailedReason.Text = leave.DetailedReason ?? "No detailed reason provided";
+            DetailStatus.Text = leave.Status;
+            DetailAdminResponse.Text = leave.AdminResponse ?? "No response yet";
+            DetailCreatedAt.Text = leave.CreatedAt;
+        }
+
+        private async void SubmitRequest_Click(object sender, RoutedEventArgs e)
+        {
+            // Validate form
+            if (!ValidateLeaveRequestForm())
+                return;
+
+            try
+            {
+                // Disable button to prevent double-click
+                BtnSubmitRequest.IsEnabled = false;
+                BtnSubmitRequest.Content = "Submitting...";
+
+                var leaveRequest = new LeaveRequestDto
+                {
+                    EmpCode = _currentEmpCode,
+                    FromDate = DatePickerFrom.SelectedDate.Value,
+                    ToDate = DatePickerTo.SelectedDate.Value,
+                    ReasonTitle = TxtReasonTitle.Text.Trim(),
+                    DetailedReason = TxtDetailedReason.Text.Trim()
+                };
+
+                Console.WriteLine($"Submitting leave request for {_currentEmpCode} from {leaveRequest.FromDate} to {leaveRequest.ToDate}");
+
+                var json = JsonSerializer.Serialize(leaveRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{ApiBaseUrl}/employeeleave/request", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(responseJson, options);
+
+                    if (apiResponse?.Success == true)
+                    {
+                        MessageBox.Show(apiResponse.Message, "Success",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        // Clear form and reload data
+                        ShowLeaveRequestForm();
+                        LoadLeaveData();
+                    }
+                    else
+                    {
+                        MessageBox.Show(apiResponse?.Message ?? "Submission failed", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error: Status={response.StatusCode}, Content={errorContent}");
+
+                    try
+                    {
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(errorContent, options);
+                        MessageBox.Show(apiResponse?.Message ?? $"Failed to submit leave request. Status: {response.StatusCode}", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show($"Failed to submit leave request. Status: {response.StatusCode}\n{errorContent}", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "Submission Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
+                // Re-enable button
                 BtnSubmitRequest.IsEnabled = true;
                 BtnSubmitRequest.Content = "Submit Request";
             }
         }
 
-        private void CancelNewRequest_Click(object sender, RoutedEventArgs e)
+        private bool ValidateLeaveRequestForm()
         {
-            ResetForm();
+            if (DatePickerFrom.SelectedDate == null)
+            {
+                MessageBox.Show("Please select a from date", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                DatePickerFrom.Focus();
+                return false;
+            }
+
+            if (DatePickerTo.SelectedDate == null)
+            {
+                MessageBox.Show("Please select a to date", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                DatePickerTo.Focus();
+                return false;
+            }
+
+            if (DatePickerFrom.SelectedDate > DatePickerTo.SelectedDate)
+            {
+                MessageBox.Show("From date cannot be after To date", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                DatePickerFrom.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(TxtReasonTitle.Text))
+            {
+                MessageBox.Show("Please enter a reason title", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtReasonTitle.Focus();
+                return false;
+            }
+
+            return true;
         }
 
-        private async void ViewDetails_Click(object sender, RoutedEventArgs e)
+        private void CancelNewRequest_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is LeaveModel leave)
-            {
-                try
-                {
-                    // Show loading
-                    ViewDetailsForm.Visibility = Visibility.Collapsed;
-                    LeaveRequestForm.Visibility = Visibility.Collapsed;
-                    FormTitle.Text = "Loading...";
+            ShowLeaveRequestForm(); // Reset to empty form
+        }
 
-                    // Fetch complete details
-                    var response = await _httpClient.GetAsync($"{_baseUrl}/{leave.LeaveID}");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var detailedLeave = await response.Content.ReadFromJsonAsync<LeaveModel>();
-                        if (detailedLeave != null)
-                        {
-                            PopulateDetailsForm(detailedLeave);
-                        }
-                    }
-                    else
-                    {
-                        // Fallback to basic details if API fails
-                        PopulateDetailsForm(leave);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error loading details: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    // Fallback to basic details
-                    PopulateDetailsForm(leave);
-                }
+        private void ViewDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is LeaveGridItem item)
+            {
+                LoadLeaveDetails(item.LeaveId);
             }
         }
 
-        private void PopulateDetailsForm(LeaveModel leave)
+        private async void LoadLeaveDetails(int leaveId)
         {
-            DetailFromDate.Text = leave.FromDate?.ToString("dddd, MMMM dd, yyyy") ?? "N/A";
-            DetailToDate.Text = leave.ToDate?.ToString("dddd, MMMM dd, yyyy") ?? "N/A";
-            DetailReasonTitle.Text = leave.ReasonTitle ?? "N/A";
-            DetailDetailedReason.Text = string.IsNullOrWhiteSpace(leave.Detail) ? "No detailed reason provided" : leave.Detail;
-            DetailStatus.Text = leave.Status?.ToUpper() ?? "N/A";
-            DetailAdminResponse.Text = string.IsNullOrWhiteSpace(leave.AdminResponse) ? "No response yet" : leave.AdminResponse;
-            DetailCreatedAt.Text = leave.CreatedAt.ToString("dddd, MMMM dd, yyyy 'at' hh:mm tt");
+            try
+            {
+                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeeleave/details/{leaveId}");
 
-            // Show details form
-            ViewDetailsForm.Visibility = Visibility.Visible;
-            LeaveRequestForm.Visibility = Visibility.Collapsed;
-            FormTitle.Text = "Leave Request Details";
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var leaveJson = apiResponse.Data.ToString();
+                        var leave = JsonSerializer.Deserialize<LeaveResponseDto>(leaveJson, options);
+
+                        if (leave != null)
+                        {
+                            Dispatcher.Invoke(() => ShowLeaveDetailsForm(leave));
+                        }
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Error loading details: {errorContent}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading leave details: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void CancelRequest_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is LeaveModel leave)
+            if (sender is Button button && button.Tag is LeaveGridItem item)
             {
                 var result = MessageBox.Show(
-                    $"Are you sure you want to cancel this leave request?\n\n" +
-                    $"From: {leave.FormattedFromDate}\n" +
-                    $"To: {leave.FormattedToDate}\n" +
-                    $"Reason: {leave.ReasonTitle}",
+                    "Are you sure you want to cancel this leave request?",
                     "Confirm Cancellation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    try
-                    {
-                        var response = await _httpClient.DeleteAsync($"{_baseUrl}/{leave.LeaveID}");
+                    await CancelLeaveRequest(item.LeaveId);
+                }
+            }
+        }
 
-                        if (response.IsSuccessStatusCode)
-                        {
-                            MessageBox.Show("Leave request cancelled successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                            await LoadLeaveStats();
-                            await LoadLeaveHistory();
-                        }
-                        else
-                        {
-                            var errorContent = await response.Content.ReadAsStringAsync();
-                            var error = JsonConvert.DeserializeObject<ErrorResponse>(errorContent);
-                            MessageBox.Show(error?.Message ?? "Failed to cancel leave request", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                    catch (Exception ex)
+        private async Task CancelLeaveRequest(int leaveId)
+        {
+            try
+            {
+                var cancelRequest = new CancelLeaveDto { LeaveId = leaveId };
+                var json = JsonSerializer.Serialize(cancelRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{ApiBaseUrl}/employeeleave/cancel", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(responseJson, options);
+
+                    if (apiResponse?.Success == true)
                     {
-                        MessageBox.Show($"Error cancelling request: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(apiResponse.Message, "Success",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        LoadLeaveData();
+                    }
+                    else
+                    {
+                        MessageBox.Show(apiResponse?.Message ?? "Cancellation failed", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Cancellation failed: {errorContent}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Cancellation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void CloseDetails_Click(object sender, RoutedEventArgs e)
         {
-            ResetForm();
+            ShowLeaveRequestForm(); // Go back to request form
         }
 
         private void LeaveHistoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Optional: Handle row selection if needed
-            // var selectedLeave = LeaveHistoryGrid.SelectedItem as LeaveModel;
+            // Optional: handle row selection if needed
         }
+    }
 
-        // Model classes (these should ideally be in separate files, but as requested)
-        public class LeaveModel
-        {
-            public int LeaveID { get; set; }
-            public DateTime? FromDate { get; set; }
-            public DateTime? ToDate { get; set; }
-            public string? ReasonTitle { get; set; }
-            public string? Detail { get; set; }
-            public string? Status { get; set; }
-            public string? AdminResponse { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public bool CanCancel { get; set; }
-
-            // Display properties
-            [JsonIgnore]
-            public string FormattedFromDate { get; set; } = string.Empty;
-
-            [JsonIgnore]
-            public string FormattedToDate { get; set; } = string.Empty;
-
-            [JsonIgnore]
-            public string FormattedCreatedAt { get; set; } = string.Empty;
-
-            [JsonIgnore]
-            public string StatusColor
-            {
-                get
-                {
-                    return Status?.ToLower() switch
-                    {
-                        "pending" => "#FF9800",
-                        "approved" => "#38b000",
-                        "rejected" => "#FF6B6B",
-                        _ => "#888888"
-                    };
-                }
-            }
-        }
-
-        public class LeaveRequestModel
-        {
-            public DateTime FromDate { get; set; }
-            public DateTime ToDate { get; set; }
-            public string ReasonTitle { get; set; } = string.Empty;
-            public string? Detail { get; set; }
-        }
-
-        public class LeaveStats
-        {
-            public int PendingCount { get; set; }
-            public int ApprovedCount { get; set; }
-            public int RejectedCount { get; set; }
-        }
-
-        public class ErrorResponse
-        {
-            public string Message { get; set; } = string.Empty;
-        }
+    // Helper class for DataGrid items
+    public class LeaveGridItem
+    {
+        public int LeaveId { get; set; }
+        public string FromDate { get; set; } = null!;
+        public string ToDate { get; set; } = null!;
+        public string ReasonTitle { get; set; } = null!;
+        public string Status { get; set; } = null!;
+        public bool CanCancel { get; set; }
+        public Brush StatusColor { get; set; } = Brushes.Gray;
     }
 }

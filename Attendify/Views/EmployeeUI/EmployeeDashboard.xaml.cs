@@ -342,20 +342,17 @@ namespace Attendify.Views.Employee
         {
             _viewModel.CurrentPageTitle = "Leave Requests";
 
-            var leaveRequestsView = new EmployeeLeaveRequestsView();
-
-            // Pass the employee code if available
+            // Pass the employee code in constructor if available
             if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
             {
-                leaveRequestsView.SetEmployeeCode(_currentEmployee.EmpCode);
+                var leaveRequestsView = new EmployeeLeaveRequestsView(_currentEmployee.EmpCode);
+                MainContentControl.Content = leaveRequestsView;
             }
             else
             {
                 MessageBox.Show("Employee information not available. Please login again.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            MainContentControl.Content = leaveRequestsView;
         }
 
         private void ShowShiftsView()

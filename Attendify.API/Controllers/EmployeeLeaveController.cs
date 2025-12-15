@@ -1,358 +1,413 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Attendify.DATA;
+﻿using Attendify.DATA;
 using Attendify.DATA.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace Attendify.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class LeavesController : ControllerBase
+    public class EmployeeLeaveController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<EmployeeLeaveController> _logger;
 
-        public LeavesController(AppDbContext context, IHttpContextAccessor httpContextAccessor)
+        public EmployeeLeaveController(AppDbContext context, ILogger<EmployeeLeaveController> logger)
         {
             _context = context;
-            _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
-        // Nested DTOs
-        public class LeaveDTO
+        // DTOs nested inside controller
+        public class LeaveRequestDto
         {
-            public int LeaveID { get; set; }
-            public DateTime? FromDate { get; set; }
-            public DateTime? ToDate { get; set; }
-            public string? ReasonTitle { get; set; }
-            public string? Detail { get; set; }
-            public string? Status { get; set; }
-            public string? AdminResponse { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public bool CanCancel { get; set; }
-            public string StatusColor
-            {
-                get
-                {
-                    return Status?.ToLower() switch
-                    {
-                        "pending" => "#FF9800",
-                        "approved" => "#38b000",
-                        "rejected" => "#FF6B6B",
-                        _ => "#888888"
-                    };
-                }
-            }
-        }
-
-        public class LeaveRequestDTO
-        {
+            public string EmpCode { get; set; } = null!;
             public DateTime FromDate { get; set; }
             public DateTime ToDate { get; set; }
-            public string ReasonTitle { get; set; } = string.Empty;
-            public string? Detail { get; set; }
+            public string ReasonTitle { get; set; } = null!;
+            public string? DetailedReason { get; set; }
         }
 
-        public class LeaveStatsDTO
+        public class UpdateLeaveStatusDto
         {
-            public int PendingCount { get; set; }
-            public int ApprovedCount { get; set; }
-            public int RejectedCount { get; set; }
+            public int LeaveId { get; set; }
+            public string Status { get; set; } = null!;
+            public string? AdminResponse { get; set; }
         }
 
-        // Helper method to get current employee code
-        private string GetCurrentEmployeeCode()
+        public class CancelLeaveDto
         {
-            // This assumes you're using JWT or similar authentication
-            // Adjust based on your authentication setup
-            var user = _httpContextAccessor.HttpContext?.User;
-            var empCodeClaim = user?.FindFirst("EmployeeCode") ??
-                              user?.FindFirst("sub") ??
-                              user?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-            return empCodeClaim?.Value ?? throw new UnauthorizedAccessException("Employee not authenticated");
+            public int LeaveId { get; set; }
         }
 
-        // GET: api/Leaves/my-leaves
-        [HttpGet("my-leaves")]
-        public async Task<ActionResult<IEnumerable<LeaveDTO>>> GetMyLeaves()
+        public class LeaveResponseDto
+        {
+            public int LeaveId { get; set; }
+            public string FromDate { get; set; } = null!;
+            public string ToDate { get; set; } = null!;
+            public string ReasonTitle { get; set; } = null!;
+            public string? DetailedReason { get; set; }
+            public string Status { get; set; } = null!;
+            public string? AdminResponse { get; set; }
+            public string CreatedAt { get; set; } = null!;
+            public bool CanCancel { get; set; }
+            public string StatusColor { get; set; } = "#FF9800"; // Default to pending
+        }
+
+        public class LeaveStatsDto
+        {
+            public int Pending { get; set; }
+            public int Approved { get; set; }
+            public int Rejected { get; set; }
+        }
+
+        public class ApiResponseDto
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = null!;
+            public object? Data { get; set; }
+        }
+
+        [HttpGet("requests/{empCode}")]
+        public async Task<ActionResult<ApiResponseDto>> GetLeaveRequests(string empCode)
         {
             try
             {
-                var empCode = GetCurrentEmployeeCode();
+                if (string.IsNullOrEmpty(empCode))
+                {
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Employee code is required"
+                    });
+                }
 
                 var leaves = await _context.Leaves
                     .Where(l => l.EmpCode == empCode)
                     .OrderByDescending(l => l.CreatedAt)
-                    .Select(l => new LeaveDTO
-                    {
-                        LeaveID = l.LeaveID,
-                        FromDate = l.FromDate,
-                        ToDate = l.ToDate,
-                        ReasonTitle = l.ReasonTitle,
-                        Detail = l.Detail,
-                        Status = l.Status,
-                        AdminResponse = l.AdminResponse,
-                        CreatedAt = l.CreatedAt,
-                        CanCancel = l.Status == "pending" && l.FromDate > DateTime.UtcNow.AddDays(1)
-                    })
+                    .Take(50)
                     .ToListAsync();
 
-                return Ok(leaves);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
+                var leaveResponses = leaves.Select(l => new LeaveResponseDto
+                {
+                    LeaveId = l.LeaveID,
+                    FromDate = l.FromDate.HasValue ? l.FromDate.Value.ToString("yyyy-MM-dd") : "N/A",
+                    ToDate = l.ToDate.HasValue ? l.ToDate.Value.ToString("yyyy-MM-dd") : "N/A",
+                    ReasonTitle = l.ReasonTitle ?? "No reason provided",
+                    DetailedReason = l.Detail,
+                    Status = l.Status ?? "Pending",
+                    AdminResponse = l.AdminResponse,
+                    CreatedAt = l.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+                    CanCancel = l.Status == "Pending" && l.CreatedAt > DateTime.UtcNow.AddDays(-1),
+                    StatusColor = GetStatusColor(l.Status ?? "Pending")
+                }).ToList();
+
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Leave requests retrieved successfully",
+                    Data = leaveResponses
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching leaves", error = ex.Message });
+                _logger.LogError(ex, "Error getting leave requests for employee: {EmpCode}", empCode);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"An error occurred while fetching leave requests: {ex.Message}"
+                });
             }
         }
 
-        // GET: api/Leaves/stats
-        [HttpGet("stats")]
-        public async Task<ActionResult<LeaveStatsDTO>> GetLeaveStats()
+        [HttpGet("stats/{empCode}")]
+        public async Task<ActionResult<ApiResponseDto>> GetLeaveStats(string empCode)
         {
             try
             {
-                var empCode = GetCurrentEmployeeCode();
-
-                var stats = new LeaveStatsDTO
+                if (string.IsNullOrEmpty(empCode))
                 {
-                    PendingCount = await _context.Leaves
-                        .CountAsync(l => l.EmpCode == empCode && l.Status == "pending"),
-                    ApprovedCount = await _context.Leaves
-                        .CountAsync(l => l.EmpCode == empCode && l.Status == "approved"),
-                    RejectedCount = await _context.Leaves
-                        .CountAsync(l => l.EmpCode == empCode && l.Status == "rejected")
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Employee code is required"
+                    });
+                }
+
+                var pendingCount = await _context.Leaves
+                    .CountAsync(l => l.EmpCode == empCode && (l.Status == null || l.Status == "Pending"));
+
+                var approvedCount = await _context.Leaves
+                    .CountAsync(l => l.EmpCode == empCode && l.Status == "Approved");
+
+                var rejectedCount = await _context.Leaves
+                    .CountAsync(l => l.EmpCode == empCode && l.Status == "Rejected");
+
+                var response = new LeaveStatsDto
+                {
+                    Pending = pendingCount,
+                    Approved = approvedCount,
+                    Rejected = rejectedCount
                 };
 
-                return Ok(stats);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Leave stats retrieved successfully",
+                    Data = response
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching stats", error = ex.Message });
+                _logger.LogError(ex, "Error getting leave stats for employee: {EmpCode}", empCode);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"An error occurred while fetching leave statistics: {ex.Message}"
+                });
             }
         }
 
-        // GET: api/Leaves/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<LeaveDTO>> GetLeave(int id)
+        [HttpPost("request")]
+        public async Task<ActionResult<ApiResponseDto>> RequestLeave([FromBody] LeaveRequestDto request)
         {
             try
             {
-                var empCode = GetCurrentEmployeeCode();
+                _logger.LogInformation("RequestLeave called with EmpCode: {EmpCode}", request.EmpCode);
 
-                var leave = await _context.Leaves
-                    .Where(l => l.LeaveID == id && l.EmpCode == empCode)
-                    .Select(l => new LeaveDTO
+                // Validate request
+                if (string.IsNullOrEmpty(request.EmpCode))
+                {
+                    return BadRequest(new ApiResponseDto
                     {
-                        LeaveID = l.LeaveID,
-                        FromDate = l.FromDate,
-                        ToDate = l.ToDate,
-                        ReasonTitle = l.ReasonTitle,
-                        Detail = l.Detail,
-                        Status = l.Status,
-                        AdminResponse = l.AdminResponse,
-                        CreatedAt = l.CreatedAt,
-                        CanCancel = l.Status == "pending" && l.FromDate > DateTime.UtcNow.AddDays(1)
-                    })
-                    .FirstOrDefaultAsync();
-
-                if (leave == null)
-                {
-                    return NotFound(new { message = "Leave request not found" });
+                        Success = false,
+                        Message = "Employee code is required"
+                    });
                 }
 
-                return Ok(leave);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while fetching leave details", error = ex.Message });
-            }
-        }
-
-        // POST: api/Leaves
-        [HttpPost]
-        public async Task<ActionResult<LeaveDTO>> CreateLeave(LeaveRequestDTO leaveRequest)
-        {
-            try
-            {
-                var empCode = GetCurrentEmployeeCode();
-
-                // Validation
-                if (leaveRequest.FromDate.Date < DateTime.UtcNow.Date)
+                if (string.IsNullOrEmpty(request.ReasonTitle))
                 {
-                    return BadRequest(new { message = "From date cannot be in the past" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Reason title is required"
+                    });
                 }
 
-                if (leaveRequest.ToDate < leaveRequest.FromDate)
+                // Validate dates
+                if (request.FromDate > request.ToDate)
                 {
-                    return BadRequest(new { message = "To date must be after from date" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "From date cannot be after To date"
+                    });
                 }
 
-                if (string.IsNullOrWhiteSpace(leaveRequest.ReasonTitle))
+                // Check if dates are in the past
+                if (request.FromDate.Date < DateTime.UtcNow.Date)
                 {
-                    return BadRequest(new { message = "Reason title is required" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Leave cannot be requested for past dates"
+                    });
                 }
 
-                // Check for overlapping leave requests
+                // Ensure dates are in UTC
+                var fromDateUtc = DateTime.SpecifyKind(request.FromDate.Date, DateTimeKind.Utc);
+                var toDateUtc = DateTime.SpecifyKind(request.ToDate.Date, DateTimeKind.Utc);
+
+                _logger.LogInformation("Checking for overlapping leaves from {FromDate} to {ToDate}", fromDateUtc, toDateUtc);
+
+                // Check for overlapping leave requests (exclude rejected ones)
                 var overlappingLeaves = await _context.Leaves
-                    .Where(l => l.EmpCode == empCode &&
-                                l.Status != "rejected" &&
-                                ((l.FromDate <= leaveRequest.ToDate && l.ToDate >= leaveRequest.FromDate)))
+                    .Where(l => l.EmpCode == request.EmpCode &&
+                               l.Status != "Rejected" &&
+                               l.Status != "Cancelled" &&
+                               l.FromDate.HasValue &&
+                               l.ToDate.HasValue)
+                    .Where(l => (l.FromDate <= toDateUtc && l.ToDate >= fromDateUtc))
                     .ToListAsync();
 
                 if (overlappingLeaves.Any())
                 {
-                    return BadRequest(new { message = "You already have a leave request for these dates" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "You already have a pending or approved leave request for these dates"
+                    });
                 }
 
+                // Create new leave request
                 var leave = new Leave
                 {
-                    EmpCode = empCode,
-                    FromDate = leaveRequest.FromDate.Date,
-                    ToDate = leaveRequest.ToDate.Date,
-                    ReasonTitle = leaveRequest.ReasonTitle.Trim(),
-                    Detail = leaveRequest.Detail?.Trim(),
-                    Status = "pending",
+                    EmpCode = request.EmpCode,
+                    FromDate = fromDateUtc,
+                    ToDate = toDateUtc,
+                    ReasonTitle = request.ReasonTitle,
+                    Detail = request.DetailedReason,
+                    Status = "Pending",
                     CreatedAt = DateTime.UtcNow
                 };
 
+                _logger.LogInformation("Adding leave request to database...");
                 _context.Leaves.Add(leave);
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("Leave request saved with ID: {LeaveId}", leave.LeaveID);
 
-                var leaveDto = new LeaveDTO
+                return Ok(new ApiResponseDto
                 {
-                    LeaveID = leave.LeaveID,
-                    FromDate = leave.FromDate,
-                    ToDate = leave.ToDate,
-                    ReasonTitle = leave.ReasonTitle,
-                    Detail = leave.Detail,
-                    Status = leave.Status,
-                    AdminResponse = leave.AdminResponse,
-                    CreatedAt = leave.CreatedAt,
-                    CanCancel = true
-                };
-
-                return CreatedAtAction(nameof(GetLeave), new { id = leave.LeaveID }, leaveDto);
+                    Success = true,
+                    Message = "Leave request submitted successfully",
+                    Data = new
+                    {
+                        LeaveId = leave.LeaveID,
+                        FromDate = leave.FromDate?.ToString("yyyy-MM-dd"),
+                        ToDate = leave.ToDate?.ToString("yyyy-MM-dd"),
+                        ReasonTitle = leave.ReasonTitle
+                    }
+                });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (DbUpdateException dbEx)
             {
-                return Unauthorized(new { message = ex.Message });
+                _logger.LogError(dbEx, "Database error while submitting leave request for employee: {EmpCode}", request.EmpCode);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}"
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating leave request", error = ex.Message });
+                _logger.LogError(ex, "Error submitting leave request for employee: {EmpCode}", request.EmpCode);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"An error occurred while submitting leave request: {ex.Message}"
+                });
             }
         }
 
-        // DELETE: api/Leaves/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> CancelLeave(int id)
+        [HttpPut("cancel")]
+        public async Task<ActionResult<ApiResponseDto>> CancelLeave([FromBody] CancelLeaveDto request)
         {
             try
             {
-                var empCode = GetCurrentEmployeeCode();
-
                 var leave = await _context.Leaves
-                    .FirstOrDefaultAsync(l => l.LeaveID == id && l.EmpCode == empCode);
+                    .FirstOrDefaultAsync(l => l.LeaveID == request.LeaveId);
 
                 if (leave == null)
                 {
-                    return NotFound(new { message = "Leave request not found" });
+                    return NotFound(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Leave request not found"
+                    });
                 }
 
-                if (leave.Status != "pending")
+                // Check if leave can be cancelled (only pending requests within 24 hours)
+                if (leave.Status != "Pending")
                 {
-                    return BadRequest(new { message = "Only pending leave requests can be cancelled" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Only pending leave requests can be cancelled"
+                    });
                 }
 
-                if (leave.FromDate <= DateTime.UtcNow.AddDays(1))
+                if (leave.CreatedAt < DateTime.UtcNow.AddDays(-1))
                 {
-                    return BadRequest(new { message = "Leave request cannot be cancelled within 24 hours of start date" });
+                    return BadRequest(new ApiResponseDto
+                    {
+                        Success = false,
+                        Message = "Leave requests can only be cancelled within 24 hours of submission"
+                    });
                 }
 
-                _context.Leaves.Remove(leave);
+                // Update status
+                leave.Status = "Cancelled";
+                leave.AdminResponse = "Cancelled by employee";
+
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Leave request cancelled successfully" });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Leave request cancelled successfully"
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while cancelling leave request", error = ex.Message });
+                _logger.LogError(ex, "Error cancelling leave request ID: {LeaveId}", request.LeaveId);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"An error occurred while cancelling leave request: {ex.Message}"
+                });
             }
         }
 
-        // GET: api/Leaves/remaining-days
-        [HttpGet("remaining-days")]
-        public async Task<ActionResult<object>> GetRemainingLeaveDays()
+        [HttpGet("details/{leaveId}")]
+        public async Task<ActionResult<ApiResponseDto>> GetLeaveDetails(int leaveId)
         {
             try
             {
-                var empCode = GetCurrentEmployeeCode();
+                var leave = await _context.Leaves
+                    .FirstOrDefaultAsync(l => l.LeaveID == leaveId);
 
-                // Get current year
-                var currentYear = DateTime.UtcNow.Year;
-
-                // Get employee's approved leaves for current year
-                var approvedLeaves = await _context.Leaves
-                    .Where(l => l.EmpCode == empCode &&
-                                l.Status == "approved" &&
-                                l.FromDate.HasValue &&
-                                l.ToDate.HasValue &&
-                                l.FromDate.Value.Year == currentYear)
-                    .ToListAsync();
-
-                // Calculate total approved leave days
-                int totalLeaveDays = 0;
-                foreach (var leave in approvedLeaves)
+                if (leave == null)
                 {
-                    if (leave.FromDate.HasValue && leave.ToDate.HasValue)
+                    return NotFound(new ApiResponseDto
                     {
-                        // Add 1 to include both start and end dates
-                        totalLeaveDays += (int)(leave.ToDate.Value.Date - leave.FromDate.Value.Date).TotalDays + 1;
-                    }
+                        Success = false,
+                        Message = "Leave request not found"
+                    });
                 }
 
-                // Get total leave allowance from employee or company policy
-                // This is a placeholder - adjust based on your business logic
-                int annualLeaveAllowance = 20; // Default 20 days per year
-
-                return Ok(new
+                var leaveResponse = new LeaveResponseDto
                 {
-                    remainingDays = annualLeaveAllowance - totalLeaveDays,
-                    usedDays = totalLeaveDays,
-                    annualAllowance = annualLeaveAllowance
+                    LeaveId = leave.LeaveID,
+                    FromDate = leave.FromDate.HasValue ? leave.FromDate.Value.ToString("yyyy-MM-dd") : "N/A",
+                    ToDate = leave.ToDate.HasValue ? leave.ToDate.Value.ToString("yyyy-MM-dd") : "N/A",
+                    ReasonTitle = leave.ReasonTitle ?? "No reason provided",
+                    DetailedReason = leave.Detail,
+                    Status = leave.Status ?? "Pending",
+                    AdminResponse = leave.AdminResponse,
+                    CreatedAt = leave.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+                    CanCancel = leave.Status == "Pending" && leave.CreatedAt > DateTime.UtcNow.AddDays(-1),
+                    StatusColor = GetStatusColor(leave.Status ?? "Pending")
+                };
+
+                return Ok(new ApiResponseDto
+                {
+                    Success = true,
+                    Message = "Leave details retrieved successfully",
+                    Data = leaveResponse
                 });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while calculating remaining days", error = ex.Message });
+                _logger.LogError(ex, "Error getting leave details for ID: {LeaveId}", leaveId);
+                return StatusCode(500, new ApiResponseDto
+                {
+                    Success = false,
+                    Message = $"An error occurred while fetching leave details: {ex.Message}"
+                });
             }
+        }
+
+        // Make this method static to fix EF translation issue
+        private static string GetStatusColor(string status)
+        {
+            return status.ToLower() switch
+            {
+                "approved" => "#38b000",  // Green
+                "rejected" => "#FF6B6B",  // Red
+                "cancelled" => "#666666", // Gray
+                _ => "#FF9800"            // Orange for pending
+            };
         }
     }
 }
