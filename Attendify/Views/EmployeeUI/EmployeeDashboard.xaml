@@ -219,6 +219,24 @@
                                     <TextBlock Text="Notifications" FontSize="20"/>
                                 </StackPanel>
                             </Button>
+
+                            <!-- Contact Admin Button -->
+                            <Button x:Name="BtnContactAdmin" 
+                                    Style="{StaticResource SidebarButton}"
+                                    Height="40"
+                                    
+                                    Click="BtnContactAdmin_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📧" 
+                                    FontSize="20" 
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,5,0"/>
+                                    <TextBlock Text="Contact Admin" 
+                                    FontSize="20" 
+                                    VerticalAlignment="Center"/>
+                            </StackPanel>
+                            </Button>
+
                         </StackPanel>
                     </Grid>
 

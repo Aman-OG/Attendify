@@ -300,6 +300,13 @@ namespace Attendify.Views.Employee
             ShowNotificationsView();
         }
 
+
+        private void BtnContactAdmin_Click(object sender, RoutedEventArgs e)
+        {
+            SetSelectedButton(BtnContactAdmin);
+            ShowContactAdminView();
+        }
+
         // View Switching Methods
         // In EmployeeDashboard.xaml.cs, update ShowHomeView() method:
 
@@ -380,8 +387,38 @@ namespace Attendify.Views.Employee
         private void ShowNotificationsView()
         {
             _viewModel.CurrentPageTitle = "Notifications";
-            MainContentControl.Content = new EmployeeNotificationsView();
+
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                var notificationsView = new EmployeeNotificationsView(_currentEmployee.EmpCode);
+                MainContentControl.Content = notificationsView;
+            }
+            else
+            {
+                var notificationsView = new EmployeeNotificationsView();
+                MainContentControl.Content = notificationsView;
+            }
         }
+
+
+
+        private void ShowContactAdminView()
+        {
+            _viewModel.CurrentPageTitle = "Contact Admin";
+
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                var contactAdminView = new EmployeeContactAdminView(_currentEmployee.EmpCode);
+                MainContentControl.Content = contactAdminView;
+            }
+            else
+            {
+                MessageBox.Show("Employee information not available. Please login again.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
 
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
         {

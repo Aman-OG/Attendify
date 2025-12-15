@@ -20,6 +20,9 @@
     <Compile Update="Views\EmployeeUI\EmployeeAttendanceView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\EmployeeUI\EmployeeContactAdminView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\EmployeeUI\EmployeeDashboard.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
