@@ -358,7 +358,17 @@ namespace Attendify.Views.Employee
         private void ShowShiftsView()
         {
             _viewModel.CurrentPageTitle = "My Shifts";
-            MainContentControl.Content = new EmployeeShiftsView();
+
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                var shiftsView = new EmployeeShiftsView(_currentEmployee.EmpCode);
+                MainContentControl.Content = shiftsView;
+            }
+            else
+            {
+                var shiftsView = new EmployeeShiftsView();
+                MainContentControl.Content = shiftsView;
+            }
         }
 
         private void ShowReportsView()

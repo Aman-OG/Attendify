@@ -62,14 +62,19 @@
         <!-- Shift Card Style -->
         <Style x:Key="ShiftCardStyle" TargetType="ContentControl">
             <Setter Property="Template" Value="{StaticResource GlassContainerTemplate}"/>
-            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Width" Value="300"/>
             <Setter Property="Height" Value="200"/>
+            <Setter Property="Margin" Value="10"/>
         </Style>
 
-  
+        <!-- WrapPanel Style for shift cards -->
+        <Style x:Key="ShiftCardsPanelStyle" TargetType="WrapPanel">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+        </Style>
 
-
-       
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
@@ -90,7 +95,7 @@
             </ContentControl>
 
             <!-- Assigned Shifts Section -->
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
+            <ContentControl Template="{StaticResource GlassContainerTemplate}">
                 <StackPanel>
                     <TextBlock Text="🕒 Assigned Shifts" 
                                Foreground="#00A6FB" 
@@ -98,126 +103,20 @@
                                FontWeight="Bold"
                                Margin="0,0,0,15"/>
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                    <!-- Dynamic shift cards container -->
+                    <WrapPanel x:Name="AssignedShiftsPanel" 
+                               Style="{StaticResource ShiftCardsPanelStyle}"/>
 
-                        <!-- Morning Shift Card -->
-                        <ContentControl Grid.Column="0" Style="{StaticResource ShiftCardStyle}">
-                            <StackPanel Margin="10">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <TextBlock Text="🌅" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Morning Shift" 
-                                               Foreground="#00A6FB" 
-                                               FontSize="16" 
-                                               FontWeight="Bold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,8">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="⏰ Time:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="08:00 – 14:00" 
-                                                   Foreground="White" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="⏱️ Grace:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="5 min" 
-                                                   Foreground="#4CAF50" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📅 Days:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="Mon – Fri" 
-                                                   Foreground="White" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <Border Background="#9038b000" CornerRadius="8" Padding="6,3" Height="32" Margin="0,5,0,0">
-                                    <TextBlock Text="🟢 Currently Active" 
-                                               Foreground="White" 
-                                               FontSize="10"
-                                               FontWeight="SemiBold"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
-                                </Border>
-                            </StackPanel>
-                        </ContentControl>
-
-                        <!-- Evening Shift Card -->
-                        <ContentControl Grid.Column="1" Style="{StaticResource ShiftCardStyle}">
-                            <StackPanel Margin="10">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <TextBlock Text="🌇" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Evening Shift" 
-                                               Foreground="#00A6FB" 
-                                               FontSize="16" 
-                                               FontWeight="Bold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,8">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="⏰ Time:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="14:00 – 22:00" 
-                                                   Foreground="White" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="⏱️ Grace:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="10 min" 
-                                                   Foreground="#4CAF50" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📅 Days:" 
-                                                   FontSize="12"
-                                                   Margin="0,0,5,0"/>
-                                        <TextBlock Text="Sat – Sun" 
-                                                   Foreground="White" 
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <Border Background="#90FF9800" CornerRadius="8" Padding="6,3" Height="32" Margin="0,5,0,0">
-                                    <TextBlock Text="🟡 Weekend Shift" 
-                                               Foreground="White" 
-                                               FontSize="10"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               HorizontalAlignment="Center"/>
-                                </Border>
-                            </StackPanel>
-                        </ContentControl>
-                    </Grid>
-
-      
-            
-
+                    <!-- Loading text (hidden when shifts are loaded) -->
+                    <TextBlock x:Name="LoadingText"
+                               Text="Loading shifts..."
+                               Foreground="#CCCCCC"
+                               FontSize="14"
+                               HorizontalAlignment="Center"
+                               Margin="0,20,0,10"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </ContentControl>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
