@@ -1,4 +1,5 @@
-﻿using Attendify.ViewModels;
+﻿using Attendify.Views;
+using Attendify.ViewModels;
 using Attendify.Views.UserControls;
 using System;
 using System.Windows;
@@ -296,6 +297,36 @@ namespace Attendify.Views
             MainContentControl.Content = new SettingsView();
         }
 
+
+
+        private void ShowChangePasswordView()
+        {
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                var changePasswordView = new ChangePasswordView(_currentEmployee.EmpCode);
+
+                // Handle events
+                changePasswordView.PasswordChanged += (s, e) =>
+                {
+                    MessageBox.Show("Password changed successfully!", "Success",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MainContentControl.Content = null; // Clear the view
+                };
+
+                changePasswordView.CancelClicked += (s, e) =>
+                {
+                    MainContentControl.Content = null; // Clear the view
+                };
+
+                MainContentControl.Content = changePasswordView;
+            }
+            else
+            {
+                MessageBox.Show("Employee information not available.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
         {
             var menu = new ContextMenu();
@@ -345,15 +376,13 @@ namespace Attendify.Views
                     MessageBoxButton.OK, MessageBoxImage.Information);
             };
 
-            var miSettings = new MenuItem { Header = "Settings" };
-            miSettings.Click += (s, ev) =>
+            var miChangePassword = new MenuItem { Header = "Change Password" };
+            miChangePassword.Click += (s, ev) =>
             {
-                SetSelectedButton(BtnSettings);
-                ShowSettingsView();
+                ShowChangePasswordView();
             };
-
             menu.Items.Add(miProfile);
-            menu.Items.Add(miSettings);
+            menu.Items.Add(miChangePassword);
             menu.Items.Add(new Separator());
 
             var miLogout = new MenuItem { Header = "Log out" };

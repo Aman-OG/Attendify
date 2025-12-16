@@ -27,6 +27,7 @@ namespace Attendify.DATA.Models
         public string? Position { get; set; }
         public string? Email { get; set; }
         public string? PasswordHash { get; set; }
+        public DateTime? LastPasswordChange { get; set; }
         public string Role { get; set; }
         public string? Phone { get; set; }
         public bool IsActive { get; set; } = true;

@@ -17,6 +17,9 @@
     <Compile Update="Views\Admin\AdminSettingsView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ChangePasswordView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\EmployeeUI\EmployeeAttendanceView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
