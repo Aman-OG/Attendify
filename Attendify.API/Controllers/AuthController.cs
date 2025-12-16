@@ -1,10 +1,7 @@
 ﻿using Attendify.DATA;
-
 using Attendify.DATA.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Attendify.API.Controllers
 {
@@ -21,7 +18,8 @@ namespace Attendify.API.Controllers
             _logger = logger;
         }
 
-        // DTO nested inside the controller
+        // ===================== DTOs =====================
+
         public class LoginRequest
         {
             public string Email { get; set; } = null!;
@@ -41,20 +39,23 @@ namespace Attendify.API.Controllers
             public int EmployeeID { get; set; }
             public string EmpCode { get; set; } = null!;
             public string FirstName { get; set; } = null!;
-            public string? MiddleName { get; set; }
             public string LastName { get; set; } = null!;
-            public string? Department { get; set; }
-            public string? Position { get; set; }
             public string Email { get; set; } = null!;
             public string Role { get; set; } = null!;
+            public string? Department { get; set; }
+            public string? Position { get; set; }
+            public string? MiddleName { get; set; }
         }
+
+        // ===================== LOGIN =====================
 
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Password))
                 {
                     return Ok(new LoginResponse
                     {
@@ -63,9 +64,62 @@ namespace Attendify.API.Controllers
                     });
                 }
 
-                // Find employee by email
+                string email = request.Email.Trim().ToLower();
+                string password = request.Password;
+
+                // =====================================================
+                // 🔥 TEMP HARDCODED LOGIN (FOR TEAM DEMO ONLY)
+                // =====================================================
+
+                if (email == "admin" && password == "1234")
+                {
+                    return Ok(new LoginResponse
+                    {
+                        Success = true,
+                        Message = "Hardcoded admin login",
+                        Role = "Admin",
+                        Employee = new EmployeeData
+                        {
+                            EmployeeID = 0,
+                            EmpCode = "ADMIN001",
+                            FirstName = "System",
+                            LastName = "Admin",
+                            Email = "admin",
+                            Role = "Admin",
+                            Department = "IT",
+                            Position = "Administrator"
+                        }
+                    });
+                }
+
+                if (email == "employee" && password == "1234")
+                {
+                    return Ok(new LoginResponse
+                    {
+                        Success = true,
+                        Message = "Hardcoded employee login",
+                        Role = "Employee",
+                        Employee = new EmployeeData
+                        {
+                            EmployeeID = 0,
+                            EmpCode = "EMP001",
+                            FirstName = "Demo",
+                            LastName = "Employee",
+                            Email = "employee",
+                            Role = "Employee",
+                            Department = "General",
+                            Position = "Staff"
+                        }
+                    });
+                }
+
+                // =====================================================
+                // ⬇️ NORMAL DATABASE LOGIN (TEMPORARILY DISABLED)
+                // =====================================================
+
+                /*
                 var employee = await _context.Employees
-                    .FirstOrDefaultAsync(e => e.Email == request.Email && e.IsActive);
+                    .FirstOrDefaultAsync(e => e.Email.ToLower() == email && e.IsActive);
 
                 if (employee == null)
                 {
@@ -76,10 +130,7 @@ namespace Attendify.API.Controllers
                     });
                 }
 
-                // Verify password (assuming you're using hashed passwords)
-                var hashedPassword = HashPassword(request.Password);
-
-                if (employee.PasswordHash != hashedPassword)
+                if (!BCrypt.Net.BCrypt.Verify(password, employee.PasswordHash))
                 {
                     return Ok(new LoginResponse
                     {
@@ -88,7 +139,6 @@ namespace Attendify.API.Controllers
                     });
                 }
 
-                // Return success with employee data
                 return Ok(new LoginResponse
                 {
                     Success = true,
@@ -99,32 +149,34 @@ namespace Attendify.API.Controllers
                         EmployeeID = employee.EmployeeID,
                         EmpCode = employee.EmpCode,
                         FirstName = employee.FirstName,
-                        MiddleName = employee.MiddleName,
                         LastName = employee.LastName,
-                        Department = employee.Department,
-                        Position = employee.Position,
+                        MiddleName = employee.MiddleName,
                         Email = employee.Email!,
-                        Role = employee.Role
+                        Role = employee.Role,
+                        Department = employee.Department,
+                        Position = employee.Position
                     }
+                });
+                */
+
+                // =====================================================
+                // FALLBACK
+                // =====================================================
+
+                return Ok(new LoginResponse
+                {
+                    Success = false,
+                    Message = "Invalid email or password"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during login for email: {Email}", request.Email);
+                _logger.LogError(ex, "Login error");
                 return StatusCode(500, new LoginResponse
                 {
                     Success = false,
-                    Message = "An error occurred during login"
+                    Message = "Server error during login"
                 });
-            }
-        }
-
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
             }
         }
     }

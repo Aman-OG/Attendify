@@ -50,6 +50,9 @@
     <Compile Update="Views\LoginPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ProfileViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\SplashScreen.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
