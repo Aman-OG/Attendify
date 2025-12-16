@@ -14,7 +14,7 @@ namespace Attendify.Views.UserControls
     public partial class EmployeeReportsView : UserControl, INotifyPropertyChanged
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode;
         private DispatcherTimer _refreshTimer;
         private bool _isLoading;
@@ -165,10 +165,8 @@ namespace Attendify.Views.UserControls
         {
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
-                Console.WriteLine("HttpClient initialized");
+                _httpClient = Attendify.Services.HttpClientService.Instance;
+                Console.WriteLine("HttpClient initialized from Service");
             }
         }
 
@@ -213,9 +211,9 @@ namespace Attendify.Views.UserControls
         {
             try
             {
-                Console.WriteLine($"Calling API: {ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
+                Console.WriteLine($"Calling API: {Attendify.Services.HttpClientService.ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
 
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeereports/stats/{_currentEmpCode}");
                 Console.WriteLine($"API Response Status: {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)
@@ -263,9 +261,9 @@ namespace Attendify.Views.UserControls
         {
             try
             {
-                Console.WriteLine($"Calling API: {ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
+                Console.WriteLine($"Calling API: {Attendify.Services.HttpClientService.ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
 
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeereports/monthly-report/{_currentEmpCode}");
                 Console.WriteLine($"Monthly Report API Response Status: {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)

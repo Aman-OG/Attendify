@@ -11,7 +11,7 @@ namespace Attendify.Views.UserControls
     public partial class ChangePasswordView : UserControl
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode;
 
         // Store visibility states as fields instead of ref parameters
@@ -59,9 +59,7 @@ namespace Attendify.Views.UserControls
         {
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
         }
 
@@ -93,7 +91,7 @@ namespace Attendify.Views.UserControls
                 var json = JsonSerializer.Serialize(changePasswordDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{ApiBaseUrl}/account/change-password", content);
+                var response = await _httpClient.PostAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/account/change-password", content);
                 var responseString = await response.Content.ReadAsStringAsync();
 
                 // Check if response is JSON
@@ -155,7 +153,7 @@ namespace Attendify.Views.UserControls
             }
             catch (HttpRequestException httpEx)
             {
-                MessageBox.Show($"Network error: {httpEx.Message}\n\nPlease check if the API server is running at {ApiBaseUrl}",
+                MessageBox.Show($"Network error: {httpEx.Message}\n\nPlease check if the API server is running at {Attendify.Services.HttpClientService.ApiBaseUrl}",
                     "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)

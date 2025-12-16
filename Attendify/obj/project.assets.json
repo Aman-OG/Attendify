@@ -3319,11 +3319,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.UI.csproj",
+      "projectUniqueName": "C:\\Users\\DBU\\Downloads\\Attendify\\Attendify\\Attendify.UI.csproj",
       "projectName": "Attendify.UI",
-      "projectPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\Attendify.UI.csproj",
+      "projectPath": "C:\\Users\\DBU\\Downloads\\Attendify\\Attendify\\Attendify.UI.csproj",
       "packagesPath": "C:\\Users\\DBU\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify\\obj\\",
+      "outputPath": "C:\\Users\\DBU\\Downloads\\Attendify\\Attendify\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3344,8 +3344,8 @@
         "net9.0-windows7.0": {
           "targetAlias": "net9.0-windows7.0",
           "projectReferences": {
-            "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj": {
-              "projectPath": "C:\\Users\\DBU\\Desktop\\Attendify Project\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj"
+            "C:\\Users\\DBU\\Downloads\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj": {
+              "projectPath": "C:\\Users\\DBU\\Downloads\\Attendify\\Attendify.DATA\\Attendify.DATA.csproj"
             }
           }
         }

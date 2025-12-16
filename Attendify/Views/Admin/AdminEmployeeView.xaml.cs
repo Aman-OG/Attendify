@@ -19,7 +19,7 @@ namespace Attendify.Views.UserControls
         private EmployeeDto _selectedEmployee;
         private bool _isAddingNew = false;
         private readonly HttpClient _httpClient;
-        private readonly string _apiBaseUrl = "https://localhost:7129/";
+        // private readonly string _apiBaseUrl = "https://localhost:7129/";
 
         // Loading states
         private bool _isLoadingEmployees = false;
@@ -134,17 +134,7 @@ namespace Attendify.Views.UserControls
             DataContext = this;
 
             // Initialize HttpClient
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback =
-                    (sender, cert, chain, sslPolicyErrors) => true
-            };
-
-            _httpClient = new HttpClient(handler)
-            {
-                BaseAddress = new Uri(_apiBaseUrl),
-                Timeout = TimeSpan.FromSeconds(30)
-            };
+            _httpClient = Attendify.Services.HttpClientService.Instance;
 
             Loaded += async (s, e) => await LoadEmployeesFromApiAsync(false);
             ShowEmptyForm();
@@ -168,7 +158,7 @@ namespace Attendify.Views.UserControls
 
             try
             {
-                var response = await _httpClient.GetAsync("api/admin/employees?pageSize=100");
+                var response = await _httpClient.GetAsync("admin/employees?pageSize=100");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -195,7 +185,7 @@ namespace Attendify.Views.UserControls
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"Cannot connect to API. Make sure the API is running at {_apiBaseUrl}\n\nError: {ex.Message}", "Connection Error");
+                MessageBox.Show($"Cannot connect to API. Make sure the API is running at \n\nError: {ex.Message}", "Connection Error");
             }
             catch (Exception ex)
             {
@@ -282,7 +272,7 @@ namespace Attendify.Views.UserControls
                 };
 
                 var response = await _httpClient.PutAsJsonAsync(
-                    $"api/admin/employees/{SelectedEmployee.EmpCode}",
+                    $"admin/employees/{SelectedEmployee.EmpCode}",
                     updateRequest);
 
                 if (response.IsSuccessStatusCode)
@@ -330,7 +320,7 @@ namespace Attendify.Views.UserControls
 
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/admin/employees", createRequest);
+                var response = await _httpClient.PostAsJsonAsync("admin/employees", createRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -376,7 +366,7 @@ namespace Attendify.Views.UserControls
 
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/admin/employees/{SelectedEmployee.EmpCode}");
+                var response = await _httpClient.DeleteAsync($"admin/employees/{SelectedEmployee.EmpCode}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -423,7 +413,7 @@ namespace Attendify.Views.UserControls
             try
             {
                 var response = await _httpClient.PostAsync(
-                    $"api/admin/employees/{SelectedEmployee.EmpCode}/reset-password",
+                    $"admin/employees/{SelectedEmployee.EmpCode}/reset-password",
                     null);
 
                 if (response.IsSuccessStatusCode)

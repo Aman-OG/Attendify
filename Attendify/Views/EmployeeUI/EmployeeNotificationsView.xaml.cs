@@ -13,7 +13,7 @@ namespace Attendify.Views.UserControls
     public partial class EmployeeNotificationsView : UserControl
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode = "";
         private DispatcherTimer _refreshTimer;
 
@@ -72,9 +72,7 @@ namespace Attendify.Views.UserControls
         {
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
         }
 
@@ -95,7 +93,7 @@ namespace Attendify.Views.UserControls
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeenotifications/unread-count");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeenotifications/unread-count");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -126,7 +124,7 @@ namespace Attendify.Views.UserControls
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeenotifications/messages");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeenotifications/messages");
 
                 if (response.IsSuccessStatusCode)
                 {

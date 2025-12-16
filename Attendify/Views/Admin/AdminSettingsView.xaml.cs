@@ -18,7 +18,7 @@ namespace Attendify.Views.UserControls
     public partial class SettingsView : UserControl
     {
         private HttpClient _httpClient;
-        private string _apiBaseUrl = "https://localhost:7129/api/settings";
+        private string _apiBaseUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/settings";
 
         // Data collections
         private List<AttendanceRuleDto> _attendanceRules = new List<AttendanceRuleDto>();
@@ -88,11 +88,7 @@ namespace Attendify.Views.UserControls
 
         private void InitializeHttpClient()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(
-                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            _httpClient = Attendify.Services.HttpClientService.Instance;
         }
 
         private async void SettingsView_Loaded(object sender, RoutedEventArgs e)

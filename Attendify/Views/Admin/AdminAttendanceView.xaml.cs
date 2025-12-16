@@ -20,7 +20,7 @@ namespace Attendify.Views.UserControls
         private ObservableCollection<AttendanceRecord> _attendanceRecords;
         private string _currentStatusFilter = "All";
         private HttpClient _httpClient;
-        private readonly string _apiBaseUrl = "https://localhost:7129/api/attendance";
+        private readonly string _apiBaseUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/attendance";
         private bool _isInitialized = false;
         private bool _isLoading = false;
         private bool _suppressDateFilterEvents = false;
@@ -49,11 +49,7 @@ namespace Attendify.Views.UserControls
         {
             try
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Accept.Clear();
-                _httpClient.DefaultRequestHeaders.Accept.Add(
-                    new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
                 Console.WriteLine("✅ HttpClient initialized successfully");
             }
             catch (Exception ex)

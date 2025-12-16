@@ -12,7 +12,7 @@ namespace Attendify.Views.Employee
     public partial class EmployeeHomeView : UserControl
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode = "";
 
         public EmployeeHomeView()
@@ -53,11 +53,10 @@ namespace Attendify.Views.Employee
             _currentEmpCode = empCode;
 
             // Initialize HTTP client only when needed
+            // Initialize HTTP client only when needed
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
 
             LoadDashboardData();
@@ -67,7 +66,7 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeehome/dashboard/{_currentEmpCode}");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeehome/dashboard/{_currentEmpCode}");
 
                 if (response.IsSuccessStatusCode)
                 {

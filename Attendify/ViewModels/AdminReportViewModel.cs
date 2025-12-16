@@ -176,13 +176,7 @@ namespace Attendify.ViewModels
 
         public AdminReportViewModel()
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("https://localhost:7129/api/")
-            };
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(
-                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient = Attendify.Services.HttpClientService.Instance;
 
             InitializeEmptyCharts();
         }

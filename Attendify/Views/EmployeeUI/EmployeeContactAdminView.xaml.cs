@@ -14,7 +14,7 @@ namespace Attendify.Views.Employee
     public partial class EmployeeContactAdminView : UserControl
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode;
         private DispatcherTimer _refreshTimer;
 
@@ -84,9 +84,7 @@ namespace Attendify.Views.Employee
         {
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
         }
 
@@ -108,7 +106,7 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeecontact/types");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeecontact/types");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -161,7 +159,7 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeecontact/requests/{_currentEmpCode}");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeecontact/requests/{_currentEmpCode}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -309,7 +307,7 @@ namespace Attendify.Views.Employee
                 var json = JsonSerializer.Serialize(contactRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{ApiBaseUrl}/employeecontact/request", content);
+                var response = await _httpClient.PostAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeecontact/request", content);
 
                 if (response.IsSuccessStatusCode)
                 {

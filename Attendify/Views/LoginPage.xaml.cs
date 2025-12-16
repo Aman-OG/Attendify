@@ -14,7 +14,7 @@ namespace Attendify
     public partial class LoginPage : Window
     {
         private readonly HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api"; // Adjust based on your API URL
+        // private const string ApiBaseUrl = "https://localhost:7129/api"; // Using shared service URL
 
         // Local DTO classes since we can't reference AuthController directly
         public class LoginRequest
@@ -47,9 +47,7 @@ namespace Attendify
         public LoginPage()
         {
             InitializeComponent();
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            _httpClient = Attendify.Services.HttpClientService.Instance;
 
             // Placeholder visibility handlers
             UsernameBox.TextChanged += (s, e) =>
@@ -214,7 +212,7 @@ namespace Attendify
                 var json = JsonSerializer.Serialize(loginRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{ApiBaseUrl}/auth/login", content);
+                var response = await _httpClient.PostAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/auth/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {

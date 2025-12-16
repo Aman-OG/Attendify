@@ -13,7 +13,7 @@ namespace Attendify.Views.Employee
     public partial class EmployeeShiftsView : UserControl
     {
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode = "";
         private DispatcherTimer _refreshTimer;
 
@@ -64,9 +64,7 @@ namespace Attendify.Views.Employee
         {
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
         }
 
@@ -77,11 +75,11 @@ namespace Attendify.Views.Employee
                 string apiUrl;
                 if (!string.IsNullOrEmpty(_currentEmpCode))
                 {
-                    apiUrl = $"{ApiBaseUrl}/employeeshifts/shifts/{_currentEmpCode}";
+                    apiUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts/{_currentEmpCode}";
                 }
                 else
                 {
-                    apiUrl = $"{ApiBaseUrl}/employeeshifts/shifts";
+                    apiUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts";
                 }
 
                 var response = await _httpClient.GetAsync(apiUrl);

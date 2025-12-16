@@ -15,7 +15,7 @@ namespace Attendify.Views.Employee
     {
         private DispatcherTimer _clockTimer;
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://localhost:7129/api";
+        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode = "";
 
         public EmployeeAttendanceView()
@@ -43,9 +43,7 @@ namespace Attendify.Views.Employee
             // Initialize HTTP client
             if (_httpClient == null)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                _httpClient = Attendify.Services.HttpClientService.Instance;
             }
 
             LoadAttendanceData();
@@ -82,7 +80,7 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{ApiBaseUrl}/employeeattendance/data/{_currentEmpCode}");
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeattendance/data/{_currentEmpCode}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -268,7 +266,7 @@ namespace Attendify.Views.Employee
                 var json = JsonSerializer.Serialize(checkInRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{ApiBaseUrl}/employeeattendance/checkin", content);
+                var response = await _httpClient.PostAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeattendance/checkin", content);
 
                 if (response.IsSuccessStatusCode)
                 {
