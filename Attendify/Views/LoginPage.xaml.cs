@@ -115,11 +115,11 @@ namespace Attendify
                 return;
             }
 
-            //if (!IsValidEmail(email))
-            //{
-            //    ShowErrorMessage("Please enter a valid email address");
-            //    return;
-            //}
+            if (!IsValidEmail(email))
+            {
+                ShowErrorMessage("Please enter a valid email address");
+                return;
+            }
 
             // Disable login button during API call
             LoginButton.IsEnabled = false;

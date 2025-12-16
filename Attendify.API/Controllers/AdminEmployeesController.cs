@@ -249,5 +249,40 @@ namespace Attendify.API.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Deactivated" });
         }
-    }
-}
+    
+
+
+
+            // Add this method - PUT it right before the closing } of the class
+        [HttpPost("reset-all-passwords")]
+        public async Task<IActionResult> ResetAllPasswords()
+        {
+            try
+            {
+                var employees = await _context.Employees.ToListAsync();
+
+                foreach (var employee in employees)
+                {
+                    // Generate new password from EmpCode
+                    var generatedPassword = GeneratePasswordFromEmpCode(employee.EmpCode);
+                    employee.PasswordHash = _passwordHasher.HashPassword(generatedPassword);
+
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "All passwords have been reset",
+                    count = employees.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error resetting passwords", error = ex.Message });
+            }
+        }
+
+
+
+    }}

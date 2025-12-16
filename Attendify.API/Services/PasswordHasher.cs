@@ -1,6 +1,4 @@
-﻿// Attendify.API/Services/PasswordHasher.cs
-using System.Security.Cryptography;
-using System.Text;
+﻿using BCrypt.Net;
 
 namespace Attendify.API.Services
 {
@@ -14,15 +12,14 @@ namespace Attendify.API.Services
     {
         public string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
+            // BCrypt automatically handles salt generation and includes it in the hash
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         public bool VerifyPassword(string hashedPassword, string password)
         {
-            var hashedInput = HashPassword(password);
-            return hashedPassword == hashedInput;
+            // BCrypt.Verify handles the comparison securely
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
     }
 }
