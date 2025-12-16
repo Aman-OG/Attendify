@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Text.RegularExpressions;
+using Attendify.Models;
 
 namespace Attendify.Views.UserControls
 {
@@ -34,53 +36,7 @@ namespace Attendify.Views.UserControls
         private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(5);
 
         // DTO Classes - MUST BE PUBLIC
-        public class EmployeeDto
-        {
-            public int EmployeeID { get; set; }
-            public string EmpCode { get; set; } = "";
-            public string FirstName { get; set; } = "";
-            public string? MiddleName { get; set; }
-            public string LastName { get; set; } = "";
-            public string? Department { get; set; }
-            public string? Position { get; set; }
-            public string? Email { get; set; }
-            public string? Phone { get; set; }
-            public string? Role { get; set; }
-            public bool IsActive { get; set; }
-            public DateTime CreatedAt { get; set; }
-        }
-
-        public class ApiResponse
-        {
-            public EmployeeDto[] Data { get; set; } = Array.Empty<EmployeeDto>();
-            public int Total { get; set; }
-            public int Page { get; set; }
-            public int PageSize { get; set; }
-            public int TotalPages { get; set; }
-        }
-
-        public class CreateEmployeeResponse
-        {
-            public int EmployeeID { get; set; }
-            public string EmpCode { get; set; } = "";
-            public string FirstName { get; set; } = "";
-            public string? MiddleName { get; set; }
-            public string LastName { get; set; } = "";
-            public string? Department { get; set; }
-            public string? Position { get; set; }
-            public string? Email { get; set; }
-            public string? Phone { get; set; }
-            public string? Role { get; set; }
-            public bool IsActive { get; set; }
-            public string GeneratedPassword { get; set; } = "";
-            public string Message { get; set; } = "";
-        }
-
-        public class ResetPasswordResponse
-        {
-            public string Message { get; set; } = "";
-            public string NewPassword { get; set; } = "";
-        }
+        // DTO classes moved to Attendify.Models namespace
 
         // Properties
         public ObservableCollection<EmployeeDto> Employees
@@ -163,7 +119,7 @@ namespace Attendify.Views.UserControls
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ApiResponse>(content, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<PaginatedResponse<EmployeeDto>>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -547,12 +503,27 @@ namespace Attendify.Views.UserControls
                 TxtEmail.Focus();
                 return false;
             }
+             // Email validation
+            if (!IsValidEmail(TxtEmail.Text))
+            {
+                MessageBox.Show("Please enter a valid email address (e.g., user@example.com)", "Validation Error");
+                TxtEmail.Focus();
+                return false;
+            }
             if (string.IsNullOrWhiteSpace(TxtPhone.Text))
             {
                 MessageBox.Show("Phone is required", "Validation Error");
                 TxtPhone.Focus();
                 return false;
             }
+            // Phone validation
+            if (!IsValidPhone(TxtPhone.Text))
+            {
+                MessageBox.Show("Phone number must be exactly 10 digits", "Validation Error");
+                TxtPhone.Focus();
+                return false;
+            }
+
             if (CmbRole.SelectedItem == null)
             {
                 MessageBox.Show("Role is required", "Validation Error");
@@ -566,6 +537,32 @@ namespace Attendify.Views.UserControls
                 return false;
             }
             return true;
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return false;
+            try
+            {
+                // Simple regex for email validation
+                return Regex.IsMatch(email,
+                    @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                    RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone)) return false;
+            // Check if it contains only digits and is 10 digits long
+            // Remove any potential formatting (like dashes or spaces) if user types them, 
+            // but requirement says "is 10 digits", so usually strict check is better for consistency.
+            // Let's assume strict 10 digits for now as per request.
+            return phone.Length == 10 && phone.All(char.IsDigit);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

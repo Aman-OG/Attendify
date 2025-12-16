@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Attendify.Models;
 
 namespace Attendify.Views
 {
@@ -372,8 +373,7 @@ namespace Attendify.Views
             var miProfile = new MenuItem { Header = "My Profile" };
             miProfile.Click += (s, ev) =>
             {
-                MessageBox.Show("Profile feature coming soon!", "Profile",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ShowProfileView();
             };
 
             var miChangePassword = new MenuItem { Header = "Change Password" };
@@ -397,6 +397,37 @@ namespace Attendify.Views
 
             menu.PlacementTarget = AccountBtn;
             menu.IsOpen = true;
+        }
+        private void ShowProfileView()
+        {
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                var profileViewer = new ProfileViewer(_currentEmployee.EmpCode);
+
+                // Handle events
+                profileViewer.EditProfileRequested += (s, e) =>
+                {
+                    MessageBox.Show("Edit profile feature coming soon!", "Edit Profile",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                };
+
+                profileViewer.ChangePasswordRequested += (s, e) =>
+                {
+                    ShowChangePasswordView();
+                };
+
+                profileViewer.CloseRequested += (s, e) =>
+                {
+                    MainContentControl.Content = null; // Clear the view
+                };
+
+                MainContentControl.Content = profileViewer;
+            }
+            else
+            {
+                MessageBox.Show("Employee information not available.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

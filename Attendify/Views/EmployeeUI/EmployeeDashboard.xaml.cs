@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Attendify.Models;
 
 namespace Attendify.Views.Employee
 {
@@ -504,8 +505,7 @@ namespace Attendify.Views.Employee
             var miProfile = new MenuItem { Header = "My Profile" };
             miProfile.Click += (s, ev) =>
             {
-                MessageBox.Show("Profile feature coming soon!", "Profile",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ShowProfileView();
             };
 
             var miChangePassword = new MenuItem { Header = "Change Password" };
@@ -543,6 +543,42 @@ namespace Attendify.Views.Employee
         public void SetEmployeeData(EmployeeInfo employee)
         {
             InitializeDashboard(employee);
+        }
+
+        private void ShowProfileView()
+        {
+            if (_currentEmployee != null && !string.IsNullOrEmpty(_currentEmployee.EmpCode))
+            {
+                _viewModel.CurrentPageTitle = "My Profile";
+
+                // Create ProfileViewer with employee code
+                var profileViewer = new ProfileViewer(_currentEmployee.EmpCode);
+
+                // Handle events
+                profileViewer.EditProfileRequested += (s, e) =>
+                {
+                    MessageBox.Show("Edit profile feature coming soon!", "Edit Profile",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                };
+
+                profileViewer.ChangePasswordRequested += (s, e) =>
+                {
+                    ShowChangePasswordView();
+                };
+
+                profileViewer.CloseRequested += (s, e) =>
+                {
+                    // Go back to home view when profile viewer is closed
+                    ShowHomeView();
+                };
+
+                MainContentControl.Content = profileViewer;
+            }
+            else
+            {
+                MessageBox.Show("Employee information not available.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

@@ -143,6 +143,14 @@ namespace Attendify.API.Controllers
                 await _context.Employees.AnyAsync(e => e.Email == request.Email))
                 return Conflict(new { message = "Email already in use" });
 
+            // Validate Email format
+            if (!string.IsNullOrEmpty(request.Email) && !Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                return BadRequest(new { message = "Invalid email format" });
+
+            // Validate Phone format (10 digits)
+            if (!string.IsNullOrEmpty(request.Phone) && (request.Phone.Length != 10 || !request.Phone.All(char.IsDigit)))
+                return BadRequest(new { message = "Phone must be exactly 10 digits" });
+
             // Generate password from EmpCode
             var generatedPassword = GeneratePasswordFromEmpCode(request.EmpCode);
 
@@ -205,6 +213,14 @@ namespace Attendify.API.Controllers
         {
             var employee = await _context.Employees.FirstOrDefaultAsync(e => e.EmpCode == empCode);
             if (employee == null) return NotFound();
+
+            // Validate Email format
+            if (!string.IsNullOrEmpty(request.Email) && !Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                return BadRequest(new { message = "Invalid email format" });
+
+            // Validate Phone format (10 digits)
+            if (!string.IsNullOrEmpty(request.Phone) && (request.Phone.Length != 10 || !request.Phone.All(char.IsDigit)))
+                return BadRequest(new { message = "Phone must be exactly 10 digits" });
 
             employee.FirstName = request.FirstName;
             employee.MiddleName = request.MiddleName;
