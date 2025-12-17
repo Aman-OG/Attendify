@@ -261,9 +261,9 @@ namespace Attendify.API.Controllers
             var employee = await _context.Employees.FirstOrDefaultAsync(e => e.EmpCode == empCode);
             if (employee == null) return NotFound();
 
-            employee.IsActive = false;
+            _context.Employees.Remove(employee);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Deactivated" });
+            return Ok(new { message = "Permanently Deleted" });
         }
     
 

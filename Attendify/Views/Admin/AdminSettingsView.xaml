@@ -826,43 +826,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Search and Filters -->
-                        <ContentControl Grid.Row="0" Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Search Box -->
-                                <Border Grid.Column="0" 
-                                        Background="#20FFFFFF" 
-                                        CornerRadius="8" 
-                                        BorderBrush="#40FFFFFF" 
-                                        BorderThickness="1"
-                                        Margin="5"
-                                        VerticalAlignment="Center">
-                                    <Grid>
-                                        <TextBox x:Name="TxtRequestSearch" 
-                                                 Style="{StaticResource ModernTextBox}"
-                                                 BorderThickness="0"
-                                                 Padding="15,8"
-                                                 Width="300"
-                                                 TextChanged="TxtRequestSearch_TextChanged"/>
-                                        <TextBlock x:Name="RequestSearchPlaceholder" 
-                                                   Text="🔍 Search employees requests..." 
-                                                   Foreground="#B0CFFF"
-                                                   Margin="15,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   Width="300"
-                                                   IsHitTestVisible="False"/>
-                                    </Grid>
-                                </Border>
-
-
-                            </Grid>
-                        </ContentControl>
+           
 
                         <!-- Requests Table -->
                         <DataGrid Grid.Row="1"

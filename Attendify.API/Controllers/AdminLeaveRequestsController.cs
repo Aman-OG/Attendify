@@ -74,7 +74,8 @@ namespace Attendify.API.Controllers
                         Description = l.Detail ?? "No additional details",
                         Status = l.Status ?? "Pending",
                         StatusColor = (l.Status ?? "Pending") == "Approved" ? "#2FBF4C" :
-                                     (l.Status ?? "Pending") == "Rejected" ? "#D23C3C" : "#E3C63A"
+                                     (l.Status ?? "Pending") == "Rejected" ? "#D23C3C" :
+                                     (l.Status ?? "Pending") == "Cancelled" ? "#8B4513" : "#E3C63A"
                     })
                     .ToListAsync();
 
@@ -110,7 +111,8 @@ namespace Attendify.API.Controllers
                         Description = l.Detail ?? "No additional details",
                         Status = l.Status ?? "Pending",
                         StatusColor = (l.Status ?? "Pending") == "Approved" ? "#2FBF4C" :
-                                     (l.Status ?? "Pending") == "Rejected" ? "#D23C3C" : "#E3C63A"
+                                     (l.Status ?? "Pending") == "Rejected" ? "#D23C3C" :
+                                     (l.Status ?? "Pending") == "Cancelled" ? "#8B4513" : "#E3C63A"
                     })
                     .FirstOrDefaultAsync();
 

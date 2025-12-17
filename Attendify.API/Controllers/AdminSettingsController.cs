@@ -389,7 +389,7 @@ namespace Attendify.API.Controllers
                     {
                         EmployeeRequestId = r.RequestID,
                         EmployeeID = r.Employee.EmpCode,
-                        EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                        EmployeeName = r.Employee.FirstName + (string.IsNullOrEmpty(r.Employee.MiddleName) ? "" : " " + r.Employee.MiddleName),
                         r.Type,
                         r.Message,
                         r.Status,
