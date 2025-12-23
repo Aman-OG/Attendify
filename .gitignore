@@ -1,7 +1,6 @@
 .vs/ 
 bin/ 
 obj/ 
-setup/
 Setup/Output/
 Setup/Publish/
 Attendify/publish/
