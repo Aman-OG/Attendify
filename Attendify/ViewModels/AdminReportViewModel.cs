@@ -217,15 +217,13 @@ namespace Attendify.ViewModels
                     var error = await response.Content.ReadAsStringAsync();
                     Debug.WriteLine($"Error: {response.StatusCode} - {error}");
 
-                    MessageBox.Show($"Failed to load reports: {response.StatusCode}\n{error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    Attendify.Views.GlassMessageBox.Show($"Failed to load reports: {response.StatusCode}\n{error}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Exception: {ex}");
-                MessageBox.Show($"Error loading reports: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Attendify.Views.GlassMessageBox.Show($"Error loading reports: {ex.Message}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -283,15 +281,13 @@ namespace Attendify.ViewModels
                     var error = await response.Content.ReadAsStringAsync();
                     Debug.WriteLine($"Export Error: {response.StatusCode} - {error}");
 
-                    MessageBox.Show($"Failed to export {fileType}: {response.ReasonPhrase}\n{error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    Attendify.Views.GlassMessageBox.Show($"Failed to export {fileType}: {response.ReasonPhrase}\n{error}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Export Exception: {ex}");
-                MessageBox.Show($"Error exporting {fileType}: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Attendify.Views.GlassMessageBox.Show($"Error exporting {fileType}: {ex.Message}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -313,14 +309,12 @@ namespace Attendify.ViewModels
                 {
                     File.WriteAllBytes(saveDialog.FileName, fileBytes);
                     Debug.WriteLine($"File saved: {saveDialog.FileName}");
-                    MessageBox.Show($"{fileType} file saved successfully!", "Success",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    Attendify.Views.GlassMessageBox.Show($"{fileType} file saved successfully!", "Success", false, Attendify.Views.GlassMessageBox.MessageType.Success);
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Save Error: {ex}");
-                    MessageBox.Show($"Error saving file: {ex.Message}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    Attendify.Views.GlassMessageBox.Show($"Error saving file: {ex.Message}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
                 }
             }
         }
@@ -416,8 +410,7 @@ namespace Attendify.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in UpdateViewModel: {ex.Message}");
-                MessageBox.Show($"Error updating view: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Attendify.Views.GlassMessageBox.Show($"Error updating view: {ex.Message}", "Error", false, Attendify.Views.GlassMessageBox.MessageType.Error);
             }
         }
         // Chart creation methods

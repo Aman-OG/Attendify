@@ -58,8 +58,22 @@ namespace Attendify
 
             PasswordBox.PasswordChanged += (s, e) =>
             {
-                PassPlaceholder.Visibility =
-                    string.IsNullOrWhiteSpace(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
+                if (PasswordBox.Visibility == Visibility.Visible)
+                {
+                    PassPlaceholder.Visibility =
+                        string.IsNullOrWhiteSpace(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
+                    PasswordRevealBox.Text = PasswordBox.Password;
+                }
+            };
+
+            PasswordRevealBox.TextChanged += (s, e) =>
+            {
+                if (PasswordRevealBox.Visibility == Visibility.Visible)
+                {
+                    PassPlaceholder.Visibility =
+                        string.IsNullOrWhiteSpace(PasswordRevealBox.Text) ? Visibility.Visible : Visibility.Hidden;
+                    PasswordBox.Password = PasswordRevealBox.Text;
+                }
             };
         }
 
@@ -71,8 +85,20 @@ namespace Attendify
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            PassPlaceholder.Visibility =
-                string.IsNullOrEmpty(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
+            if (PasswordBox.Visibility == Visibility.Visible)
+            {
+                PassPlaceholder.Visibility =
+                    string.IsNullOrEmpty(PasswordBox.Password) ? Visibility.Visible : Visibility.Hidden;
+            }
+        }
+
+        private void PasswordRevealBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (PasswordRevealBox.Visibility == Visibility.Visible)
+            {
+                PassPlaceholder.Visibility =
+                    string.IsNullOrEmpty(PasswordRevealBox.Text) ? Visibility.Visible : Visibility.Hidden;
+            }
         }
 
         private void LoginButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
@@ -119,10 +145,9 @@ namespace Attendify
                 return;
             }
 
-            // Disable login button during API call
-            LoginButton.IsEnabled = false;
-            var originalBackground = LoginButton.Background;
-            LoginButton.Background = new SolidColorBrush(Colors.Gray);
+            // Show loading overlay
+            LoginLoadingOverlay.Visibility = Visibility.Visible;
+            LoginLoadingOverlay.Message = "Authenticating...";
 
             try
             {
@@ -193,9 +218,8 @@ namespace Attendify
             }
             finally
             {
-                // Re-enable login button
-                LoginButton.IsEnabled = true;
-                LoginButton.Background = originalBackground;
+                // Hide loading overlay
+                LoginLoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -276,21 +300,52 @@ namespace Attendify
 
         private void ShowErrorMessage(string message)
         {
-            MessageBox.Show(message, "Login Failed",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            GlassMessageBox.Show(message, "Login Failed", false, GlassMessageBox.MessageType.Error);
         }
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
         {
-            // You can implement forgot password functionality later
-            MessageBox.Show("Please contact your administrator to reset your password.",
-                "Forgot Password", MessageBoxButton.OK, MessageBoxImage.Information);
+            var forgotPasswordWindow = new ForgotPasswordPage();
+            forgotPasswordWindow.ShowDialog();
         }
 
         private void Admin_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Please contact system administrator at admin@attendify.com",
-                "Contact Admin", MessageBoxButton.OK, MessageBoxImage.Information);
+            var guestContactWindow = new GuestContactWindow();
+            guestContactWindow.ShowDialog();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                Login_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        private bool _isPasswordRevealed = false;
+        private void TogglePassword_Click(object sender, RoutedEventArgs e)
+        {
+            _isPasswordRevealed = !_isPasswordRevealed;
+            if (_isPasswordRevealed)
+            {
+                PasswordRevealBox.Text = PasswordBox.Password;
+                PasswordBox.Visibility = Visibility.Collapsed;
+                PasswordRevealBox.Visibility = Visibility.Visible;
+                EyeIcon.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#00A6FB")!;
+            }
+            else
+            {
+                PasswordBox.Password = PasswordRevealBox.Text;
+                PasswordRevealBox.Visibility = Visibility.Collapsed;
+                PasswordBox.Visibility = Visibility.Visible;
+                EyeIcon.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#555")!;
+            }
         }
     }
 }

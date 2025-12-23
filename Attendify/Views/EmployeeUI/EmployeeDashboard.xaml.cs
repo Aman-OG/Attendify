@@ -30,6 +30,9 @@ namespace Attendify.Views.Employee
             "#D9783A"  // Brown
         };
 
+        private System.Net.Http.HttpClient _httpClient;
+        private List<ShiftDto> _shifts = new List<ShiftDto>();
+
         // EmployeeInfo class (same as in AdminDashboard but in this namespace)
         public class EmployeeInfo
         {
@@ -42,6 +45,13 @@ namespace Attendify.Views.Employee
             public string? Position { get; set; }
             public string Email { get; set; } = null!;
             public string Role { get; set; } = null!;
+        }
+        
+        public class ShiftDto
+        {
+            public string Name { get; set; } = null!;
+            public string StartTime { get; set; } = null!;
+            public string EndTime { get; set; } = null!;
         }
 
         // Default constructor
@@ -139,12 +149,34 @@ namespace Attendify.Views.Employee
                 _timer.Tick += Timer_Tick;
                 _timer.Start();
 
+                // Load shifts for dynamic display
+                if (_httpClient == null) _httpClient = Attendify.Services.HttpClientService.Instance;
+                LoadShifts();
+
                 Loaded += EmployeeDashboard_Loaded;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error initializing dashboard: {ex.Message}",
-                    "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error initializing dashboard: {ex.Message}", "Initialization Error", false, GlassMessageBox.MessageType.Error);
+            }
+        }
+
+        private async Task PerformEmployeeActionAsync(string statusText, Func<Task> action)
+        {
+            EmployeeLoadingOverlay.Message = statusText;
+            EmployeeLoadingOverlay.Visibility = Visibility.Visible;
+            try
+            {
+                await Task.Delay(300); // Small artificial delay for smooth transition
+                await action();
+            }
+            catch (Exception ex)
+            {
+                GlassMessageBox.Show($"Operation failed: {ex.Message}", "Error");
+            }
+            finally
+            {
+                EmployeeLoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -184,14 +216,47 @@ namespace Attendify.Views.Employee
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            var now = DateTime.Now;
+            var now = Attendify.Services.TimeService.Instance.Now;
             _viewModel.CurrentDate = now.ToString("dd-MM-yyyy");
-            _viewModel.CurrentTime = now.ToString("HH : mm : ss");
+            _viewModel.CurrentTime = now.ToString("hh : mm : ss tt");
 
             int h = now.Hour;
-            if (h >= 6 && h < 14) _viewModel.CurrentShift = "Morning Shift";
-            else if (h >= 14 && h < 22) _viewModel.CurrentShift = "Afternoon Shift";
-            else _viewModel.CurrentShift = "Night Shift";
+            var currentShift = "Regular Shift"; // Default
+
+            if (_shifts != null && _shifts.Any())
+            {
+                var timeNow = now.TimeOfDay;
+                foreach (var s in _shifts)
+                {
+                    if (TimeSpan.TryParse(s.StartTime, out var start) && TimeSpan.TryParse(s.EndTime, out var end))
+                    {
+                        if (start <= end)
+                        {
+                            if (timeNow >= start && timeNow <= end)
+                            {
+                                currentShift = s.Name;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (timeNow >= start || timeNow <= end)
+                            {
+                                currentShift = s.Name;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (h >= 6 && h < 14) currentShift = "Morning Shift";
+                else if (h >= 14 && h < 22) currentShift = "Afternoon Shift";
+                else if (h >= 22 || h < 6) currentShift = "Night Shift";
+            }
+            
+            _viewModel.CurrentShift = currentShift;
         }
 
         private void SetSelectedButton(Button btn)
@@ -340,8 +405,7 @@ namespace Attendify.Views.Employee
             else
             {
                 // Optional: show a message or disable features
-                MessageBox.Show("Employee information not available.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Employee information not available.", "Error", false, GlassMessageBox.MessageType.Error);
             }
 
             MainContentControl.Content = attendanceView;
@@ -359,8 +423,7 @@ namespace Attendify.Views.Employee
             }
             else
             {
-                MessageBox.Show("Employee information not available. Please login again.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("Employee information not available. Please login again.", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -431,8 +494,7 @@ namespace Attendify.Views.Employee
             }
             else
             {
-                MessageBox.Show("Employee information not available. Please login again.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("Employee information not available. Please login again.", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -446,8 +508,7 @@ namespace Attendify.Views.Employee
                 // Handle events
                 changePasswordView.PasswordChanged += (s, e) =>
                 {
-                    MessageBox.Show("Password changed successfully!", "Success",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    GlassMessageBox.Show("Password changed successfully!", "Success", false, GlassMessageBox.MessageType.Success);
                 };
 
 
@@ -456,8 +517,7 @@ namespace Attendify.Views.Employee
             }
             else
             {
-                MessageBox.Show("Employee information not available.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("Employee information not available.", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
         private void AccountBtn_Click(object sender, RoutedEventArgs e)
@@ -522,10 +582,9 @@ namespace Attendify.Views.Employee
             var miLogout = new MenuItem { Header = "Log out" };
             miLogout.Click += (s, ev) =>
             {
-                var result = MessageBox.Show("Are you sure you want to logout?", "Logout Confirmation",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = GlassMessageBox.Show("Are you sure you want to logout?", "Logout Confirmation", true);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == GlassMessageBox.MessageBoxResult.OK)
                 {
                     // Go back to login page
                     LoginPage loginPage = new LoginPage();
@@ -557,8 +616,7 @@ namespace Attendify.Views.Employee
                 // Handle events
                 profileViewer.EditProfileRequested += (s, e) =>
                 {
-                    MessageBox.Show("Edit profile feature coming soon!", "Edit Profile",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    GlassMessageBox.Show("Edit profile feature coming soon!", "Edit Profile");
                 };
 
                 profileViewer.ChangePasswordRequested += (s, e) =>
@@ -576,9 +634,37 @@ namespace Attendify.Views.Employee
             }
             else
             {
-                MessageBox.Show("Employee information not available.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("Employee information not available.", "Error", false, GlassMessageBox.MessageType.Error);
             }
+        }
+        private async void LoadShifts()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    
+                    var envelope = System.Text.Json.JsonSerializer.Deserialize<Envelope<object>>(json, options);
+                    if (envelope?.Success == true && envelope.Data != null)
+                    {
+                         var raw = envelope.Data.ToString();
+                         _shifts = System.Text.Json.JsonSerializer.Deserialize<List<ShiftDto>>(raw, options) ?? new List<ShiftDto>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading shifts: {ex.Message}");
+            }
+        }
+
+        private class Envelope<T>
+        {
+            public bool Success { get; set; }
+            public T Data { get; set; }
         }
     }
 }

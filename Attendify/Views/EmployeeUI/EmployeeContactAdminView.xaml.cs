@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Attendify.Views;
 
 namespace Attendify.Views.Employee
 {
@@ -97,8 +98,7 @@ namespace Attendify.Views.Employee
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading contact data: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading contact data: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -181,8 +181,7 @@ namespace Attendify.Views.Employee
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading contact requests: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading contact requests: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -317,8 +316,7 @@ namespace Attendify.Views.Employee
 
                     if (apiResponse?.Success == true)
                     {
-                        MessageBox.Show(apiResponse.Message, "Success",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show(apiResponse.Message, "Success", false, GlassMessageBox.MessageType.Success);
 
                         // Clear form and reload data
                         ShowNewRequestForm();
@@ -326,21 +324,18 @@ namespace Attendify.Views.Employee
                     }
                     else
                     {
-                        MessageBox.Show(apiResponse?.Message ?? "Submission failed", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show(apiResponse?.Message ?? "Submission failed", "Error", false, GlassMessageBox.MessageType.Error);
                     }
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Failed to submit request: {errorContent}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Failed to submit request: {errorContent}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "Submission Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "Submission Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -354,32 +349,28 @@ namespace Attendify.Views.Employee
         {
             if (DatePickerRequestDate.SelectedDate == null)
             {
-                MessageBox.Show("Please select a date", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please select a date", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 DatePickerRequestDate.Focus();
                 return false;
             }
 
             if (CmbRequestType.SelectedItem == null)
             {
-                MessageBox.Show("Please select a request type", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please select a request type", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 CmbRequestType.Focus();
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(TxtMessage.Text))
             {
-                MessageBox.Show("Please enter a message", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please enter a message", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtMessage.Focus();
                 return false;
             }
 
             if (TxtMessage.Text.Length < 10)
             {
-                MessageBox.Show("Please provide more details in your message (minimum 10 characters)", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please provide more details in your message (minimum 10 characters)", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtMessage.Focus();
                 return false;
             }
@@ -428,8 +419,7 @@ namespace Attendify.Views.Employee
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading request details: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading request details: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 

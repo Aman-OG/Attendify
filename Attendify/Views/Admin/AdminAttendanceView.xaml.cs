@@ -408,7 +408,7 @@ namespace Attendify.Views.UserControls
                 // Optionally show a message box
                 if (!string.IsNullOrEmpty(message) && !message.Contains("Loading"))
                 {
-                    MessageBox.Show(message, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    GlassMessageBox.Show(message, "Information", false, GlassMessageBox.MessageType.Info);
                 }
             });
         }

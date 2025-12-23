@@ -140,13 +140,11 @@ namespace Attendify.API.Controllers
             try
             {
                 // Validate request
-                if (string.IsNullOrEmpty(request.EmpCode))
+                // EmpCode can be null for Guest requests
+                string? finalEmpCode = request.EmpCode;
+                if (string.IsNullOrEmpty(finalEmpCode) || finalEmpCode == "UNKNOWN")
                 {
-                    return BadRequest(new ApiResponseDto
-                    {
-                        Success = false,
-                        Message = "Employee code is required"
-                    });
+                    finalEmpCode = null;
                 }
 
                 if (string.IsNullOrEmpty(request.Type))
@@ -170,7 +168,7 @@ namespace Attendify.API.Controllers
                 // Create new request
                 var employeeRequest = new EmployeeRequest
                 {
-                    EmpCode = request.EmpCode,
+                    EmpCode = finalEmpCode,
                     Date = request.Date,
                     Type = request.Type,
                     Message = request.Message,

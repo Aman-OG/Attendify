@@ -13,29 +13,8 @@ namespace Attendify.Views.Employee
     public partial class EmployeeShiftsView : UserControl
     {
         private HttpClient _httpClient;
-        // private const string ApiBaseUrl = "https://localhost:7129/api";
         private string _currentEmpCode = "";
         private DispatcherTimer _refreshTimer;
-
-        // DTO classes
-        public class ShiftResponseDto
-        {
-            public int ShiftId { get; set; }
-            public string Name { get; set; } = null!;
-            public string StartTime { get; set; } = null!;
-            public string EndTime { get; set; } = null!;
-            public int GracePeriodMinutes { get; set; }
-            public bool IsCurrentlyActive { get; set; }
-            public string DisplayTime { get; set; } = null!;
-            public string StatusColor { get; set; } = "#38b000";
-        }
-
-        public class ApiResponseDto
-        {
-            public bool Success { get; set; }
-            public string Message { get; set; } = null!;
-            public object? Data { get; set; }
-        }
 
         public EmployeeShiftsView()
         {
@@ -43,7 +22,6 @@ namespace Attendify.Views.Employee
             Loaded += EmployeeShiftsView_Loaded;
         }
 
-        // Constructor with empCode parameter
         public EmployeeShiftsView(string empCode) : this()
         {
             _currentEmpCode = empCode;
@@ -54,7 +32,7 @@ namespace Attendify.Views.Employee
             InitializeHttpClient();
             LoadShifts();
 
-            // Set up auto-refresh timer (every 60 seconds)
+            // Auto-refresh every 60s
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
             _refreshTimer.Tick += (s, e) => LoadShifts();
             _refreshTimer.Start();
@@ -72,15 +50,10 @@ namespace Attendify.Views.Employee
         {
             try
             {
-                string apiUrl;
-                if (!string.IsNullOrEmpty(_currentEmpCode))
-                {
-                    apiUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts/{_currentEmpCode}";
-                }
-                else
-                {
-                    apiUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts";
-                }
+                LoadingText.Visibility = Visibility.Visible;
+                string apiUrl = !string.IsNullOrEmpty(_currentEmpCode) 
+                    ? $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts/{_currentEmpCode}"
+                    : $"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeshifts/shifts";
 
                 var response = await _httpClient.GetAsync(apiUrl);
 
@@ -97,7 +70,7 @@ namespace Attendify.Views.Employee
 
                         Dispatcher.Invoke(() =>
                         {
-                            UpdateShiftsDisplay(shifts ?? new List<ShiftResponseDto>());
+                            BindShifts(shifts);
                         });
                     }
                 }
@@ -105,198 +78,111 @@ namespace Attendify.Views.Employee
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading shifts: {ex.Message}");
-                // Keep displaying the default shifts if API fails
+                // Ideally show a "Retry" button or error message here
+            }
+            finally
+            {
+                LoadingText.Visibility = Visibility.Collapsed;
             }
         }
 
-        private void UpdateShiftsDisplay(List<ShiftResponseDto> shifts)
+        private void BindShifts(List<ShiftResponseDto> dtos)
         {
-            // Clear existing shift cards
-            AssignedShiftsPanel.Children.Clear();
-
-            if (shifts == null || !shifts.Any())
+            if (dtos == null || !dtos.Any())
             {
-                // Show default shifts if no data
-                ShowDefaultShifts();
+                // Show default/empty state if needed
+                ShiftsItemsControl.ItemsSource = null;
                 return;
             }
 
-            // Create shift cards dynamically
-            foreach (var shift in shifts)
-            {
-                var shiftCard = CreateShiftCard(shift);
-                AssignedShiftsPanel.Children.Add(shiftCard);
-            }
+            var viewModels = dtos.Select(dto => new ShiftViewModel(dto)).ToList();
+            ShiftsItemsControl.ItemsSource = viewModels;
         }
 
-        private ContentControl CreateShiftCard(ShiftResponseDto shift)
+        // --- View Models & DTOs ---
+
+        public class ShiftViewModel
         {
-            var card = new ContentControl
+            public string Name { get; set; }
+            public string Icon { get; set; }
+            public string DisplayTime { get; set; }
+            public string GracePeriodText { get; set; }
+            public string DaysText { get; set; }
+            public Brush StatusBackground { get; set; }
+            public string StatusText { get; set; }
+
+            public ShiftViewModel(ShiftResponseDto dto)
             {
-                Style = (Style)FindResource("ShiftCardStyle"),
-                Margin = new Thickness(10)
-            };
+                Name = dto.Name;
+                Icon = GetShiftIcon(dto.Name);
+                
+                // Format Time: 24h -> 12h
+                string start = FormatTime(dto.StartTime);
+                string end = FormatTime(dto.EndTime);
+                DisplayTime = $"{start} – {end}";
 
-            var stackPanel = new StackPanel { Margin = new Thickness(10) };
+                GracePeriodText = $"{dto.GracePeriodMinutes} min";
+                DaysText = GetShiftDays(dto.Name);
 
-            // Shift header with icon
-            var headerPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-
-            var icon = GetShiftIcon(shift.Name);
-            var iconText = new TextBlock
-            {
-                Text = icon,
-                FontSize = 16,
-                VerticalAlignment = VerticalAlignment.Center,
-                Foreground = (SolidColorBrush)new BrushConverter().ConvertFromString("#00A6FB"),
-                Margin = new Thickness(0, 0, 8, 0)
-            };
-
-            var nameText = new TextBlock
-            {
-                Text = shift.Name,
-                Foreground = (SolidColorBrush)new BrushConverter().ConvertFromString("#00A6FB"),
-                FontSize = 16,
-                FontWeight = FontWeights.Bold,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            headerPanel.Children.Add(iconText);
-            headerPanel.Children.Add(nameText);
-
-            // Shift details
-            var detailsPanel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
-
-            // Time
-            var timePanel = CreateDetailRow("⏰ Time:", shift.DisplayTime, "White", new Thickness(0, 0, 0, 5));
-            detailsPanel.Children.Add(timePanel);
-
-            // Grace period
-            var gracePanel = CreateDetailRow("⏱️ Grace:", $"{shift.GracePeriodMinutes} min", "#4CAF50", new Thickness(0, 0, 0, 5));
-            detailsPanel.Children.Add(gracePanel);
-
-            // Days (simplified based on shift name)
-            var days = GetShiftDays(shift.Name);
-            var daysPanel = CreateDetailRow("📅 Days:", days, "White", new Thickness(0, 0, 0, 0));
-            detailsPanel.Children.Add(daysPanel);
-
-            // Status badge
-            var statusText = shift.IsCurrentlyActive ? "🟢 Currently Active" : "🔴 Not Active";
-            if (shift.Name.Contains("Weekend", StringComparison.OrdinalIgnoreCase))
-            {
-                statusText = "🟡 Weekend Shift";
-            }
-
-            var statusBorder = new Border
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(shift.StatusColor + "90")), // Add transparency
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(6, 3, 0,0),
-                Height = 32,
-                Margin = new Thickness(0, 5, 0, 0)
-            };
-
-            var statusTextBlock = new TextBlock
-            {
-                Text = statusText,
-                Foreground = Brushes.White,
-                FontSize = 10,
-                FontWeight = FontWeights.SemiBold,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            statusBorder.Child = statusTextBlock;
-
-            // Add all elements to the card
-            stackPanel.Children.Add(headerPanel);
-            stackPanel.Children.Add(detailsPanel);
-            stackPanel.Children.Add(statusBorder);
-
-            card.Content = stackPanel;
-            return card;
-        }
-
-        private StackPanel CreateDetailRow(string label, string value, string valueColor, Thickness margin)
-        {
-            var panel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Margin = margin
-            };
-
-            var labelText = new TextBlock
-            {
-                Text = label,
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 5, 0)
-            };
-
-            var valueText = new TextBlock
-            {
-                Text = value,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(valueColor)),
-                FontSize = 13,
-                FontWeight = FontWeights.SemiBold
-            };
-
-            panel.Children.Add(labelText);
-            panel.Children.Add(valueText);
-
-            return panel;
-        }
-
-        private string GetShiftIcon(string shiftName)
-        {
-            if (shiftName.Contains("Morning", StringComparison.OrdinalIgnoreCase))
-                return "🌅";
-            if (shiftName.Contains("Evening", StringComparison.OrdinalIgnoreCase))
-                return "🌇";
-            if (shiftName.Contains("Night", StringComparison.OrdinalIgnoreCase))
-                return "🌙";
-            if (shiftName.Contains("Weekend", StringComparison.OrdinalIgnoreCase))
-                return "🎯";
-            return "🕒";
-        }
-
-        private string GetShiftDays(string shiftName)
-        {
-            if (shiftName.Contains("Weekend", StringComparison.OrdinalIgnoreCase) ||
-                shiftName.Contains("Sat", StringComparison.OrdinalIgnoreCase) ||
-                shiftName.Contains("Sun", StringComparison.OrdinalIgnoreCase))
-                return "Sat – Sun";
-            if (shiftName.Contains("Flex", StringComparison.OrdinalIgnoreCase))
-                return "Flexible";
-            return "Mon – Fri";
-        }
-
-        private void ShowDefaultShifts()
-        {
-            var defaultShifts = new List<ShiftResponseDto>
-            {
-                new ShiftResponseDto
+                // Status Logic
+                if (dto.IsCurrentlyActive)
                 {
-                    Name = "Morning Shift",
-                    DisplayTime = "08:00 – 14:00",
-                    GracePeriodMinutes = 5,
-                    IsCurrentlyActive = DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 14,
-                    StatusColor = DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 14 ? "#38b000" : "#666666"
-                },
-                new ShiftResponseDto
-                {
-                    Name = "Evening Shift",
-                    DisplayTime = "14:00 – 22:00",
-                    GracePeriodMinutes = 10,
-                    IsCurrentlyActive = DateTime.Now.Hour >= 14 && DateTime.Now.Hour < 22,
-                    StatusColor = "#FF9800"
+                    StatusText = "🟢 CURRENTLY ACTIVE";
+                    StatusBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#38b000")) { Opacity = 0.8 };
                 }
-            };
+                else
+                {
+                    StatusText = "⚪ INACTIVE";
+                    StatusBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#333333")) { Opacity = 0.6 };
+                }
+            }
 
-            UpdateShiftsDisplay(defaultShifts);
+            private string FormatTime(string timeString)
+            {
+                 // Expected format: "14:00:00" or "8:00"
+                 if (TimeSpan.TryParse(timeString, out TimeSpan ts))
+                 {
+                     DateTime dt = DateTime.Today.Add(ts);
+                     return dt.ToString("hh:mm tt");
+                 }
+                 return timeString; // Fallback
+            }
+
+            private string GetShiftIcon(string shiftName)
+            {
+                if (string.IsNullOrEmpty(shiftName)) return "🕒";
+                if (shiftName.Contains("Morning", StringComparison.OrdinalIgnoreCase)) return "🌅";
+                if (shiftName.Contains("Evening", StringComparison.OrdinalIgnoreCase)) return "🌇";
+                if (shiftName.Contains("Night", StringComparison.OrdinalIgnoreCase)) return "🌙";
+                if (shiftName.Contains("Weekend", StringComparison.OrdinalIgnoreCase)) return "🎯";
+                return "🕒";
+            }
+
+            private string GetShiftDays(string shiftName)
+            {
+                 if (string.IsNullOrEmpty(shiftName)) return "Mon – Fri";
+                 if (shiftName.Contains("Weekend", StringComparison.OrdinalIgnoreCase) ||
+                     shiftName.Contains("Sat", StringComparison.OrdinalIgnoreCase)) return "Sat – Sun";
+                 if (shiftName.Contains("Flex", StringComparison.OrdinalIgnoreCase)) return "Flexible";
+                 return "Mon – Fri";
+            }
+        }
+
+        public class ShiftResponseDto
+        {
+            public int ShiftId { get; set; }
+            public string Name { get; set; } = null!;
+            public string StartTime { get; set; } = null!; // Expecting "HH:mm:ss"
+            public string EndTime { get; set; } = null!;
+            public int GracePeriodMinutes { get; set; }
+            public bool IsCurrentlyActive { get; set; }
+        }
+
+        public class ApiResponseDto
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = null!;
+            public object? Data { get; set; }
         }
     }
 }

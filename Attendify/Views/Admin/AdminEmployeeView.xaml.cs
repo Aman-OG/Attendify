@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Text.RegularExpressions;
 using Attendify.Models;
+using Attendify.Views;
 
 namespace Attendify.Views.UserControls
 {
@@ -136,16 +137,16 @@ namespace Attendify.Views.UserControls
                 }
                 else
                 {
-                    MessageBox.Show($"Error loading employees: {response.StatusCode}", "Error");
+                    GlassMessageBox.Show($"Error loading employees: {response.StatusCode}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"Cannot connect to API. Make sure the API is running at \n\nError: {ex.Message}", "Connection Error");
+                GlassMessageBox.Show($"Cannot connect to API. Make sure the API is running.\n\nError: {ex.Message}", "Connection Error", false, GlassMessageBox.MessageType.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error");
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -233,18 +234,18 @@ namespace Attendify.Views.UserControls
 
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Employee updated successfully!", "Success");
+                    GlassMessageBox.Show("Employee updated successfully!", "Success", false, GlassMessageBox.MessageType.Success);
                     await LoadEmployeesFromApiAsync(true); // Force refresh
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Update failed: {error}", "Error");
+                    GlassMessageBox.Show($"Update failed: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Update failed: {ex.Message}", "Error");
+                GlassMessageBox.Show($"Update failed: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -284,8 +285,8 @@ namespace Attendify.Views.UserControls
 
                     if (result != null)
                     {
-                        MessageBox.Show($"Employee added successfully!\n\nGenerated Password: {result.GeneratedPassword}\n\nPlease inform the employee.",
-                            "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show($"Employee added successfully!\n\nGenerated Password: {result.GeneratedPassword}\n\nPlease inform the employee.",
+                            "Success", false, GlassMessageBox.MessageType.Success);
 
                         await LoadEmployeesFromApiAsync(true); // Force refresh
                         ShowEmptyForm();
@@ -294,12 +295,12 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Add failed: {error}", "Error");
+                    GlassMessageBox.Show($"Add failed: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Add failed: {ex.Message}", "Error");
+                GlassMessageBox.Show($"Add failed: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -312,9 +313,9 @@ namespace Attendify.Views.UserControls
         {
             if (SelectedEmployee == null || IsDeleting) return;
 
-            var result = MessageBox.Show($"Deactivate {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
-                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.Yes) return;
+            var result = GlassMessageBox.Show($"Deactivate {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
+                "Confirm", true);
+            if (result != GlassMessageBox.MessageBoxResult.OK) return;
 
             IsDeleting = true;
             FormLoadingText.Text = "Deactivating employee...";
@@ -329,7 +330,7 @@ namespace Attendify.Views.UserControls
                     // Remove from local collection immediately
                     Employees.Remove(SelectedEmployee);
                     ShowEmptyForm();
-                    MessageBox.Show("Employee deactivated successfully!", "Success");
+                    GlassMessageBox.Show("Employee deactivated successfully!", "Success", false, GlassMessageBox.MessageType.Success);
 
                     // Update cache
                     _cachedEmployees = _cachedEmployees
@@ -339,12 +340,12 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Delete failed: {error}", "Error");
+                    GlassMessageBox.Show($"Delete failed: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Delete failed: {ex.Message}", "Error");
+                GlassMessageBox.Show($"Delete failed: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -357,10 +358,10 @@ namespace Attendify.Views.UserControls
         {
             if (SelectedEmployee == null || IsResettingPassword) return;
 
-            var result = MessageBox.Show($"Reset password for {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
-                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = GlassMessageBox.Show($"Reset password for {SelectedEmployee.FirstName} {SelectedEmployee.LastName}?",
+                "Confirm", true);
 
-            if (result != MessageBoxResult.Yes) return;
+            if (result != GlassMessageBox.MessageBoxResult.OK) return;
 
             IsResettingPassword = true;
             FormLoadingText.Text = "Resetting password...";
@@ -377,19 +378,19 @@ namespace Attendify.Views.UserControls
                     var resultJson = await response.Content.ReadFromJsonAsync<ResetPasswordResponse>();
                     if (resultJson != null)
                     {
-                        MessageBox.Show($"Password reset successfully!\n\nNew Password: {resultJson.NewPassword}\n\nPlease inform the employee.",
-                            "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show($"Password reset successfully!\n\nNew Password: {resultJson.NewPassword}\n\nPlease inform the employee.",
+                            "Success", false, GlassMessageBox.MessageType.Success);
                     }
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Reset failed: {error}", "Error");
+                    GlassMessageBox.Show($"Reset failed: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Reset failed: {ex.Message}", "Error");
+                GlassMessageBox.Show($"Reset failed: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
             finally
             {
@@ -475,64 +476,64 @@ namespace Attendify.Views.UserControls
         {
             if (string.IsNullOrWhiteSpace(TxtFirstName.Text))
             {
-                MessageBox.Show("First Name is required", "Validation Error");
+                GlassMessageBox.Show("First Name is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtFirstName.Focus();
                 return false;
             }
             if (string.IsNullOrWhiteSpace(TxtLastName.Text))
             {
-                MessageBox.Show("Last Name is required", "Validation Error");
+                GlassMessageBox.Show("Last Name is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtLastName.Focus();
                 return false;
             }
             if (string.IsNullOrWhiteSpace(TxtDepartment.Text))
             {
-                MessageBox.Show("Department is required", "Validation Error");
+                GlassMessageBox.Show("Department is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtDepartment.Focus();
                 return false;
             }
             if (string.IsNullOrWhiteSpace(TxtPosition.Text))
             {
-                MessageBox.Show("Position is required", "Validation Error");
+                GlassMessageBox.Show("Position is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtPosition.Focus();
                 return false;
             }
             if (string.IsNullOrWhiteSpace(TxtEmail.Text))
             {
-                MessageBox.Show("Email is required", "Validation Error");
+                GlassMessageBox.Show("Email is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtEmail.Focus();
                 return false;
             }
              // Email validation
             if (!IsValidEmail(TxtEmail.Text))
             {
-                MessageBox.Show("Please enter a valid email address (e.g., user@example.com)", "Validation Error");
+                GlassMessageBox.Show("Please enter a valid email address (e.g., user@example.com)", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtEmail.Focus();
                 return false;
             }
             if (string.IsNullOrWhiteSpace(TxtPhone.Text))
             {
-                MessageBox.Show("Phone is required", "Validation Error");
+                GlassMessageBox.Show("Phone is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtPhone.Focus();
                 return false;
             }
             // Phone validation
             if (!IsValidPhone(TxtPhone.Text))
             {
-                MessageBox.Show("Phone number must be exactly 10 digits", "Validation Error");
+                GlassMessageBox.Show("Phone number must be exactly 10 digits", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtPhone.Focus();
                 return false;
             }
 
             if (CmbRole.SelectedItem == null)
             {
-                MessageBox.Show("Role is required", "Validation Error");
+                GlassMessageBox.Show("Role is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 CmbRole.Focus();
                 return false;
             }
             if (!isEditMode && string.IsNullOrWhiteSpace(TxtEmployeeID.Text))
             {
-                MessageBox.Show("Employee ID is required", "Validation Error");
+                GlassMessageBox.Show("Employee ID is required", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtEmployeeID.Focus();
                 return false;
             }

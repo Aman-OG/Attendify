@@ -325,13 +325,13 @@ namespace Attendify.API.Controllers
             }
         }
 
-        private bool CheckIfLate(string checkInTime, Shift shift)
+        private bool CheckIfLate(string checkInTimeStr, Shift shift)
         {
-            if (string.IsNullOrEmpty(checkInTime) || shift == null) return false;
+            if (string.IsNullOrEmpty(checkInTimeStr) || shift == null) return false;
 
-            if (TimeSpan.TryParse(checkInTime, out var checkIn) &&
-                TimeSpan.TryParse(shift.StartTime, out var shiftStart))
+            if (TimeSpan.TryParse(checkInTimeStr, out var checkIn))
             {
+                var shiftStart = shift.StartTime;
                 var graceTime = shiftStart.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
                 return checkIn > graceTime;
             }

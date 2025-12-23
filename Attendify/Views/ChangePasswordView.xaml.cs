@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Attendify.Views;
 
 namespace Attendify.Views.UserControls
 {
@@ -129,14 +130,12 @@ namespace Attendify.Views.UserControls
                             }
                             else
                             {
-                                MessageBox.Show(apiResponse?.Message ?? "Password change failed", "Error",
-                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                                GlassMessageBox.Show(apiResponse?.Message ?? "Password change failed", "Error", false, GlassMessageBox.MessageType.Error);
                             }
                         }
                         else
                         {
-                            MessageBox.Show(apiResponse?.Message ?? $"Failed to change password. Status: {response.StatusCode}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                GlassMessageBox.Show(apiResponse?.Message ?? $"Failed to change password. Status: {response.StatusCode}", "Error", false, GlassMessageBox.MessageType.Error);
                         }
                     }
                     else
@@ -153,13 +152,12 @@ namespace Attendify.Views.UserControls
             }
             catch (HttpRequestException httpEx)
             {
-                MessageBox.Show($"Network error: {httpEx.Message}\n\nPlease check if the API server is running at {Attendify.Services.HttpClientService.ApiBaseUrl}",
-                    "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Network error: {httpEx.Message}\n\nPlease check if the API server is running.",
+                    "Connection Error", false, GlassMessageBox.MessageType.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Password Change Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Password Change Error", false, GlassMessageBox.MessageType.Error);
             }
 
             finally
@@ -173,17 +171,11 @@ namespace Attendify.Views.UserControls
         {
             if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
             {
-                MessageBox.Show("Server error occurred. Please check server logs.\n\n" +
-                              $"Status Code: {response.StatusCode}\n" +
-                              $"Response: {responseContent.Substring(0, Math.Min(500, responseContent.Length))}...",
-                              "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("Server error occurred. Please check server logs.", "Server Error", false, GlassMessageBox.MessageType.Error);
             }
             else
             {
-                MessageBox.Show($"Unexpected response from server.\n\n" +
-                               $"Status: {response.StatusCode}\n" +
-                               $"Response: {responseContent.Substring(0, Math.Min(500, responseContent.Length))}...",
-                               "Unexpected Response", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Unexpected response from server.\n\nStatus: {response.StatusCode}", "Unexpected Response", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -192,8 +184,7 @@ namespace Attendify.Views.UserControls
             // Check current password
             if (string.IsNullOrWhiteSpace(TxtCurrentPassword.Password))
             {
-                MessageBox.Show("Please enter your current password", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please enter your current password", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtCurrentPassword.Focus();
                 return false;
             }
@@ -201,8 +192,7 @@ namespace Attendify.Views.UserControls
             // Check new password
             if (string.IsNullOrWhiteSpace(TxtNewPassword.Password))
             {
-                MessageBox.Show("Please enter a new password", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please enter a new password", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtNewPassword.Focus();
                 return false;
             }
@@ -210,8 +200,7 @@ namespace Attendify.Views.UserControls
             // Check password length
             if (TxtNewPassword.Password.Length < 6)
             {
-                MessageBox.Show("New password must be at least 6 characters long", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("New password must be at least 6 characters long", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtNewPassword.Focus();
                 return false;
             }
@@ -219,8 +208,7 @@ namespace Attendify.Views.UserControls
             // Check if passwords match
             if (TxtNewPassword.Password != TxtConfirmPassword.Password)
             {
-                MessageBox.Show("New password and confirmation do not match", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("New password and confirmation do not match", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtConfirmPassword.Focus();
                 return false;
             }
@@ -228,8 +216,7 @@ namespace Attendify.Views.UserControls
             // Check if new password is same as current
             if (TxtNewPassword.Password == TxtCurrentPassword.Password)
             {
-                MessageBox.Show("New password must be different from current password", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("New password must be different from current password", "Validation Error", false, GlassMessageBox.MessageType.Error);
                 TxtNewPassword.Focus();
                 return false;
             }

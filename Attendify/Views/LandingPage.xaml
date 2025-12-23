@@ -110,12 +110,12 @@
                                FontWeight="Bold"
                                FontSize="40"
                                VerticalAlignment="Center"
-                               Foreground="#2979FF"/>
+                               Foreground="#00A6FB"/>
                 </StackPanel>
 
                 <!-- LOGIN BUTTON RIGHT -->
                 <Border x:Name="LoginButton" 
-                    Background="#2979FF"
+                    Background="#00A6FB"
                         CornerRadius="25"
                         Padding="25,10"
                         VerticalAlignment="Center"

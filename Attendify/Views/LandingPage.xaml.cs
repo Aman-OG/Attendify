@@ -65,7 +65,19 @@ namespace Attendify.Views
         // --- Learn More Click ---
         private void LearnMore_Click(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show("More features coming soon!");
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://amankoboattendify.netlify.app/",
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                GlassMessageBox.Show($"Could not open link: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
         }
 
         // --- Custom Close Button ---

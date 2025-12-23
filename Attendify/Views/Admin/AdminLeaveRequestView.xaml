@@ -15,7 +15,7 @@
             <Setter Property="Background">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#33FFFFFF" Offset="0" />
+                        <GradientStop Color="#13FFFFFF" Offset="0" />
                         <GradientStop Color="#13FFFFFF" Offset="1" />
                     </LinearGradientBrush>
                 </Setter.Value>
@@ -197,8 +197,8 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               Background="Transparent"
-                              RowBackground="#40FFFFFF"
-                              AlternatingRowBackground="#30FFFFFF"
+                              RowBackground="#20FFFFFF"
+                              AlternatingRowBackground="#10FFFFFF"
                               GridLinesVisibility="None"
                               BorderThickness="0"
                               HeadersVisibility="Column"

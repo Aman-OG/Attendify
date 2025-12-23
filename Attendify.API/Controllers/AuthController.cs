@@ -27,6 +27,13 @@ namespace Attendify.API.Controllers
             public string? Role { get; set; }
         }
 
+        public class ResetPasswordRequest
+        {
+            public string Email { get; set; } = null!;
+            public string EmpCode { get; set; } = null!;
+            public string NewPassword { get; set; } = null!;
+        }
+
         public class EmployeeData
         {
             public int EmployeeID { get; set; }
@@ -127,14 +134,37 @@ namespace Attendify.API.Controllers
             }
         }
 
-        // REMOVE the old HashPassword method since we're using IPasswordHasher now
-        // private string HashPassword(string password)
-        // {
-        //     using (var sha256 = SHA256.Create())
-        //     {
-        //         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        //         return Convert.ToBase64String(bytes);
-        //     }
-        // }
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<LoginResponse>> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email) || 
+                    string.IsNullOrWhiteSpace(request.EmpCode) || 
+                    string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return Ok(new LoginResponse { Success = false, Message = "All fields are required" });
+                }
+
+                var employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Email == request.Email && e.EmpCode == request.EmpCode && e.IsActive);
+
+                if (employee == null)
+                {
+                    return Ok(new LoginResponse { Success = false, Message = "Invalid email or employee code" });
+                }
+
+                // Update password
+                employee.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+                await _context.SaveChangesAsync();
+
+                return Ok(new LoginResponse { Success = true, Message = "Password reset successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for email: {Email}", request.Email);
+                return StatusCode(500, new LoginResponse { Success = false, Message = "An error occurred" });
+            }
+        }
     }
 }

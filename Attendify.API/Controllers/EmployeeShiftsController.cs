@@ -54,8 +54,8 @@ namespace Attendify.API.Controllers
                 {
                     ShiftId = s.ShiftID,
                     Name = s.Name,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
+                    StartTime = s.StartTime.ToString(@"hh\:mm"),
+                    EndTime = s.EndTime.ToString(@"hh\:mm"),
                     GracePeriodMinutes = s.GracePeriodMinutes,
                     DisplayTime = FormatShiftTime(s.StartTime, s.EndTime),
                     IsCurrentlyActive = IsShiftActive(s, currentTime, currentDay),
@@ -97,8 +97,8 @@ namespace Attendify.API.Controllers
                 {
                     ShiftId = s.ShiftID,
                     Name = s.Name,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
+                    StartTime = s.StartTime.ToString(@"hh\:mm"),
+                    EndTime = s.EndTime.ToString(@"hh\:mm"),
                     GracePeriodMinutes = s.GracePeriodMinutes,
                     DisplayTime = FormatShiftTime(s.StartTime, s.EndTime),
                     IsCurrentlyActive = IsShiftActive(s, currentTime, currentDay),
@@ -125,23 +125,20 @@ namespace Attendify.API.Controllers
 
         private bool IsShiftActive(Shift shift, TimeSpan currentTime, DayOfWeek currentDay)
         {
-            if (TimeSpan.TryParse(shift.StartTime, out var startTime) &&
-                TimeSpan.TryParse(shift.EndTime, out var endTime))
-            {
-                // Handle overnight shifts
-                if (endTime < startTime)
-                {
-                    // Shift spans midnight
-                    return currentTime >= startTime || currentTime <= endTime;
-                }
-                else
-                {
-                    // Normal shift
-                    return currentTime >= startTime && currentTime <= endTime;
-                }
-            }
+            var startTime = shift.StartTime;
+            var endTime = shift.EndTime;
 
-            return false;
+            // Handle overnight shifts
+            if (endTime < startTime)
+            {
+                // Shift spans midnight
+                return currentTime >= startTime || currentTime <= endTime;
+            }
+            else
+            {
+                // Normal shift
+                return currentTime >= startTime && currentTime <= endTime;
+            }
         }
 
         private string GetShiftStatusColor(Shift shift, TimeSpan currentTime, DayOfWeek currentDay)
@@ -164,17 +161,22 @@ namespace Attendify.API.Controllers
             }
         }
 
-        private string FormatShiftTime(string startTime, string endTime)
+        private string FormatShiftTime(TimeSpan start, TimeSpan end)
         {
-            if (TimeSpan.TryParse(startTime, out var start) &&
-                TimeSpan.TryParse(endTime, out var end))
+            var startTimeStr = DateTime.Today.Add(start).ToString("hh:mm tt");
+            var endTimeStr = DateTime.Today.Add(end).ToString("hh:mm tt");
+            return $"{startTimeStr} – {endTimeStr}";
+        }
+
+        private string FormatShiftTime(string startTimeStr, string endTimeStr)
+        {
+            if (TimeSpan.TryParse(startTimeStr, out var start) &&
+                TimeSpan.TryParse(endTimeStr, out var end))
             {
-                var startTimeStr = start.ToString(@"hh\:mm");
-                var endTimeStr = end.ToString(@"hh\:mm");
-                return $"{startTimeStr} – {endTimeStr}";
+                return FormatShiftTime(start, end);
             }
 
-            return $"{startTime} – {endTime}";
+            return $"{startTimeStr} – {endTimeStr}";
         }
     }
 }

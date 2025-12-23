@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Attendify.Views;
 
 namespace Attendify.Views.Employee
 {
@@ -72,11 +73,11 @@ namespace Attendify.Views.Employee
         private void EmployeeLeaveRequestsView_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeHttpClient();
-            LoadLeaveData();
+            LoadLeaveData(true);
 
             // Set up auto-refresh timer (every 30 seconds)
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-            _refreshTimer.Tick += (s, e) => LoadLeaveData();
+            _refreshTimer.Tick += (s, e) => LoadLeaveData(false);
             _refreshTimer.Start();
         }
 
@@ -90,6 +91,7 @@ namespace Attendify.Views.Employee
 
         private async void LoadLeaveData()
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 await LoadLeaveStats();
@@ -97,13 +99,56 @@ namespace Attendify.Views.Employee
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading leave data: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading leave data: {ex.Message}", "Error");
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
+        // Note: LoadLeaveStats and LoadLeaveRequests are helpers called by LoadLeaveData. 
+        // Since LoadLeaveData manages the overlay, we don't necessarily need to add it inside these if they are always called from there.
+        // HOWEVER, the timer calls LoadLeaveData, so maybe we SHOULD NOT show the overlay on every timer tick?
+        // Actually, the timer tick calls LoadLeaveData. This would be annoying every 30 seconds.
+        // Let's modify behavior: LoadLeaveData takes a parameter 'showSpinner' default true.
+        // But to keep it simple and consistent with "only show specific spinners during API calls", we probably want the spinner when the user FIRST loads the view, but not necessarily on background regresh.
+        // The current implementation calls LoadLeaveData() from Loaded event and Timer.
+        // Let's change the Loaded event to call with true, and timer with false.
+
+        // Wait, I can't easily change the signature and all calls without reading everything carefully.
+        // Let's just look at how LoadLeaveData is defined.
+        
+        // Revised plan for LoadLeaveData:
+        // Overload LoadLeaveData(bool showSpinner = true)
+        
+        private async void LoadLeaveData(bool showSpinner = true)
+        {
+            if (showSpinner) LoadingOverlay.Visibility = Visibility.Visible;
+            try
+            {
+                await LoadLeaveStats();
+                await LoadLeaveRequests();
+            }
+            catch (Exception ex)
+            {
+                GlassMessageBox.Show($"Error loading leave data: {ex.Message}", "Error");
+            }
+            finally
+            {
+                if (showSpinner) LoadingOverlay.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // We also need to update the call sites.
+        // line 76: LoadLeaveData(); -> LoadLeaveData(true);
+        // line 80: _refreshTimer.Tick += (s, e) => LoadLeaveData(); -> ... LoadLeaveData(false);
+        // line 286: LoadLeaveData(); -> LoadLeaveData(true);
+        // line 438: LoadLeaveData(); -> LoadLeaveData(true);
+
         private async Task LoadLeaveStats()
         {
+             // No internal spinner management here, relying on caller
             try
             {
                 var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/stats/{_currentEmpCode}");
@@ -141,6 +186,7 @@ namespace Attendify.Views.Employee
 
         private async Task LoadLeaveRequests()
         {
+             // No internal spinner management here, relying on caller
             try
             {
                 var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/requests/{_currentEmpCode}");
@@ -170,8 +216,7 @@ namespace Attendify.Views.Employee
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading leave requests: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading leave requests: {ex.Message}", "Error");
             }
         }
 
@@ -244,12 +289,168 @@ namespace Attendify.Views.Employee
             DetailCreatedAt.Text = leave.CreatedAt;
         }
 
+        private bool ValidateLeaveRequestForm()
+        {
+            if (DatePickerFrom.SelectedDate == null)
+            {
+                GlassMessageBox.Show("Please select a from date", "Validation Error");
+                DatePickerFrom.Focus();
+                return false;
+            }
+
+            if (DatePickerTo.SelectedDate == null)
+            {
+                GlassMessageBox.Show("Please select a to date", "Validation Error");
+                DatePickerTo.Focus();
+                return false;
+            }
+
+            if (DatePickerFrom.SelectedDate > DatePickerTo.SelectedDate)
+            {
+                GlassMessageBox.Show("From date cannot be after To date", "Validation Error");
+                DatePickerFrom.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(TxtReasonTitle.Text))
+            {
+                GlassMessageBox.Show("Please enter a reason title", "Validation Error");
+                TxtReasonTitle.Focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        private void CancelNewRequest_Click(object sender, RoutedEventArgs e)
+        {
+            ShowLeaveRequestForm(); // Reset to empty form
+        }
+
+        private void ViewDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is LeaveGridItem item)
+            {
+                LoadLeaveDetails(item.LeaveId);
+            }
+        }
+
+        private async void CancelRequest_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is LeaveGridItem item)
+            {
+                var result = GlassMessageBox.Show(
+                    "Are you sure you want to cancel this leave request?",
+                    "Confirm Cancellation",
+                    true);
+
+                if (result == GlassMessageBox.MessageBoxResult.OK)
+                {
+                    await CancelLeaveRequest(item.LeaveId);
+                }
+            }
+        }
+
+        private async void LoadLeaveDetails(int leaveId)
+        {
+            LoadingOverlay.Visibility = Visibility.Visible;
+            try
+            {
+                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/details/{leaveId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
+
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        var leaveJson = apiResponse.Data.ToString();
+                        var leave = JsonSerializer.Deserialize<LeaveResponseDto>(leaveJson, options);
+
+                        if (leave != null)
+                        {
+                            Dispatcher.Invoke(() => ShowLeaveDetailsForm(leave));
+                        }
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    GlassMessageBox.Show($"Error loading details: {errorContent}", "Error");
+                }
+            }
+            catch (Exception ex)
+            {
+                GlassMessageBox.Show($"Error loading leave details: {ex.Message}", "Error");
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private async Task CancelLeaveRequest(int leaveId)
+        {
+            LoadingOverlay.Visibility = Visibility.Visible;
+            try
+            {
+                var cancelRequest = new CancelLeaveDto { LeaveId = leaveId };
+                var json = JsonSerializer.Serialize(cancelRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/cancel", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(responseJson, options);
+
+                    if (apiResponse?.Success == true)
+                    {
+                        GlassMessageBox.Show(apiResponse.Message, "Success");
+                        LoadLeaveData(true);
+                    }
+                    else
+                    {
+                        GlassMessageBox.Show(apiResponse?.Message ?? "Cancellation failed", "Error");
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    GlassMessageBox.Show($"Cancellation failed: {errorContent}", "Error");
+                }
+            }
+            catch (Exception ex)
+            {
+                GlassMessageBox.Show($"Error: {ex.Message}", "Cancellation Error");
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void CloseDetails_Click(object sender, RoutedEventArgs e)
+        {
+            ShowLeaveRequestForm(); // Go back to request form
+        }
+
+        private void LeaveHistoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Optional: handle row selection if needed
+        }
+
         private async void SubmitRequest_Click(object sender, RoutedEventArgs e)
         {
             // Validate form
             if (!ValidateLeaveRequestForm())
                 return;
 
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 // Disable button to prevent double-click
@@ -280,17 +481,15 @@ namespace Attendify.Views.Employee
 
                     if (apiResponse?.Success == true)
                     {
-                        MessageBox.Show(apiResponse.Message, "Success",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show(apiResponse.Message, "Success");
 
                         // Clear form and reload data
                         ShowLeaveRequestForm();
-                        LoadLeaveData();
+                        LoadLeaveData(true);
                     }
                     else
                     {
-                        MessageBox.Show(apiResponse?.Message ?? "Submission failed", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show(apiResponse?.Message ?? "Submission failed", "Error");
                     }
                 }
                 else
@@ -302,183 +501,25 @@ namespace Attendify.Views.Employee
                     {
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(errorContent, options);
-                        MessageBox.Show(apiResponse?.Message ?? $"Failed to submit leave request. Status: {response.StatusCode}", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show(apiResponse?.Message ?? $"Failed to submit leave request. Status: {response.StatusCode}", "Error");
                     }
                     catch
                     {
-                        MessageBox.Show($"Failed to submit leave request. Status: {response.StatusCode}\n{errorContent}", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show($"Failed to submit leave request. Status: {response.StatusCode}\n{errorContent}", "Error");
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "Submission Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}\n\nStack Trace: {ex.StackTrace}", "Submission Error");
             }
             finally
             {
                 // Re-enable button
                 BtnSubmitRequest.IsEnabled = true;
                 BtnSubmitRequest.Content = "Submit Request";
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
-        }
-
-        private bool ValidateLeaveRequestForm()
-        {
-            if (DatePickerFrom.SelectedDate == null)
-            {
-                MessageBox.Show("Please select a from date", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                DatePickerFrom.Focus();
-                return false;
-            }
-
-            if (DatePickerTo.SelectedDate == null)
-            {
-                MessageBox.Show("Please select a to date", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                DatePickerTo.Focus();
-                return false;
-            }
-
-            if (DatePickerFrom.SelectedDate > DatePickerTo.SelectedDate)
-            {
-                MessageBox.Show("From date cannot be after To date", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                DatePickerFrom.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(TxtReasonTitle.Text))
-            {
-                MessageBox.Show("Please enter a reason title", "Validation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                TxtReasonTitle.Focus();
-                return false;
-            }
-
-            return true;
-        }
-
-        private void CancelNewRequest_Click(object sender, RoutedEventArgs e)
-        {
-            ShowLeaveRequestForm(); // Reset to empty form
-        }
-
-        private void ViewDetails_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.Tag is LeaveGridItem item)
-            {
-                LoadLeaveDetails(item.LeaveId);
-            }
-        }
-
-        private async void LoadLeaveDetails(int leaveId)
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/details/{leaveId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(json, options);
-
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
-                    {
-                        var leaveJson = apiResponse.Data.ToString();
-                        var leave = JsonSerializer.Deserialize<LeaveResponseDto>(leaveJson, options);
-
-                        if (leave != null)
-                        {
-                            Dispatcher.Invoke(() => ShowLeaveDetailsForm(leave));
-                        }
-                    }
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading details: {errorContent}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading leave details: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async void CancelRequest_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.Tag is LeaveGridItem item)
-            {
-                var result = MessageBox.Show(
-                    "Are you sure you want to cancel this leave request?",
-                    "Confirm Cancellation",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    await CancelLeaveRequest(item.LeaveId);
-                }
-            }
-        }
-
-        private async Task CancelLeaveRequest(int leaveId)
-        {
-            try
-            {
-                var cancelRequest = new CancelLeaveDto { LeaveId = leaveId };
-                var json = JsonSerializer.Serialize(cancelRequest);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PutAsync($"{Attendify.Services.HttpClientService.ApiBaseUrl}/employeeleave/cancel", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseJson = await response.Content.ReadAsStringAsync();
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponseDto>(responseJson, options);
-
-                    if (apiResponse?.Success == true)
-                    {
-                        MessageBox.Show(apiResponse.Message, "Success",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                        LoadLeaveData();
-                    }
-                    else
-                    {
-                        MessageBox.Show(apiResponse?.Message ?? "Cancellation failed", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Cancellation failed: {errorContent}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}", "Cancellation Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void CloseDetails_Click(object sender, RoutedEventArgs e)
-        {
-            ShowLeaveRequestForm(); // Go back to request form
-        }
-
-        private void LeaveHistoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Optional: handle row selection if needed
         }
     }
 

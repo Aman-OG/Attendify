@@ -183,6 +183,7 @@ namespace Attendify.Views.UserControls
 
         private async Task LoadAttendanceRulesAsync()
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/attendance-rules");
@@ -199,19 +200,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading attendance rules: {error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error loading attendance rules: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task AddAttendanceRuleAsync(AttendanceRuleDto rule)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/attendance-rules", rule);
@@ -231,17 +235,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task UpdateAttendanceRuleAsync(AttendanceRuleDto rule)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/attendance-rules/{rule.AttendanceRuleId}", rule);
@@ -261,17 +270,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task DeleteAttendanceRuleAsync(int id)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/attendance-rules/{id}");
@@ -287,12 +301,16 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -315,8 +333,8 @@ namespace Attendify.Views.UserControls
             if (_currentEditingRule != null)
             {
                 if (CmbRuleDay != null) CmbRuleDay.Text = _currentEditingRule.Day;
-                if (TxtStartTime != null) TxtStartTime.Text = _currentEditingRule.StartTime;
-                if (TxtEndTime != null) TxtEndTime.Text = _currentEditingRule.EndTime;
+                if (TxtStartTime != null) SetTimeFields(_currentEditingRule.StartTime, TxtStartTime, TxtStartAmPm);
+                if (TxtEndTime != null) SetTimeFields(_currentEditingRule.EndTime, TxtEndTime, TxtEndAmPm);
                 if (TxtGracePeriod != null) TxtGracePeriod.Text = _currentEditingRule.GracePeriod;
 
                 RuleFormContainer.Visibility = Visibility.Visible;
@@ -330,10 +348,9 @@ namespace Attendify.Views.UserControls
 
             if (rule != null)
             {
-                var result = MessageBox.Show($"Delete rule for {rule.Day}?", "Confirm",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = GlassMessageBox.Show($"Delete rule for {rule.Day}?", "Confirm", true);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == GlassMessageBox.MessageBoxResult.OK)
                 {
                     await DeleteAttendanceRuleAsync(rule.AttendanceRuleId);
                 }
@@ -344,18 +361,30 @@ namespace Attendify.Views.UserControls
         {
             if (string.IsNullOrWhiteSpace(CmbRuleDay?.Text) ||
                 string.IsNullOrWhiteSpace(TxtStartTime?.Text) ||
-                string.IsNullOrWhiteSpace(TxtEndTime?.Text))
+                string.IsNullOrWhiteSpace(TxtStartAmPm?.Text) ||
+                string.IsNullOrWhiteSpace(TxtEndTime?.Text) ||
+                string.IsNullOrWhiteSpace(TxtEndAmPm?.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please fill in all required fields.", "Error", false, GlassMessageBox.MessageType.Error);
                 return;
+            }
+
+            string startTime, endTime;
+            try
+            {
+                startTime = Get24HourTime(TxtStartTime.Text, TxtStartAmPm.Text);
+                endTime = Get24HourTime(TxtEndTime.Text, TxtEndAmPm.Text);
+            }
+            catch (ArgumentException ex) {
+                  GlassMessageBox.Show(ex.Message, "Invalid Time", false, GlassMessageBox.MessageType.Error);
+                 return;
             }
 
             var rule = new AttendanceRuleDto
             {
                 Day = CmbRuleDay.Text,
-                StartTime = TxtStartTime.Text,
-                EndTime = TxtEndTime.Text,
+                StartTime = startTime,
+                EndTime = endTime,
                 GracePeriod = TxtGracePeriod?.Text ?? "10"
             };
 
@@ -383,7 +412,9 @@ namespace Attendify.Views.UserControls
         {
             if (CmbRuleDay != null) CmbRuleDay.SelectedIndex = -1;
             if (TxtStartTime != null) TxtStartTime.Text = "09:00";
-            if (TxtEndTime != null) TxtEndTime.Text = "17:00";
+            if (TxtStartAmPm != null) TxtStartAmPm.Text = "AM";
+            if (TxtEndTime != null) TxtEndTime.Text = "05:00";
+            if (TxtEndAmPm != null) TxtEndAmPm.Text = "PM";
             if (TxtGracePeriod != null) TxtGracePeriod.Text = "10";
             _currentEditingRule = null;
         }
@@ -394,6 +425,7 @@ namespace Attendify.Views.UserControls
 
         private async Task LoadShiftsAsync()
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/shifts");
@@ -410,19 +442,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading shifts: {error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error loading shifts: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading shifts: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading shifts: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task AddShiftAsync(ShiftDto shift)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/shifts", shift);
@@ -442,17 +477,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task UpdateShiftAsync(ShiftDto shift)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/shifts/{shift.ShiftId}", shift);
@@ -472,17 +512,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task DeleteShiftAsync(int id)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/shifts/{id}");
@@ -498,12 +543,16 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -526,8 +575,8 @@ namespace Attendify.Views.UserControls
             if (_currentEditingShift != null)
             {
                 if (TxtShiftName != null) TxtShiftName.Text = _currentEditingShift.Name;
-                if (TxtShiftStart != null) TxtShiftStart.Text = _currentEditingShift.StartTime;
-                if (TxtShiftEnd != null) TxtShiftEnd.Text = _currentEditingShift.EndTime;
+                if (TxtShiftStart != null) SetTimeFields(_currentEditingShift.StartTime, TxtShiftStart, TxtShiftStartAmPm);
+                if (TxtShiftEnd != null) SetTimeFields(_currentEditingShift.EndTime, TxtShiftEnd, TxtShiftEndAmPm);
                 if (TxtShiftGrace != null) TxtShiftGrace.Text = _currentEditingShift.GracePeriod;
 
                 ShiftFormContainer.Visibility = Visibility.Visible;
@@ -541,10 +590,9 @@ namespace Attendify.Views.UserControls
 
             if (shift != null)
             {
-                var result = MessageBox.Show($"Delete shift '{shift.Name}'?", "Confirm",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = GlassMessageBox.Show($"Delete shift '{shift.Name}'?", "Confirm", true);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == GlassMessageBox.MessageBoxResult.OK)
                 {
                     await DeleteShiftAsync(shift.ShiftId);
                 }
@@ -555,18 +603,30 @@ namespace Attendify.Views.UserControls
         {
             if (string.IsNullOrWhiteSpace(TxtShiftName?.Text) ||
                 string.IsNullOrWhiteSpace(TxtShiftStart?.Text) ||
-                string.IsNullOrWhiteSpace(TxtShiftEnd?.Text))
+                string.IsNullOrWhiteSpace(TxtShiftStartAmPm?.Text) ||
+                string.IsNullOrWhiteSpace(TxtShiftEnd?.Text) ||
+                string.IsNullOrWhiteSpace(TxtShiftEndAmPm?.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please fill in all required fields.", "Error");
                 return;
+            }
+
+            string startTime, endTime;
+            try
+            {
+                startTime = Get24HourTime(TxtShiftStart.Text, TxtShiftStartAmPm.Text);
+                endTime = Get24HourTime(TxtShiftEnd.Text, TxtShiftEndAmPm.Text);
+            }
+            catch (ArgumentException ex) {
+                 GlassMessageBox.Show(ex.Message, "Invalid Time");
+                 return;
             }
 
             var shift = new ShiftDto
             {
                 Name = TxtShiftName.Text,
-                StartTime = TxtShiftStart.Text,
-                EndTime = TxtShiftEnd.Text,
+                StartTime = startTime,
+                EndTime = endTime,
                 GracePeriod = TxtShiftGrace?.Text ?? "5"
             };
 
@@ -594,17 +654,75 @@ namespace Attendify.Views.UserControls
         {
             if (TxtShiftName != null) TxtShiftName.Text = "";
             if (TxtShiftStart != null) TxtShiftStart.Text = "08:00";
-            if (TxtShiftEnd != null) TxtShiftEnd.Text = "14:00";
+            if (TxtShiftStartAmPm != null) TxtShiftStartAmPm.Text = "AM";
+            if (TxtShiftEnd != null) TxtShiftEnd.Text = "02:00";
+            if (TxtShiftEndAmPm != null) TxtShiftEndAmPm.Text = "PM";
             if (TxtShiftGrace != null) TxtShiftGrace.Text = "5";
             _currentEditingShift = null;
         }
 
         #endregion
 
+        #region Helper Methods
+
+        private string Get24HourTime(string time12, string amPm)
+        {
+            if (string.IsNullOrWhiteSpace(time12) || string.IsNullOrWhiteSpace(amPm)) return null;
+
+            // Normalize AM/PM
+            amPm = amPm.Trim().ToUpper();
+            if (amPm != "AM" && amPm != "PM") throw new ArgumentException("AM/PM must be 'AM' or 'PM'");
+
+            // Try different formats to be robust
+            string[] formats = { "h:mm tt", "hh:mm tt", "H:mm", "HH:mm" };
+            
+            // If user enters "09:00" "AM" -> "09:00 AM"
+            string combined = $"{time12.Trim()} {amPm}";
+            
+            if (DateTime.TryParseExact(combined, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+            {
+                return dt.ToString("HH:mm"); // Return 24h format for backend
+            }
+            
+            // Fallback for simple parse
+             if (DateTime.TryParse(combined, out dt))
+            {
+                return dt.ToString("HH:mm");
+            }
+            
+            throw new ArgumentException("Invalid time format. Use 'hh:mm'");
+        }
+
+        private void SetTimeFields(string time24, TextBox txtTime, TextBox txtAmPm)
+        {
+            if (string.IsNullOrEmpty(time24))
+            {
+                txtTime.Text = "";
+                txtAmPm.Text = "AM";
+                return;
+            }
+
+            // Backend typically sends "HH:mm:ss" or "HH:mm"
+            if (DateTime.TryParse(time24, out DateTime dt))
+            {
+                txtTime.Text = dt.ToString("hh:mm");
+                txtAmPm.Text = dt.ToString("tt", CultureInfo.InvariantCulture).ToUpper();
+            }
+            else
+            {
+                // Fallback if parsing fails
+                txtTime.Text = time24;
+                txtAmPm.Text = "AM";
+            }
+        }
+
+        #endregion
+        
         #region Broadcast Messages API Methods
 
         private async Task LoadBroadcastMessagesAsync()
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/broadcast-messages");
@@ -621,19 +739,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading messages: {error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error loading messages: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading messages: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading messages: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task AddBroadcastMessageAsync(BroadcastMessageDto message)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/broadcast-messages", message);
@@ -653,17 +774,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task UpdateBroadcastMessageAsync(BroadcastMessageDto message)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/broadcast-messages/{message.BroadcastMessageId}", message);
@@ -683,17 +809,22 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
         private async Task DeleteBroadcastMessageAsync(int id)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/broadcast-messages/{id}");
@@ -709,12 +840,16 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -751,10 +886,9 @@ namespace Attendify.Views.UserControls
 
             if (message != null)
             {
-                var result = MessageBox.Show($"Delete message '{message.Title}'?", "Confirm",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = GlassMessageBox.Show($"Delete message '{message.Title}'?", "Confirm", true);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == GlassMessageBox.MessageBoxResult.OK)
                 {
                     await DeleteBroadcastMessageAsync(message.BroadcastMessageId);
                 }
@@ -766,8 +900,7 @@ namespace Attendify.Views.UserControls
             if (string.IsNullOrWhiteSpace(TxtMessageTitle?.Text) ||
                 string.IsNullOrWhiteSpace(TxtMessageBody?.Text))
             {
-                MessageBox.Show("Please fill in title and message body.", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please fill in title and message body.", "Error");
                 return;
             }
 
@@ -814,6 +947,7 @@ namespace Attendify.Views.UserControls
 
         private async Task LoadEmployeeRequestsAsync()
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/employee-requests");
@@ -830,14 +964,16 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading requests: {error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error loading requests: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading requests: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error loading requests: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -896,22 +1032,23 @@ namespace Attendify.Views.UserControls
         {
             if (_currentReviewingRequest == null)
             {
-                MessageBox.Show("No request selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show("No request selected.", "Error", false, GlassMessageBox.MessageType.Error);
                 return;
             }
 
             if ((RadioApprove?.IsChecked != true) && (RadioReject?.IsChecked != true))
             {
-                MessageBox.Show("Select Approve or Reject.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Select Approve or Reject.", "Error");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(TxtAdminReply?.Text))
             {
-                MessageBox.Show("Enter admin reply.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Enter admin reply.", "Error");
                 return;
             }
 
+            LoadingOverlay.Visibility = Visibility.Visible;
             try
             {
                 var reviewDto = new
@@ -927,7 +1064,7 @@ namespace Attendify.Views.UserControls
 
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Decision submitted.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    GlassMessageBox.Show("Decision submitted.", "Success", false, GlassMessageBox.MessageType.Success);
                     ReviewPanel.Visibility = Visibility.Collapsed;
                     _currentReviewingRequest = null;
                     await LoadEmployeeRequestsAsync(); // Refresh list
@@ -935,12 +1072,16 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 

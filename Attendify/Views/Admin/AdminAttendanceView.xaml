@@ -5,41 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Attendify.Views.UserControls"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:views="clr-namespace:Attendify.Views"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
              Background="Transparent">
 
     <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Merged dictionaries if any -->
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- Loading Spinner Style -->
-        <Style x:Key="LoadingSpinnerStyle" TargetType="Control">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Viewbox Width="24" Height="24">
-                            <Grid>
-                                <Ellipse Stroke="#00A6FB" StrokeThickness="3" Opacity="0.3"/>
-                                <Path Data="M1,0.5 A0.5,0.5 0 0,1 0.5,1" Stroke="#00A6FB" StrokeThickness="3">
-                                    <Path.RenderTransform>
-                                        <RotateTransform Angle="0" CenterX="0.5" CenterY="0.5"/>
-                                    </Path.RenderTransform>
-                                    <Path.Triggers>
-                                        <EventTrigger RoutedEvent="Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard RepeatBehavior="Forever">
-                                                    <DoubleAnimation Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
-                                                                     From="0" To="360" Duration="0:0:1"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </Path.Triggers>
-                                </Path>
-                            </Grid>
-                        </Viewbox>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+
 
         <!-- Glass container style -->
         <ControlTemplate x:Key="GlassContainerTemplate" TargetType="ContentControl">
@@ -47,8 +24,8 @@
                 <Border CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#13FFFFFF" Offset="0" />
-                            <GradientStop Color="#13FFFFFF" Offset="1" />
+                            <GradientStop Color="#01FFFFFF" Offset="0" />
+                            <GradientStop Color="#01FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.Effect>
@@ -298,6 +275,7 @@
             <!-- Disable future dates -->
             <Setter Property="DisplayDateEnd" Value="{x:Static sys:DateTime.Today}"/>
         </Style>
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -308,22 +286,10 @@
         </Grid.RowDefinitions>
 
         <!-- Loading Overlay (for initial load only) -->
-        <Border x:Name="InitialLoadingOverlay" 
-                Grid.RowSpan="3" 
-                Background="#80000000"
-                VerticalAlignment="Stretch"
-                HorizontalAlignment="Stretch"
-                Visibility="Collapsed"
-                Panel.ZIndex="1000">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Control Style="{StaticResource LoadingSpinnerStyle}" Width="50" Height="50"/>
-                <TextBlock Text="Loading Attendance..." 
-                           Foreground="White" 
-                           FontSize="16" 
-                           FontWeight="Bold"
-                           Margin="0,15,0,0"/>
-            </StackPanel>
-        </Border>
+        <views:LoadingOverlay x:Name="InitialLoadingOverlay" 
+                              Grid.RowSpan="3" 
+                              Visibility="Collapsed"
+                              Panel.ZIndex="1000"/>
 
         <!-- Search and Filter Section -->
         <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,15">
@@ -560,7 +526,9 @@
                 <DataGrid Grid.Row="1"
                           x:Name="AttendanceGrid"
                           Style="{StaticResource ModernDataGrid}"
-                          RowStyle="{StaticResource DataGridRowStyle}">
+                          RowStyle="{StaticResource DataGridRowStyle}"
+                             RowBackground="#20FFFFFF"
+   AlternatingRowBackground="#10FFFFFF">
 
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="EmpID" Binding="{Binding EmployeeID}" Width="100"/>
@@ -581,7 +549,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Check-In" Binding="{Binding CheckInTime}" Width="80"/>
+                        <DataGridTextColumn Header="Check-In" Binding="{Binding CheckInTime, Converter={StaticResource TimeSpanTo12HourConverter}}" Width="80"/>
                     </DataGrid.Columns>
 
                     <DataGrid.CellStyle>

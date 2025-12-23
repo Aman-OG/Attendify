@@ -177,7 +177,7 @@ namespace Attendify.Views.UserControls
 
             if (profile.LastPasswordChange.HasValue)
             {
-                TxtLastPasswordChange.Text = profile.LastPasswordChange.Value.ToString("dd MMMM yyyy HH:mm");
+                TxtLastPasswordChange.Text = profile.LastPasswordChange.Value.ToString("dd MMMM yyyy hh:mm tt");
             }
             else
             {
@@ -203,20 +203,13 @@ namespace Attendify.Views.UserControls
             int colorIndex = Math.Abs(hash) % colors.Length;
             Color selectedColor = colors[colorIndex];
 
-            // Create gradient brush for liquid effect
-            var gradientBrush = new RadialGradientBrush
-            {
-                GradientOrigin = new Point(0.3, 0.3),
-                Center = new Point(0.5, 0.5),
-                RadiusX = 0.8,
-                RadiusY = 0.8
-            };
-
-            gradientBrush.GradientStops.Add(new GradientStop(Color.FromArgb(150, selectedColor.R, selectedColor.G, selectedColor.B), 0));
-            gradientBrush.GradientStops.Add(new GradientStop(Color.FromArgb(100, selectedColor.R, selectedColor.G, selectedColor.B), 0.5));
-            gradientBrush.GradientStops.Add(new GradientStop(Color.FromArgb(50, selectedColor.R, selectedColor.G, selectedColor.B), 1));
-
-            ProfileCircle.Background = gradientBrush;
+            // Use SolidColorBrush instead of Gradient as requested
+            // Keeping it slightly transparent or solid - let's use the solid color but maybe slightly lighter?
+            // User asked for "one color".
+            ProfileCircle.Background = new SolidColorBrush(selectedColor);
+            
+            // Ensure the textblock has no background (it defaults to null anyway, but just in case)
+            ProfileInitial.Background = Brushes.Transparent;
         }
 
         private void UpdateStatusUI(bool isActive)
@@ -239,7 +232,7 @@ namespace Attendify.Views.UserControls
 
         private void UpdateLastUpdatedText()
         {
-            LastUpdatedText.Text = $"Updated {DateTime.Now:HH:mm:ss}";
+            LastUpdatedText.Text = $"Updated {Attendify.Services.TimeService.Instance.Now:hh:mm:ss tt}";
         }
 
         private void ShowErrorMessage(string message)

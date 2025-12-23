@@ -33,8 +33,8 @@ namespace Attendify.API.Controllers
                     {
                         r.RuleID,
                         Day = r.DayOfWeek, // Map DayOfWeek to Day for WPF
-                        r.StartTime,
-                        r.EndTime,
+                        StartTime = r.StartTime.ToString(@"hh\:mm"), // Format for WPF
+                        EndTime = r.EndTime.ToString(@"hh\:mm"),
                         GracePeriod = r.GracePeriodMinutes.ToString() // Convert to string for WPF
                     })
                     .ToListAsync();
@@ -60,8 +60,8 @@ namespace Attendify.API.Controllers
                 var rule = new AttendanceRule
                 {
                     DayOfWeek = ruleDto.Day,
-                    StartTime = ruleDto.StartTime,
-                    EndTime = ruleDto.EndTime,
+                    StartTime = TimeSpan.Parse(ruleDto.StartTime),
+                    EndTime = TimeSpan.Parse(ruleDto.EndTime),
                     GracePeriodMinutes = int.TryParse(ruleDto.GracePeriod, out int grace) ? grace : 10,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -97,8 +97,8 @@ namespace Attendify.API.Controllers
                 }
 
                 existingRule.DayOfWeek = ruleDto.Day;
-                existingRule.StartTime = ruleDto.StartTime;
-                existingRule.EndTime = ruleDto.EndTime;
+                existingRule.StartTime = TimeSpan.Parse(ruleDto.StartTime);
+                existingRule.EndTime = TimeSpan.Parse(ruleDto.EndTime);
                 existingRule.GracePeriodMinutes = int.TryParse(ruleDto.GracePeriod, out int grace) ? grace : 10;
 
                 await _context.SaveChangesAsync();
@@ -147,8 +147,8 @@ namespace Attendify.API.Controllers
                     {
                         ShiftId = s.ShiftID,
                         s.Name,
-                        s.StartTime,
-                        s.EndTime,
+                        StartTime = s.StartTime.ToString(@"hh\:mm"),
+                        EndTime = s.EndTime.ToString(@"hh\:mm"),
                         GracePeriod = s.GracePeriodMinutes.ToString()
                     })
                     .ToListAsync();
@@ -174,8 +174,8 @@ namespace Attendify.API.Controllers
                 var shift = new Shift
                 {
                     Name = shiftDto.Name,
-                    StartTime = shiftDto.StartTime,
-                    EndTime = shiftDto.EndTime,
+                    StartTime = TimeSpan.Parse(shiftDto.StartTime),
+                    EndTime = TimeSpan.Parse(shiftDto.EndTime),
                     GracePeriodMinutes = int.TryParse(shiftDto.GracePeriod, out int grace) ? grace : 5,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -211,8 +211,8 @@ namespace Attendify.API.Controllers
                 }
 
                 existingShift.Name = shiftDto.Name;
-                existingShift.StartTime = shiftDto.StartTime;
-                existingShift.EndTime = shiftDto.EndTime;
+                existingShift.StartTime = TimeSpan.Parse(shiftDto.StartTime);
+                existingShift.EndTime = TimeSpan.Parse(shiftDto.EndTime);
                 existingShift.GracePeriodMinutes = int.TryParse(shiftDto.GracePeriod, out int grace) ? grace : 5;
 
                 await _context.SaveChangesAsync();
@@ -388,12 +388,13 @@ namespace Attendify.API.Controllers
                     .Select(r => new
                     {
                         EmployeeRequestId = r.RequestID,
-                        EmployeeID = r.Employee.EmpCode,
-                        EmployeeName = r.Employee.FirstName + (string.IsNullOrEmpty(r.Employee.MiddleName) ? "" : " " + r.Employee.MiddleName),
+                        EmployeeID = r.Employee != null ? r.Employee.EmpCode : "GUEST",
+                        EmployeeName = r.Employee != null 
+                            ? (r.Employee.FirstName + (string.IsNullOrEmpty(r.Employee.MiddleName) ? "" : " " + r.Employee.MiddleName)) 
+                            : "Unknown User",
                         r.Type,
                         r.Message,
                         r.Status,
-                        // Replace switch expression with conditional operator
                         StatusColor = r.Status == "Pending" ? "#FF9800" :
                                     r.Status == "Approved" ? "#4CAF50" :
                                     r.Status == "Rejected" ? "#F44336" : "#9E9E9E",

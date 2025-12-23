@@ -151,19 +151,16 @@ namespace Attendify.API.Controllers
                     bool isLate = false;
                     int? lateMinutes = null;
 
-                    if (checkInTime.HasValue && shift != null &&
-                        !string.IsNullOrEmpty(shift.StartTime))
+                    if (checkInTime.HasValue && shift != null)
                     {
-                        if (TimeSpan.TryParse(shift.StartTime, out var shiftStartTime))
-                        {
-                            var gracePeriod = TimeSpan.FromMinutes(shift.GracePeriodMinutes);
-                            var actualStartTime = shiftStartTime.Add(gracePeriod);
+                        var shiftStartTime = shift.StartTime;
+                        var gracePeriod = TimeSpan.FromMinutes(shift.GracePeriodMinutes);
+                        var actualStartTime = shiftStartTime.Add(gracePeriod);
 
-                            if (checkInTime > actualStartTime)
-                            {
-                                isLate = true;
-                                lateMinutes = (int)(checkInTime.Value - actualStartTime).TotalMinutes;
-                            }
+                        if (checkInTime > actualStartTime)
+                        {
+                            isLate = true;
+                            lateMinutes = (int)(checkInTime.Value - actualStartTime).TotalMinutes;
                         }
                     }
 
@@ -207,17 +204,17 @@ namespace Attendify.API.Controllers
                 if (nextShift != null)
                 {
                     // Use the ACTUAL times from database
-                    string startTime = nextShift.StartTime ?? "08:00";
-                    string endTime = nextShift.EndTime ?? "12:30"; // Default to your actual end time
+                    var startTimeTs = nextShift.StartTime;
+                    var endTimeTs = nextShift.EndTime;
 
                     // Calculate time until start
-                    string timeUntil = CalculateTimeUntilNextShift(startTime);
+                    string timeUntil = CalculateTimeUntilNextShift(startTimeTs);
 
                     result.NextShift = new NextShiftInfo
                     {
                         ShiftName = nextShift.Name,
-                        StartTime = startTime,
-                        EndTime = endTime,
+                        StartTime = startTimeTs.ToString(@"hh\:mm"),
+                        EndTime = endTimeTs.ToString(@"hh\:mm"),
                         TimeUntilStart = timeUntil
                     };
                 }
@@ -229,7 +226,7 @@ namespace Attendify.API.Controllers
                         ShiftName = "Morning Shift",
                         StartTime = "08:00",
                         EndTime = "12:30", // Your actual end time
-                        TimeUntilStart = CalculateTimeUntilNextShift("08:00")
+                        TimeUntilStart = CalculateTimeUntilNextShift(new TimeSpan(8, 0, 0))
                     };
                 }
 
@@ -278,34 +275,39 @@ namespace Attendify.API.Controllers
             }
         }
 
-        private string CalculateTimeUntilNextShift(string startTime)
+        private string CalculateTimeUntilNextShift(TimeSpan shiftStartTime)
         {
-            if (TimeSpan.TryParse(startTime, out var shiftStartTime))
+            var localNow = DateTime.Now;
+            var startTimeToday = new DateTime(localNow.Year, localNow.Month, localNow.Day)
+                .Add(shiftStartTime);
+
+            if (startTimeToday > localNow)
             {
-                var localNow = DateTime.Now;
-                var startTimeToday = new DateTime(localNow.Year, localNow.Month, localNow.Day)
-                    .Add(shiftStartTime);
+                var timeUntil = startTimeToday - localNow;
 
-                if (startTimeToday > localNow)
-                {
-                    var timeUntil = startTimeToday - localNow;
-
-                    if (timeUntil.TotalHours >= 1)
-                        return $"Starts in {Math.Ceiling(timeUntil.TotalHours)} hours";
-                    else if (timeUntil.TotalMinutes >= 1)
-                        return $"Starts in {Math.Ceiling(timeUntil.TotalMinutes)} minutes";
-                    else
-                        return "Starting soon";
-                }
+                if (timeUntil.TotalHours >= 1)
+                    return $"Starts in {Math.Ceiling(timeUntil.TotalHours)} hours";
+                else if (timeUntil.TotalMinutes >= 1)
+                    return $"Starts in {Math.Ceiling(timeUntil.TotalMinutes)} minutes";
                 else
-                {
-                    // Shift has already started
-                    var timeSinceStart = localNow - startTimeToday;
-                    if (timeSinceStart.TotalHours < 1)
-                        return $"Started {Math.Floor(timeSinceStart.TotalMinutes)} minutes ago";
-                    else
-                        return "In progress";
-                }
+                    return "Starting soon";
+            }
+            else
+            {
+                // Shift has already started
+                var timeSinceStart = localNow - startTimeToday;
+                if (timeSinceStart.TotalHours < 1)
+                    return $"Started {Math.Floor(timeSinceStart.TotalMinutes)} minutes ago";
+                else
+                    return "In progress";
+            }
+        }
+
+        private string CalculateTimeUntilNextShift(string startTimeStr)
+        {
+            if (TimeSpan.TryParse(startTimeStr, out var shiftStartTime))
+            {
+                return CalculateTimeUntilNextShift(shiftStartTime);
             }
 
             return "Schedule not available";

@@ -12,9 +12,12 @@ namespace Attendify
     {
         public IServiceProvider ServiceProvider { get; private set; }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Trigger time synchronization early
+            _ = Attendify.Services.TimeService.Instance.SyncWithServerAsync();
 
             // Build configuration
             var config = new ConfigurationBuilder()

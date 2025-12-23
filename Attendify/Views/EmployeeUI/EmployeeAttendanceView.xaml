@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:Attendify.Views"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="800"
              Background="Transparent">
@@ -116,267 +117,270 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
-        <StackPanel>
-            <!-- Header Section -->
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="My Attendance" 
-                               Foreground="#00A6FB" 
-                               FontSize="24" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,10"/>
-                    <TextBlock Text="Track your daily attendance and view your history" 
-                               Foreground="White" 
-                               FontSize="14"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
-            </ContentControl>
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+            <StackPanel>
+                <!-- Header Section -->
+                <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="My Attendance" 
+                                   Foreground="#00A6FB" 
+                                   FontSize="24" 
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,10"/>
+                        <TextBlock Text="Track your daily attendance and view your history" 
+                                   Foreground="White" 
+                                   FontSize="14"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ContentControl>
 
-            <!-- Today's Attendance Card -->
-            <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Today's Attendance Card -->
+                <ContentControl Template="{StaticResource GlassContainerTemplate}" Margin="0,0,0,20">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Attendance Details -->
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="📅" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB" Margin="0,0,8,0"/>
-                            <TextBlock Text="Today's Attendance" 
-                                       Foreground="#00A6FB" 
-                                       FontSize="18" 
-                                       FontWeight="Bold"
-                                       VerticalAlignment="Center"/>
+                        <!-- Attendance Details -->
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="📅" FontSize="16" VerticalAlignment="Center" Foreground="#00A6FB" Margin="0,0,8,0"/>
+                                <TextBlock Text="Today's Attendance" 
+                                           Foreground="#00A6FB" 
+                                           FontSize="18" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Today's Date -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" 
+                                           Text="Today:" 
+                                           Foreground="#CCCCCC" 
+                                           FontSize="14"
+                                           Margin="0,0,10,8"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                           x:Name="TxtTodayDate"
+                                           Text="Loading..." 
+                                           Foreground="White" 
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8"/>
+
+                                <!-- Shift Details -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" 
+                                           Text="Shift:" 
+                                           Foreground="#CCCCCC" 
+                                           FontSize="14"
+                                           Margin="0,0,10,8"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           x:Name="TxtShiftDetails"
+                                           Text="Loading..." 
+                                           Foreground="White" 
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8"/>
+
+                                <!-- Grace Period -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" 
+                                           Text="Grace Period:" 
+                                           Foreground="#CCCCCC" 
+                                           FontSize="14"
+                                           Margin="0,0,10,8"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" 
+                                           x:Name="TxtGracePeriod"
+                                           Text="-- min" 
+                                           Foreground="#4CAF50" 
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8"/>
+
+                                <!-- Current Time -->
+                                <TextBlock Grid.Row="3" Grid.Column="0" 
+                                           Text="Current Time:" 
+                                           Foreground="#CCCCCC" 
+                                           FontSize="14"
+                                           Margin="0,0,10,8"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" 
+                                           x:Name="TxtCurrentTime"
+                                           Text="--:-- --" 
+                                           Foreground="#64FF33" 
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,8"/>
+                            </Grid>
                         </StackPanel>
 
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Today's Date -->
-                            <TextBlock Grid.Row="0" Grid.Column="0" 
-                                       Text="Today:" 
+                        <!-- Status Section -->
+                        <StackPanel Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
+                            <Border x:Name="StatusBadge" Background="#666666" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
+                                <TextBlock x:Name="StatusText" 
+                                           Text="NOT CHECKED IN" 
+                                           Foreground="White" 
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="LateInfo" 
+                                       Text="Waiting for check-in" 
                                        Foreground="#CCCCCC" 
-                                       FontSize="14"
-                                       Margin="0,0,10,8"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" 
-                                       x:Name="TxtTodayDate"
-                                       Text="Loading..." 
-                                       Foreground="White" 
-                                       FontSize="14"
+                                       FontSize="12"
                                        FontWeight="SemiBold"
-                                       Margin="0,0,0,8"/>
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
 
-                            <!-- Shift Details -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" 
-                                       Text="Shift:" 
-                                       Foreground="#CCCCCC" 
-                                       FontSize="14"
-                                       Margin="0,0,10,8"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" 
-                                       x:Name="TxtShiftDetails"
-                                       Text="Loading..." 
-                                       Foreground="White" 
-                                       FontSize="14"
+                        <!-- Check In Button -->
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <Button x:Name="BtnCheckIn" 
+                                    Content="CHECK IN" 
+                                    Style="{StaticResource ModernButton}"
+                                    Padding="30,15"
+                                    FontSize="16"
+                                    Click="BtnCheckIn_Click"
+                                    IsEnabled="False"/>
+
+                            <TextBlock x:Name="TxtCheckedInTime" 
+                                       Text="" 
+                                       Foreground="#38b000" 
+                                       FontSize="12"
                                        FontWeight="SemiBold"
-                                       Margin="0,0,0,8"/>
+                                       HorizontalAlignment="Center"
+                                       Margin="0,8,0,0"
+                                       Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Grid>
+                </ContentControl>
 
-                            <!-- Grace Period -->
-                            <TextBlock Grid.Row="2" Grid.Column="0" 
-                                       Text="Grace Period:" 
-                                       Foreground="#CCCCCC" 
-                                       FontSize="14"
-                                       Margin="0,0,10,8"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" 
-                                       x:Name="TxtGracePeriod"
-                                       Text="-- min" 
-                                       Foreground="#4CAF50" 
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,8"/>
+                <!-- Attendance History -->
+                <ContentControl Template="{StaticResource GlassContainerTemplate}">
+                    <StackPanel>
+                        <TextBlock Text="Attendance History" 
+                                   Foreground="#00A6FB" 
+                                   FontSize="18" 
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,15"/>
 
-                            <!-- Current Time -->
-                            <TextBlock Grid.Row="3" Grid.Column="0" 
-                                       Text="Current Time:" 
-                                       Foreground="#CCCCCC" 
-                                       FontSize="14"
-                                       Margin="0,0,10,8"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" 
-                                       x:Name="TxtCurrentTime"
-                                       Text="--:-- --" 
-                                       Foreground="#64FF33" 
-                                       FontSize="16"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,8"/>
-                        </Grid>
+                        <DataGrid x:Name="AttendanceHistoryGrid"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  RowStyle="{StaticResource DataGridRowStyle}"
+                                  ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
+                                  AutoGenerateColumns="False"
+                                  Height="300">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*"/>
+                                <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="*"/>
+                                <DataGridTextColumn Header="Check In" Binding="{Binding CheckIn}" Width="*"/>
+                                <DataGridTemplateColumn Header="Status" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding StatusColor}" 
+                                                    CornerRadius="10" 
+                                                    Padding="5,2"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Status}" 
+                                                           Foreground="White" 
+                                                           FontWeight="SemiBold"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </StackPanel>
+                </ContentControl>
 
-                    <!-- Status Section -->
-                    <StackPanel Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
-                        <Border x:Name="StatusBadge" Background="#666666" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
-                            <TextBlock x:Name="StatusText" 
-                                       Text="NOT CHECKED IN" 
-                                       Foreground="White" 
-                                       FontSize="16"
+                <!-- Monthly Stats -->
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- This Month -->
+                    <ContentControl Grid.Column="0" Style="{StaticResource StatCardStyle}">
+                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="📅 This Month" 
+                                       Foreground="#00A6FB" 
+                                       FontSize="14" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,10"/>
+                            <TextBlock x:Name="DaysPresentCount" 
+                                       Text="0" 
+                                       Foreground="#38b000" 
+                                       FontSize="32" 
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"/>
-                        </Border>
-                        <TextBlock x:Name="LateInfo" 
-                                   Text="Waiting for check-in" 
-                                   Foreground="#CCCCCC" 
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                            <TextBlock Text="Days Present" 
+                                       Foreground="#CCCCCC" 
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </ContentControl>
 
-                    <!-- Check In Button -->
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                        <Button x:Name="BtnCheckIn" 
-                                Content="CHECK IN" 
-                                Style="{StaticResource ModernButton}"
-                                Padding="30,15"
-                                FontSize="16"
-                                Click="BtnCheckIn_Click"
-                                IsEnabled="False"/>
+                    <!-- On Time Rate -->
+                    <ContentControl Grid.Column="1" Style="{StaticResource StatCardStyle}">
+                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="⏰ On Time Rate" 
+                                       Foreground="#00A6FB" 
+                                       FontSize="14" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,10"/>
+                            <TextBlock x:Name="OnTimeRateCount" 
+                                       Text="0%" 
+                                       Foreground="#4CAF50" 
+                                       FontSize="32" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="This Month" 
+                                       Foreground="#CCCCCC" 
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </ContentControl>
 
-                        <TextBlock x:Name="TxtCheckedInTime" 
-                                   Text="" 
-                                   Foreground="#38b000" 
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,8,0,0"
-                                   Visibility="Collapsed"/>
-                    </StackPanel>
+                    <!-- Late Arrivals -->
+                    <ContentControl Grid.Column="2" Style="{StaticResource StatCardStyle}">
+                        <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="⚠️ Late Arrivals" 
+                                       Foreground="#00A6FB" 
+                                       FontSize="14" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,10"/>
+                            <TextBlock x:Name="LateArrivalsCount" 
+                                       Text="0" 
+                                       Foreground="#FF9800" 
+                                       FontSize="32" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="This Month" 
+                                       Foreground="#CCCCCC" 
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </ContentControl>
                 </Grid>
-            </ContentControl>
-
-            <!-- Attendance History -->
-            <ContentControl Template="{StaticResource GlassContainerTemplate}">
-                <StackPanel>
-                    <TextBlock Text="Attendance History" 
-                               Foreground="#00A6FB" 
-                               FontSize="18" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,15"/>
-
-                    <DataGrid x:Name="AttendanceHistoryGrid"
-                              Style="{StaticResource ModernDataGrid}"
-                              RowStyle="{StaticResource DataGridRowStyle}"
-                              ColumnHeaderStyle="{StaticResource GlassColumnHeaderStyle}"
-                              AutoGenerateColumns="False"
-                              Height="300">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*"/>
-                            <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="*"/>
-                            <DataGridTextColumn Header="Check In" Binding="{Binding CheckIn}" Width="*"/>
-                            <DataGridTemplateColumn Header="Status" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding StatusColor}" 
-                                                CornerRadius="10" 
-                                                Padding="5,2"
-                                                HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Status}" 
-                                                       Foreground="White" 
-                                                       FontWeight="SemiBold"
-                                                       FontSize="11"
-                                                       HorizontalAlignment="Center"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-            </ContentControl>
-
-            <!-- Monthly Stats -->
-            <Grid Margin="0,20,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- This Month -->
-                <ContentControl Grid.Column="0" Style="{StaticResource StatCardStyle}">
-                    <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="📅 This Month" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="14" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-                        <TextBlock x:Name="DaysPresentCount" 
-                                   Text="0" 
-                                   Foreground="#38b000" 
-                                   FontSize="32" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="Days Present" 
-                                   Foreground="#CCCCCC" 
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </ContentControl>
-
-                <!-- On Time Rate -->
-                <ContentControl Grid.Column="1" Style="{StaticResource StatCardStyle}">
-                    <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="⏰ On Time Rate" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="14" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-                        <TextBlock x:Name="OnTimeRateCount" 
-                                   Text="0%" 
-                                   Foreground="#4CAF50" 
-                                   FontSize="32" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="This Month" 
-                                   Foreground="#CCCCCC" 
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </ContentControl>
-
-                <!-- Late Arrivals -->
-                <ContentControl Grid.Column="2" Style="{StaticResource StatCardStyle}">
-                    <StackPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="⚠️ Late Arrivals" 
-                                   Foreground="#00A6FB" 
-                                   FontSize="14" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-                        <TextBlock x:Name="LateArrivalsCount" 
-                                   Text="0" 
-                                   Foreground="#FF9800" 
-                                   FontSize="32" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="This Month" 
-                                   Foreground="#CCCCCC" 
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </ContentControl>
-            </Grid>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+        <views:LoadingOverlay x:Name="LoadingOverlay" Visibility="Collapsed"/>
+    </Grid>
 </UserControl>

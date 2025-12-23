@@ -15,7 +15,7 @@ namespace Attendify.DATA.Models
         [Key]
         public int RequestID { get; set; }
 
-        public string EmpCode { get; set; }
+        public string? EmpCode { get; set; }
 
         public string? Date { get; set; }
 

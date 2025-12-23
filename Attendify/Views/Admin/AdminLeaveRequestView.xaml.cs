@@ -62,14 +62,12 @@ namespace Attendify.Views.UserControls
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Error loading leave requests: {error}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error loading leave requests: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
             }
         }
 
@@ -78,11 +76,11 @@ namespace Attendify.Views.UserControls
             // Define hover colors for each button
             var buttonColors = new Dictionary<Button, string>
             {
-                { BtnAll, "#6000A6FB" },
-                { BtnToday, "#80A95315" },
-                { BtnApproved, "#802FBF4C" },
-                { BtnPending, "#80E3C63A" },
-                { BtnRejected, "#80D23C3C" }
+                { BtnAll, "#00A6FB" },
+                { BtnToday, "#A95315" },
+                { BtnApproved, "#2FBF4C" },
+                { BtnPending, "#E3C63A" },
+                { BtnRejected, "#D23C3C" }
             };
 
             foreach (var button in buttonColors.Keys)
@@ -137,11 +135,11 @@ namespace Attendify.Views.UserControls
             // Set active button color based on which button it is
             string activeColor = activeButton.Name switch
             {
-                "BtnAll" => "#6000A6FB",
-                "BtnToday" => "#80A95315",
-                "BtnApproved" => "#802FBF4C",
-                "BtnPending" => "#80E3C63A",
-                "BtnRejected" => "#80D23C3C",
+                "BtnAll" => "#00A6FB",
+                "BtnToday" => "#A95315",
+                "BtnApproved" => "#2FBF4C",
+                "BtnPending" => "#E3C63A",
+                "BtnRejected" => "#D23C3C",
                 _ => "#6000A6FB"
             };
 
@@ -304,20 +302,17 @@ namespace Attendify.Views.UserControls
                         ShowDetailedView(_selectedRequest);
                         ResetRejectionPanel();
 
-                        MessageBox.Show("Leave request approved successfully!", "Success",
-                                      MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show("Leave request approved successfully!", "Success", false, GlassMessageBox.MessageType.Success);
                     }
                     else
                     {
                         var error = await response.Content.ReadAsStringAsync();
-                        MessageBox.Show($"Error approving request: {error}", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show($"Error approving request: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error: {ex.Message}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
         }
@@ -410,26 +405,22 @@ namespace Attendify.Views.UserControls
                         // Hide rejection panel and reset
                         ResetRejectionPanel();
 
-                        MessageBox.Show($"Leave request rejected. Reason: {rejectDto.RejectionReason}", "Rejected",
-                                      MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show($"Leave request rejected. Reason: {rejectDto.RejectionReason}", "Rejected", false, GlassMessageBox.MessageType.Success);
                     }
                     else
                     {
                         var error = await response.Content.ReadAsStringAsync();
-                        MessageBox.Show($"Error rejecting request: {error}", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show($"Error rejecting request: {error}", "Error", false, GlassMessageBox.MessageType.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error: {ex.Message}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
                 }
             }
             else
             {
-                MessageBox.Show("Please enter a reason for rejection.", "Reason Required",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please enter a reason for rejection.", "Reason Required");
             }
         }
 

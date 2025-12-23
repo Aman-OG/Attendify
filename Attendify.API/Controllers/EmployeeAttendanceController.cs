@@ -331,25 +331,24 @@ namespace Attendify.API.Controllers
             // Find shift that matches current time
             foreach (var shift in shifts)
             {
-                if (TimeSpan.TryParse(shift.StartTime, out var startTime) &&
-                    TimeSpan.TryParse(shift.EndTime, out var endTime))
+                var startTime = shift.StartTime;
+                var endTime = shift.EndTime;
+
+                // Handle overnight shifts
+                if (endTime < startTime)
                 {
-                    // Handle overnight shifts
-                    if (endTime < startTime)
+                    // Shift spans midnight
+                    if (currentTime.TimeOfDay >= startTime || currentTime.TimeOfDay <= endTime)
                     {
-                        // Shift spans midnight
-                        if (currentTime.TimeOfDay >= startTime || currentTime.TimeOfDay <= endTime)
-                        {
-                            return shift;
-                        }
+                        return shift;
                     }
-                    else
+                }
+                else
+                {
+                    // Normal shift
+                    if (currentTime.TimeOfDay >= startTime && currentTime.TimeOfDay <= endTime)
                     {
-                        // Normal shift
-                        if (currentTime.TimeOfDay >= startTime && currentTime.TimeOfDay <= endTime)
-                        {
-                            return shift;
-                        }
+                        return shift;
                     }
                 }
             }
@@ -360,8 +359,8 @@ namespace Attendify.API.Controllers
                    ?? new Shift
                    {
                        Name = "Morning Shift",
-                       StartTime = "08:00",
-                       EndTime = "12:30",
+                       StartTime = new TimeSpan(8, 0, 0),
+                       EndTime = new TimeSpan(12, 30, 0),
                        GracePeriodMinutes = 5,
                        ShiftID = 1
                    };
@@ -369,81 +368,117 @@ namespace Attendify.API.Controllers
 
         private bool CanCheckIn(DateTime currentTime, Shift shift)
         {
-            if (TimeSpan.TryParse(shift.StartTime, out var startTime) &&
-                TimeSpan.TryParse(shift.EndTime, out var endTime))
+            var startTime = shift.StartTime;
+            var endTime = shift.EndTime;
+            var grace = TimeSpan.FromMinutes(shift.GracePeriodMinutes);
+
+            // Allow check-in from 15 minutes before shift starts until shift ends + grace period
+            var checkInStart = startTime.Add(TimeSpan.FromMinutes(-15));
+            var checkInEnd = endTime.Add(grace);
+            
+            var currentTimeOfDay = currentTime.TimeOfDay;
+
+            // Handle overnight shifts
+            if (endTime < startTime)
             {
-                // Allow check-in from 15 minutes before shift starts until shift ends
-                var checkInStart = startTime.Add(TimeSpan.FromMinutes(-15));
-                var currentTimeOfDay = currentTime.TimeOfDay;
-
-                // Handle overnight shifts
-                if (endTime < startTime)
-                {
-                    // Shift spans midnight
-                    return currentTimeOfDay >= checkInStart || currentTimeOfDay <= endTime;
-                }
-                else
-                {
-                    // Normal shift
-                    return currentTimeOfDay >= checkInStart && currentTimeOfDay <= endTime;
-                }
+                // Shift spans midnight
+                // E.g. 22:00 to 06:00. CheckInStart 21:45. CheckInEnd 06:05 (if grace 5)
+                // If current 23:00 -> True (>= 21:45)
+                // If current 05:00 -> True (<= 06:00)
+                // If current 06:03 -> True (<= 06:05)
+                return currentTimeOfDay >= checkInStart || currentTimeOfDay <= checkInEnd;
             }
-
-            return false;
+            else
+            {
+                // Normal shift
+                return currentTimeOfDay >= checkInStart && currentTimeOfDay <= checkInEnd;
+            }
         }
 
         private bool CanCheckOut(DateTime currentTime, Shift shift)
         {
-            if (TimeSpan.TryParse(shift.EndTime, out var endTime))
-            {
-                // Allow check-out 30 minutes before shift ends until 30 minutes after
-                var checkOutStart = endTime.Add(TimeSpan.FromMinutes(-30));
-                var checkOutEnd = endTime.Add(TimeSpan.FromMinutes(30));
-                var currentTimeOfDay = currentTime.TimeOfDay;
+            var endTime = shift.EndTime;
 
-                return currentTimeOfDay >= checkOutStart && currentTimeOfDay <= checkOutEnd;
-            }
+            // Allow check-out 30 minutes before shift ends until 30 minutes after
+            var checkOutStart = endTime.Add(TimeSpan.FromMinutes(-30));
+            var checkOutEnd = endTime.Add(TimeSpan.FromMinutes(30));
+            var currentTimeOfDay = currentTime.TimeOfDay;
 
-            return false;
+            return currentTimeOfDay >= checkOutStart && currentTimeOfDay <= checkOutEnd;
         }
 
-        private bool CheckIfLate(string checkInTime, Shift shift)
+        private bool CheckIfLate(string checkInTimeStr, Shift shift)
         {
-            if (string.IsNullOrEmpty(checkInTime) || shift == null) return false;
+            if (string.IsNullOrEmpty(checkInTimeStr) || shift == null) return false;
 
-            if (TimeSpan.TryParse(checkInTime, out var checkIn) &&
-                TimeSpan.TryParse(shift.StartTime, out var shiftStart))
+            if (TimeSpan.TryParse(checkInTimeStr, out var checkIn))
             {
-                var graceTime = shiftStart.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
-                return checkIn > graceTime;
-            }
-
-            return false;
-        }
-
-        private int CalculateLateMinutes(string checkInTime, Shift shift)
-        {
-            if (string.IsNullOrEmpty(checkInTime) || shift == null) return 0;
-
-            if (TimeSpan.TryParse(checkInTime, out var checkIn) &&
-                TimeSpan.TryParse(shift.StartTime, out var shiftStart))
-            {
-                var graceTime = shiftStart.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
-                if (checkIn > graceTime)
+                var shiftEnd = shift.EndTime;
+                var graceTime = shiftEnd.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
+                
+                // If shift spans midnight and checkIn is "early" next day (e.g. 01:00), we need to handle that.
+                // But simplified logic as per user request: "5:00 - 5:35 is ontime".
+                // This implies strict comparison against the "End Window".
+                
+                // Note: User logic says "during this 5:00 - 5:30... is ontime".
+                // So basic logic: CheckIn > EndTime + Grace => Late.
+                
+                // However, handling strict timespan comparison for overnight shifts:
+                if (shift.EndTime < shift.StartTime)
                 {
-                    return (int)(checkIn - graceTime).TotalMinutes;
+                     // Overnight
+                     // If CheckIn > GraceTime AND CheckIn < StartTime ? Late?
+                     // Technically overnight shifts end on Day 2.
+                     // A pure TimeSpan compare might fail if we don't account for date.
+                     // But assuming standard daily checkin constraint:
+                     if (checkIn > graceTime && checkIn < shift.StartTime) return true;
+                }
+                else
+                {
+                    if (checkIn > graceTime) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private int CalculateLateMinutes(string checkInTimeStr, Shift shift)
+        {
+            if (string.IsNullOrEmpty(checkInTimeStr) || shift == null) return 0;
+
+            if (TimeSpan.TryParse(checkInTimeStr, out var checkIn))
+            {
+                var shiftEnd = shift.EndTime;
+                var graceTime = shiftEnd.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
+                
+                if (shift.EndTime < shift.StartTime)
+                {
+                     if (checkIn > graceTime && checkIn < shift.StartTime)
+                         return (int)(checkIn - graceTime).TotalMinutes;
+                }
+                else
+                {
+                    if (checkIn > graceTime)
+                    {
+                        return (int)(checkIn - graceTime).TotalMinutes;
+                    }
                 }
             }
 
             return 0;
         }
 
+        private string FormatTime12Hour(TimeSpan timeSpan)
+        {
+            var dateTime = DateTime.Today.Add(timeSpan);
+            return dateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
+        }
+
         private string FormatTime12Hour(string time24Hour)
         {
             if (TimeSpan.TryParse(time24Hour, out var timeSpan))
             {
-                var dateTime = DateTime.Today.Add(timeSpan);
-                return dateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture);
+                return FormatTime12Hour(timeSpan);
             }
 
             return time24Hour; // Return original if parsing fails
@@ -454,8 +489,8 @@ namespace Attendify.API.Controllers
             return new ShiftInfo
             {
                 Name = shift.Name,
-                StartTime = shift.StartTime,
-                EndTime = shift.EndTime,
+                StartTime = shift.StartTime.ToString(@"hh\:mm"),
+                EndTime = shift.EndTime.ToString(@"hh\:mm"),
                 GracePeriodMinutes = shift.GracePeriodMinutes,
                 ShiftID = shift.ShiftID
             };

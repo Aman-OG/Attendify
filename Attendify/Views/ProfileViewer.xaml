@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:views="clr-namespace:Attendify.Views"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800"
              Background="Transparent">
@@ -374,40 +375,9 @@
             </Grid>
 
             <!-- Loading Overlay -->
-            <Border x:Name="LoadingOverlay" 
-                    Background="#80000000"
-                    CornerRadius="20"
-                    Visibility="Collapsed"
-                    Panel.ZIndex="1000">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <!-- Animated Spinner -->
-                    <Viewbox Width="40" Height="40">
-                        <Grid>
-                            <Ellipse Stroke="#00A6FB" StrokeThickness="3" Opacity="0.3"/>
-                            <Path Data="M1,0.5 A0.5,0.5 0 0,1 0.5,1" Stroke="#00A6FB" StrokeThickness="3">
-                                <Path.RenderTransform>
-                                    <RotateTransform Angle="0" CenterX="0.5" CenterY="0.5"/>
-                                </Path.RenderTransform>
-                                <Path.Triggers>
-                                    <EventTrigger RoutedEvent="Loaded">
-                                        <BeginStoryboard>
-                                            <Storyboard RepeatBehavior="Forever">
-                                                <DoubleAnimation Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
-                                                                 From="0" To="360" Duration="0:0:1"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </EventTrigger>
-                                </Path.Triggers>
-                            </Path>
-                        </Grid>
-                    </Viewbox>
-                    <TextBlock Text="Loading profile..." 
-                               Foreground="White" 
-                               FontSize="14" 
-                               FontWeight="SemiBold"
-                               Margin="0,12,0,0"/>
-                </StackPanel>
-            </Border>
+            <views:LoadingOverlay x:Name="LoadingOverlay" 
+                                  Visibility="Collapsed"
+                                  Panel.ZIndex="1000"/>
         </Grid>
     </Border>
 </UserControl>

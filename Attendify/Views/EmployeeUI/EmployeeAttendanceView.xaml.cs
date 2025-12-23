@@ -46,7 +46,7 @@ namespace Attendify.Views.Employee
                 _httpClient = Attendify.Services.HttpClientService.Instance;
             }
 
-            LoadAttendanceData();
+            _ = LoadAttendanceData();
         }
 
         private void SetLoadingState()
@@ -73,10 +73,10 @@ namespace Attendify.Views.Employee
 
         private void ClockTimer_Tick(object sender, EventArgs e)
         {
-            TxtCurrentTime.Text = DateTime.Now.ToString("hh:mm:ss tt");
+            TxtCurrentTime.Text = Attendify.Services.TimeService.Instance.Now.ToString("hh:mm:ss tt");
         }
 
-        private async void LoadAttendanceData()
+        private async Task LoadAttendanceData()
         {
             try
             {
@@ -176,7 +176,7 @@ namespace Attendify.Views.Employee
                         // Already checked in
                         BtnCheckIn.IsEnabled = false;
                         BtnCheckIn.Content = "CHECKED IN";
-                        TxtCheckedInTime.Text = $"Checked in at {data.TodayAttendance.CheckInTime}";
+                        TxtCheckedInTime.Text = $"Checked in at {FormatTo12Hour(data.TodayAttendance.CheckInTime)}";
                         TxtCheckedInTime.Visibility = Visibility.Visible;
 
                         // Update status
@@ -217,7 +217,7 @@ namespace Attendify.Views.Employee
                         {
                             Date = record.Date,
                             Shift = record.Shift,
-                            CheckIn = record.CheckIn,
+                            CheckIn = FormatTo12Hour(record.CheckIn),
                             Status = record.Status,
                             StatusColor = GetStatusColor(record.StatusColor)
                         });
@@ -253,9 +253,12 @@ namespace Attendify.Views.Employee
 
         private async void BtnCheckIn_Click(object sender, RoutedEventArgs e)
         {
+            LoadingOverlay.Visibility = Visibility.Visible;
+            BtnCheckIn.IsEnabled = false;
+
             try
             {
-                var currentTime = DateTime.Now.ToString("HH:mm");
+                var currentTime = Attendify.Services.TimeService.Instance.Now.ToString("HH:mm");
 
                 var checkInRequest = new
                 {
@@ -276,28 +279,31 @@ namespace Attendify.Views.Employee
 
                     if (result?.Success == true)
                     {
-                        MessageBox.Show(result.Message, "Check In Successful",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        GlassMessageBox.Show(result.Message, "Check In Successful", false, GlassMessageBox.MessageType.Success);
 
                         // Reload data
-                        LoadAttendanceData();
+                        await LoadAttendanceData();
                     }
                     else
                     {
-                        MessageBox.Show(result?.Message ?? "Check-in failed", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        GlassMessageBox.Show(result?.Message ?? "Check-in failed", "Error", false, GlassMessageBox.MessageType.Error);
+                        BtnCheckIn.IsEnabled = true;
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Failed to check in. Please try again.", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    GlassMessageBox.Show("Failed to check in. Please try again.", "Error", false, GlassMessageBox.MessageType.Error);
+                    BtnCheckIn.IsEnabled = true;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Check In Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                GlassMessageBox.Show($"Error: {ex.Message}", "Check In Error", false, GlassMessageBox.MessageType.Error);
+                BtnCheckIn.IsEnabled = true;
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -310,9 +316,21 @@ namespace Attendify.Views.Employee
             public string Status { get; set; } = null!;
         }
 
+        private string FormatTo12Hour(string time24)
+        {
+            if (string.IsNullOrEmpty(time24)) return "";
+            if (DateTime.TryParse(time24, out DateTime dt))
+            {
+                // If the input is just time, TryParse might default to today's date.
+                // We just want the time part.
+                return dt.ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture).ToUpper();
+            }
+            return time24;
+        }
+
         private void ShowErrorMessage(string message)
         {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            GlassMessageBox.Show(message, "Error", false, GlassMessageBox.MessageType.Error);
         }
     }
 

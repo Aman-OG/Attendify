@@ -34,15 +34,13 @@ namespace Attendify.Views.UserControls
         {
             if (StartDatePicker.SelectedDate == null || EndDatePicker.SelectedDate == null)
             {
-                MessageBox.Show("Please select both start and end dates.", "Date Range Required",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Please select both start and end dates.", "Date Range Required");
                 return;
             }
 
             if (StartDatePicker.SelectedDate > EndDatePicker.SelectedDate)
             {
-                MessageBox.Show("Start date cannot be after end date.", "Invalid Date Range",
-                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                GlassMessageBox.Show("Start date cannot be after end date.", "Invalid Date Range");
                 return;
             }
 

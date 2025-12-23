@@ -12,8 +12,8 @@ namespace Attendify.DATA.Models
         public int ShiftID { get; set; }   
 
         public string Name { get; set; } = null!;
-        public string StartTime { get; set; } = null!;
-        public string EndTime { get; set; } = null!;
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
         public int GracePeriodMinutes { get; set; } 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

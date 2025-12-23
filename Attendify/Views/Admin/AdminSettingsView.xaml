@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:Attendify.Views"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
              Background="Transparent">
@@ -14,8 +15,8 @@
                 <Border CornerRadius="10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#13FFFFFF" Offset="0" />
-                            <GradientStop Color="#13FFFFFF" Offset="1" />
+                            <GradientStop Color="#03FFFFFF" Offset="0" />
+                            <GradientStop Color="#03FFFFFF" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.Effect>
@@ -71,10 +72,10 @@
         <Style x:Key="ModernTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="#10FFFFFF"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#20FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="6,6"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -96,6 +97,9 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
+        
+        
 
         <!-- SIMPLE WORKING COMBOBOX STYLE -->
         <Style x:Key="GlassComboBox" TargetType="ComboBox">
@@ -496,9 +500,21 @@
                                                    Foreground="White" 
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,5"/>
-                                        <TextBox x:Name="TxtStartTime" 
-                                                 Style="{StaticResource ModernTextBox}"
-                                                 Text="09:00 AM"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtStartTime" 
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="09:00"
+                                                     Margin="0,0,5,0"/>
+                                            <TextBox Grid.Column="1"
+                                                     x:Name="TxtStartAmPm"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="AM"
+                                                     HorizontalContentAlignment="Center"/>
+                                        </Grid>
                                     </StackPanel>
 
                                     <!-- End Time -->
@@ -507,9 +523,21 @@
                                                    Foreground="White" 
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,5"/>
-                                        <TextBox x:Name="TxtEndTime" 
-                                                 Style="{StaticResource ModernTextBox}"
-                                                 Text="05:00 PM"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtEndTime" 
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="05:00"
+                                                     Margin="0,0,5,0"/>
+                                            <TextBox Grid.Column="1"
+                                                     x:Name="TxtEndAmPm"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="PM"
+                                                     HorizontalContentAlignment="Center"/>
+                                        </Grid>
                                     </StackPanel>
                                 </Grid>
 
@@ -612,7 +640,7 @@
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
                                         <ColumnDefinition Width="10"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="10"/>
@@ -636,9 +664,22 @@
                                                    Foreground="White" 
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,5"/>
-                                        <TextBox x:Name="TxtShiftStart" 
-                                                 Style="{StaticResource ModernTextBox}"
-                                                 Text="08:00"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtShiftStart" 
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="08:00"
+                                                     Margin="0,0,5,0"/>
+                                            <TextBox Grid.Column="1"
+                                                     x:Name="TxtShiftStartAmPm"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Width="90"
+                                                     Text="AM"
+                                                     HorizontalContentAlignment="Center"/>
+                                        </Grid>
                                     </StackPanel>
 
                                     <!-- End Time -->
@@ -647,9 +688,22 @@
                                                    Foreground="White" 
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,5"/>
-                                        <TextBox x:Name="TxtShiftEnd" 
-                                                 Style="{StaticResource ModernTextBox}"
-                                                 Text="14:00"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtShiftEnd" 
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Text="02:00"
+                                                     Margin="0,0,5,0"/>
+                                            <TextBox Grid.Column="1"
+                                                     x:Name="TxtShiftEndAmPm"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     Width="90"
+                                                     Text="PM"
+                                                     HorizontalContentAlignment="Center"/>
+                                        </Grid>
                                     </StackPanel>
                                 </Grid>
 
@@ -983,5 +1037,10 @@
                 </Grid>
             </ContentControl>
         </ScrollViewer>
+        <!-- Loading Overlay -->
+        <views:LoadingOverlay x:Name="LoadingOverlay" 
+                              Grid.RowSpan="2" 
+                              Visibility="Collapsed"
+                              Panel.ZIndex="1000"/>
     </Grid>
 </UserControl>

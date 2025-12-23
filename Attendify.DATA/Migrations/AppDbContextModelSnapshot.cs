@@ -129,16 +129,14 @@ namespace Attendify.DATA.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("EndTime")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("GracePeriodMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<string>("StartTime")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
 
                     b.HasKey("RuleID");
 
@@ -220,7 +218,6 @@ namespace Attendify.DATA.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("EmpCode")
-                        .IsRequired()
                         .HasColumnType("character varying(20)");
 
                     b.Property<int>("EmployeeID")
@@ -296,9 +293,8 @@ namespace Attendify.DATA.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EndTime")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("GracePeriodMinutes")
                         .HasColumnType("integer");
@@ -307,9 +303,8 @@ namespace Attendify.DATA.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("StartTime")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
 
                     b.HasKey("ShiftID");
 
@@ -351,8 +346,7 @@ namespace Attendify.DATA.Migrations
                     b.HasOne("Attendify.DATA.Models.Employee", "Employee")
                         .WithMany("EmployeeRequests")
                         .HasForeignKey("EmpCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Employee");
                 });
