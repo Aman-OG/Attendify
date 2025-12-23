@@ -175,14 +175,7 @@ namespace Attendify.Views.UserControls
             TxtPhone.Text = profile.Phone ?? "Not provided";
             TxtCreatedAt.Text = profile.CreatedAt.ToString("dd MMMM yyyy");
 
-            if (profile.LastPasswordChange.HasValue)
-            {
-                TxtLastPasswordChange.Text = profile.LastPasswordChange.Value.ToString("dd MMMM yyyy hh:mm tt");
-            }
-            else
-            {
-                TxtLastPasswordChange.Text = "Never changed";
-            }
+
         }
 
         private void SetProfileColor(string initial)

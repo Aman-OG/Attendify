@@ -20,119 +20,7 @@ namespace Attendify.API.Controllers
             _context = context;
         }
 
-        #region Attendance Rules Endpoints
 
-        // GET: api/settings/attendance-rules
-        [HttpGet("attendance-rules")]
-        public async Task<ActionResult<IEnumerable<object>>> GetAttendanceRules()
-        {
-            try
-            {
-                var rules = await _context.AttendanceRules
-                    .Select(r => new
-                    {
-                        r.RuleID,
-                        Day = r.DayOfWeek, // Map DayOfWeek to Day for WPF
-                        StartTime = r.StartTime.ToString(@"hh\:mm"), // Format for WPF
-                        EndTime = r.EndTime.ToString(@"hh\:mm"),
-                        GracePeriod = r.GracePeriodMinutes.ToString() // Convert to string for WPF
-                    })
-                    .ToListAsync();
-                return Ok(rules);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        // POST: api/settings/attendance-rules
-        [HttpPost("attendance-rules")]
-        public async Task<ActionResult<object>> CreateAttendanceRule([FromBody] AttendanceRuleDto ruleDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var rule = new AttendanceRule
-                {
-                    DayOfWeek = ruleDto.Day,
-                    StartTime = TimeSpan.Parse(ruleDto.StartTime),
-                    EndTime = TimeSpan.Parse(ruleDto.EndTime),
-                    GracePeriodMinutes = int.TryParse(ruleDto.GracePeriod, out int grace) ? grace : 10,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.AttendanceRules.Add(rule);
-                await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    AttendanceRuleId = rule.RuleID,
-                    rule.DayOfWeek,
-                    rule.StartTime,
-                    rule.EndTime,
-                    GracePeriod = rule.GracePeriodMinutes.ToString()
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        // PUT: api/settings/attendance-rules/{id}
-        [HttpPut("attendance-rules/{id}")]
-        public async Task<IActionResult> UpdateAttendanceRule(int id, [FromBody] AttendanceRuleDto ruleDto)
-        {
-            try
-            {
-                var existingRule = await _context.AttendanceRules.FindAsync(id);
-                if (existingRule == null)
-                {
-                    return NotFound();
-                }
-
-                existingRule.DayOfWeek = ruleDto.Day;
-                existingRule.StartTime = TimeSpan.Parse(ruleDto.StartTime);
-                existingRule.EndTime = TimeSpan.Parse(ruleDto.EndTime);
-                existingRule.GracePeriodMinutes = int.TryParse(ruleDto.GracePeriod, out int grace) ? grace : 10;
-
-                await _context.SaveChangesAsync();
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        // DELETE: api/settings/attendance-rules/{id}
-        [HttpDelete("attendance-rules/{id}")]
-        public async Task<IActionResult> DeleteAttendanceRule(int id)
-        {
-            try
-            {
-                var rule = await _context.AttendanceRules.FindAsync(id);
-                if (rule == null)
-                {
-                    return NotFound();
-                }
-
-                _context.AttendanceRules.Remove(rule);
-                await _context.SaveChangesAsync();
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        #endregion
 
         #region Shifts Endpoints
 
@@ -438,13 +326,7 @@ namespace Attendify.API.Controllers
 
         #region DTO Classes
 
-        public class AttendanceRuleDto
-        {
-            public string Day { get; set; } = "";
-            public string StartTime { get; set; } = "";
-            public string EndTime { get; set; } = "";
-            public string GracePeriod { get; set; } = "";
-        }
+
 
         public class ShiftDto
         {

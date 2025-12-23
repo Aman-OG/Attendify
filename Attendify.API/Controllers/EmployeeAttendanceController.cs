@@ -372,9 +372,12 @@ namespace Attendify.API.Controllers
             var endTime = shift.EndTime;
             var grace = TimeSpan.FromMinutes(shift.GracePeriodMinutes);
 
-            // Allow check-in from 15 minutes before shift starts until shift ends + grace period
-            var checkInStart = startTime.Add(TimeSpan.FromMinutes(-15));
-            var checkInEnd = endTime.Add(grace);
+            // Allow check-in from 1 hour before shift starts until shift ends
+            // User requirement: "button should be active before one hour of start time"
+            var checkInStart = startTime.Add(TimeSpan.FromHours(-1));
+            // User requirement: "late = from the end of grace minutes to end of time shifts"
+            // Implications: One can check in until the shift ends (just marked as late).
+            var checkInEnd = endTime;
             
             var currentTimeOfDay = currentTime.TimeOfDay;
 
@@ -413,28 +416,31 @@ namespace Attendify.API.Controllers
 
             if (TimeSpan.TryParse(checkInTimeStr, out var checkIn))
             {
-                var shiftEnd = shift.EndTime;
-                var graceTime = shiftEnd.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
+                // Logic: On Time = [CheckInStart, StartTime + Grace]
+                // Late = (StartTime + Grace, EndTime]
                 
-                // If shift spans midnight and checkIn is "early" next day (e.g. 01:00), we need to handle that.
-                // But simplified logic as per user request: "5:00 - 5:35 is ontime".
-                // This implies strict comparison against the "End Window".
-                
-                // Note: User logic says "during this 5:00 - 5:30... is ontime".
-                // So basic logic: CheckIn > EndTime + Grace => Late.
-                
-                // However, handling strict timespan comparison for overnight shifts:
+                var shiftStart = shift.StartTime;
+                var graceTime = shiftStart.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
+
                 if (shift.EndTime < shift.StartTime)
                 {
-                     // Overnight
-                     // If CheckIn > GraceTime AND CheckIn < StartTime ? Late?
-                     // Technically overnight shifts end on Day 2.
-                     // A pure TimeSpan compare might fail if we don't account for date.
-                     // But assuming standard daily checkin constraint:
-                     if (checkIn > graceTime && checkIn < shift.StartTime) return true;
+                     // Overnight shift
+                     // Example: Start 22:00, End 06:00. Grace 10m -> 22:10.
+                     // On Time: 21:00 ... 22:10.
+                     // Late: 22:10 ... 06:00
+                     
+                     // If CheckIn is small (e.g. 05:00), it's definitely "late" relative to 22:00 start (conceptually next day)
+                     // If CheckIn is large (e.g. 23:00), it's > 22:10, so Late.
+                     
+                     // If checkIn < start (is 00:00 - 06:00) -> Late
+                     if (checkIn < shiftStart && checkIn <= shift.EndTime) return true;
+                     
+                     // If checkIn > grace -> Late
+                     if (checkIn > graceTime) return true;
                 }
                 else
                 {
+                    // Normal shift
                     if (checkIn > graceTime) return true;
                 }
             }
@@ -448,19 +454,41 @@ namespace Attendify.API.Controllers
 
             if (TimeSpan.TryParse(checkInTimeStr, out var checkIn))
             {
-                var shiftEnd = shift.EndTime;
-                var graceTime = shiftEnd.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
+                var shiftStart = shift.StartTime;
+                var graceTime = shiftStart.Add(TimeSpan.FromMinutes(shift.GracePeriodMinutes));
                 
-                if (shift.EndTime < shift.StartTime)
+                // Logic: Late Minutes = CheckIn - (Start + Grace) ?? Or just CheckIn - Start?
+                // Usually "Late Minutes" means how much AFTER the start time.
+                // But if they are within grace, late = 0.
+                // If they are past grace, late = Total minutes past Start time? Or past grace?
+                // Standard HR: late is from StartTime. 
+                // However, user said "on time = ... + grace minutes".
+                // Let's count minutes past Start Time for simplicity, but only if IsLate is true.
+                
+                // Simplified per user request implied logic:
+                // late = from end of grace minutes... 
+                // So let's calculate diff from GraceTime boundary or StartTime?
+                // Usually it makes sense to calc from StartTime.
+                
+                if (CheckIfLate(checkInTimeStr, shift))
                 {
-                     if (checkIn > graceTime && checkIn < shift.StartTime)
-                         return (int)(checkIn - graceTime).TotalMinutes;
-                }
-                else
-                {
-                    if (checkIn > graceTime)
+                     // Handle overnight
+                    if (shift.EndTime < shift.StartTime)
                     {
-                        return (int)(checkIn - graceTime).TotalMinutes;
+                        if (checkIn < shiftStart) // Next day part (01:00)
+                        {
+                            // Time from Start(22:00) to Midnight(24:00) + CheckIn(01:00)
+                            double minutes = (24 * 60) - shiftStart.TotalMinutes + checkIn.TotalMinutes;
+                            return (int)minutes;
+                        }
+                        else
+                        {
+                            return (int)(checkIn - shiftStart).TotalMinutes;
+                        }
+                    }
+                    else
+                    {
+                        return (int)(checkIn - shiftStart).TotalMinutes;
                     }
                 }
             }

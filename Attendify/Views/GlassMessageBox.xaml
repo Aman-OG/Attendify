@@ -49,6 +49,7 @@
                         Cursor="Hand"
                         Click="SecondaryButton_Click"
                         Visibility="Collapsed"
+                        IsCancel="True"
                         Margin="0,0,10,0">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -79,6 +80,7 @@
                         FontWeight="Bold"
                         BorderThickness="0"
                         Cursor="Hand"
+                        IsDefault="True"
                         Click="PrimaryButton_Click">
                     <Button.Style>
                         <Style TargetType="Button">

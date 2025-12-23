@@ -487,10 +487,15 @@ namespace Attendify.Views
             var miLogout = new MenuItem { Header = "Log out" };
             miLogout.Click += (s, ev) =>
             {
-                // Go back to login page
-                LoginPage loginPage = new LoginPage();
-                loginPage.Show();
-                this.Close();
+                var result = GlassMessageBox.Show("Are you sure you want to logout?", "Logout Confirmation", true);
+
+                if (result == GlassMessageBox.MessageBoxResult.OK)
+                {
+                    // Go back to login page
+                    LoginPage loginPage = new LoginPage();
+                    loginPage.Show();
+                    this.Close();
+                }
             };
             menu.Items.Add(miLogout);
 

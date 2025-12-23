@@ -309,7 +309,7 @@
                                 </StackPanel>
                                 <Border Background="#40000000" CornerRadius="8" Padding="15,8">
                                     <StackPanel>
-                                        <TextBlock Text="SERVER TIME" FontSize="10" Foreground="#80FFFFFF" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="ATTENDANCE TIME" FontSize="10" Foreground="#80FFFFFF" HorizontalAlignment="Center"/>
                                         <TextBlock x:Name="ClockText" 
                                                    Text="{Binding CurrentTime}" 
                                                    Foreground="#00A6FB" 

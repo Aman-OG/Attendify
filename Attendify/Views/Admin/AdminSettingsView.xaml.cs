@@ -21,13 +21,13 @@ namespace Attendify.Views.UserControls
         private string _apiBaseUrl = $"{Attendify.Services.HttpClientService.ApiBaseUrl}/settings";
 
         // Data collections
-        private List<AttendanceRuleDto> _attendanceRules = new List<AttendanceRuleDto>();
+        // private List<AttendanceRuleDto> _attendanceRules = new List<AttendanceRuleDto>();
         private List<ShiftDto> _shifts = new List<ShiftDto>();
         private List<BroadcastMessageDto> _broadcastMessages = new List<BroadcastMessageDto>();
         private List<EmployeeRequestDto> _employeeRequests = new List<EmployeeRequestDto>();
 
         // Track current editing items
-        private AttendanceRuleDto _currentEditingRule;
+        // private AttendanceRuleDto _currentEditingRule;
         private ShiftDto _currentEditingShift;
         private BroadcastMessageDto _currentEditingMessage;
         private EmployeeRequestDto _currentReviewingRequest;
@@ -37,14 +37,7 @@ namespace Attendify.Views.UserControls
 
         #region DTO Classes
 
-        public class AttendanceRuleDto
-        {
-            public int AttendanceRuleId { get; set; }
-            public string Day { get; set; } = "";
-            public string StartTime { get; set; } = "";
-            public string EndTime { get; set; } = "";
-            public string GracePeriod { get; set; } = "";
-        }
+
 
         public class ShiftDto
         {
@@ -95,9 +88,9 @@ namespace Attendify.Views.UserControls
         {
             if (!_isDataInitialized)
             {
-                ShowTab("AttendanceRules");
-                UpdateTabButtonStyles(BtnAttendanceRules);
-                await LoadAttendanceRulesAsync();
+                ShowTab("Shifts");
+                UpdateTabButtonStyles(BtnShifts);
+                await LoadShiftsAsync();
                 _isDataInitialized = true;
             }
         }
@@ -118,13 +111,11 @@ namespace Attendify.Views.UserControls
         private void ShowTab(string tabName)
         {
             // Hide all panels
-            if (AttendanceRulesPanel != null) AttendanceRulesPanel.Visibility = Visibility.Collapsed;
             if (ShiftsPanel != null) ShiftsPanel.Visibility = Visibility.Collapsed;
             if (MessagesPanel != null) MessagesPanel.Visibility = Visibility.Collapsed;
             if (RequestsPanel != null) RequestsPanel.Visibility = Visibility.Collapsed;
 
             // Hide all forms
-            if (RuleFormContainer != null) RuleFormContainer.Visibility = Visibility.Collapsed;
             if (ShiftFormContainer != null) ShiftFormContainer.Visibility = Visibility.Collapsed;
             if (MessageFormContainer != null) MessageFormContainer.Visibility = Visibility.Collapsed;
             if (ReviewPanel != null) ReviewPanel.Visibility = Visibility.Collapsed;
@@ -132,11 +123,6 @@ namespace Attendify.Views.UserControls
             // Show selected tab and load data
             switch (tabName)
             {
-                case "AttendanceRules":
-                    AttendanceRulesPanel.Visibility = Visibility.Visible;
-                    if (_attendanceRules.Count == 0)
-                        _ = LoadAttendanceRulesAsync();
-                    break;
                 case "Shifts":
                     ShiftsPanel.Visibility = Visibility.Visible;
                     if (_shifts.Count == 0)
@@ -161,12 +147,10 @@ namespace Attendify.Views.UserControls
 
             // Reset all tab buttons
             var inactiveColor = new SolidColorBrush(Color.FromRgb(204, 204, 204));
-            BtnAttendanceRules.Foreground = inactiveColor;
             BtnShifts.Foreground = inactiveColor;
             BtnBroadcastMessages.Foreground = inactiveColor;
             BtnEmployeeRequests.Foreground = inactiveColor;
 
-            BtnAttendanceRules.BorderThickness = new Thickness(0);
             BtnShifts.BorderThickness = new Thickness(0);
             BtnBroadcastMessages.BorderThickness = new Thickness(0);
             BtnEmployeeRequests.BorderThickness = new Thickness(0);
@@ -179,247 +163,7 @@ namespace Attendify.Views.UserControls
 
         #endregion
 
-        #region Attendance Rules API Methods
 
-        private async Task LoadAttendanceRulesAsync()
-        {
-            LoadingOverlay.Visibility = Visibility.Visible;
-            try
-            {
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/attendance-rules");
-                if (response.IsSuccessStatusCode)
-                {
-                    var rules = await response.Content.ReadFromJsonAsync<List<AttendanceRuleDto>>();
-                    _attendanceRules = rules ?? new List<AttendanceRuleDto>();
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        RulesGrid.ItemsSource = _attendanceRules;
-                    });
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    GlassMessageBox.Show($"Error loading attendance rules: {error}", "Error", false, GlassMessageBox.MessageType.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
-            }
-            finally
-            {
-                LoadingOverlay.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        private async Task AddAttendanceRuleAsync(AttendanceRuleDto rule)
-        {
-            LoadingOverlay.Visibility = Visibility.Visible;
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/attendance-rules", rule);
-                if (response.IsSuccessStatusCode)
-                {
-                    var createdRule = await response.Content.ReadFromJsonAsync<AttendanceRuleDto>();
-                    if (createdRule != null)
-                    {
-                        _attendanceRules.Add(createdRule);
-                        Dispatcher.Invoke(() =>
-                        {
-                            RulesGrid.ItemsSource = null;
-                            RulesGrid.ItemsSource = _attendanceRules;
-                        });
-                    }
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
-            }
-            finally
-            {
-                LoadingOverlay.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        private async Task UpdateAttendanceRuleAsync(AttendanceRuleDto rule)
-        {
-            LoadingOverlay.Visibility = Visibility.Visible;
-            try
-            {
-                var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}/attendance-rules/{rule.AttendanceRuleId}", rule);
-                if (response.IsSuccessStatusCode)
-                {
-                    var index = _attendanceRules.FindIndex(r => r.AttendanceRuleId == rule.AttendanceRuleId);
-                    if (index != -1)
-                    {
-                        _attendanceRules[index] = rule;
-                        Dispatcher.Invoke(() =>
-                        {
-                            RulesGrid.ItemsSource = null;
-                            RulesGrid.ItemsSource = _attendanceRules;
-                        });
-                    }
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
-            }
-            finally
-            {
-                LoadingOverlay.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        private async Task DeleteAttendanceRuleAsync(int id)
-        {
-            LoadingOverlay.Visibility = Visibility.Visible;
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/attendance-rules/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    _attendanceRules.RemoveAll(r => r.AttendanceRuleId == id);
-                    Dispatcher.Invoke(() =>
-                    {
-                        RulesGrid.ItemsSource = null;
-                        RulesGrid.ItemsSource = _attendanceRules;
-                    });
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    GlassMessageBox.Show($"Error: {error}", "Error", false, GlassMessageBox.MessageType.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                GlassMessageBox.Show($"Error: {ex.Message}", "Error", false, GlassMessageBox.MessageType.Error);
-            }
-            finally
-            {
-                LoadingOverlay.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        #endregion
-
-        #region Attendance Rules Event Handlers
-
-        private void BtnAddRule_Click(object sender, RoutedEventArgs e)
-        {
-            _currentEditingRule = null;
-            ResetRuleForm();
-            RuleFormContainer.Visibility = Visibility.Visible;
-        }
-
-        private void EditRule_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as Button;
-            _currentEditingRule = button?.DataContext as AttendanceRuleDto;
-
-            if (_currentEditingRule != null)
-            {
-                if (CmbRuleDay != null) CmbRuleDay.Text = _currentEditingRule.Day;
-                if (TxtStartTime != null) SetTimeFields(_currentEditingRule.StartTime, TxtStartTime, TxtStartAmPm);
-                if (TxtEndTime != null) SetTimeFields(_currentEditingRule.EndTime, TxtEndTime, TxtEndAmPm);
-                if (TxtGracePeriod != null) TxtGracePeriod.Text = _currentEditingRule.GracePeriod;
-
-                RuleFormContainer.Visibility = Visibility.Visible;
-            }
-        }
-
-        private async void DeleteRule_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as Button;
-            var rule = button?.DataContext as AttendanceRuleDto;
-
-            if (rule != null)
-            {
-                var result = GlassMessageBox.Show($"Delete rule for {rule.Day}?", "Confirm", true);
-
-                if (result == GlassMessageBox.MessageBoxResult.OK)
-                {
-                    await DeleteAttendanceRuleAsync(rule.AttendanceRuleId);
-                }
-            }
-        }
-
-        private async void BtnSaveRule_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(CmbRuleDay?.Text) ||
-                string.IsNullOrWhiteSpace(TxtStartTime?.Text) ||
-                string.IsNullOrWhiteSpace(TxtStartAmPm?.Text) ||
-                string.IsNullOrWhiteSpace(TxtEndTime?.Text) ||
-                string.IsNullOrWhiteSpace(TxtEndAmPm?.Text))
-            {
-                GlassMessageBox.Show("Please fill in all required fields.", "Error", false, GlassMessageBox.MessageType.Error);
-                return;
-            }
-
-            string startTime, endTime;
-            try
-            {
-                startTime = Get24HourTime(TxtStartTime.Text, TxtStartAmPm.Text);
-                endTime = Get24HourTime(TxtEndTime.Text, TxtEndAmPm.Text);
-            }
-            catch (ArgumentException ex) {
-                  GlassMessageBox.Show(ex.Message, "Invalid Time", false, GlassMessageBox.MessageType.Error);
-                 return;
-            }
-
-            var rule = new AttendanceRuleDto
-            {
-                Day = CmbRuleDay.Text,
-                StartTime = startTime,
-                EndTime = endTime,
-                GracePeriod = TxtGracePeriod?.Text ?? "10"
-            };
-
-            if (_currentEditingRule == null)
-            {
-                await AddAttendanceRuleAsync(rule);
-            }
-            else
-            {
-                rule.AttendanceRuleId = _currentEditingRule.AttendanceRuleId;
-                await UpdateAttendanceRuleAsync(rule);
-            }
-
-            RuleFormContainer.Visibility = Visibility.Collapsed;
-            ResetRuleForm();
-        }
-
-        private void BtnCancelRule_Click(object sender, RoutedEventArgs e)
-        {
-            RuleFormContainer.Visibility = Visibility.Collapsed;
-            ResetRuleForm();
-        }
-
-        private void ResetRuleForm()
-        {
-            if (CmbRuleDay != null) CmbRuleDay.SelectedIndex = -1;
-            if (TxtStartTime != null) TxtStartTime.Text = "09:00";
-            if (TxtStartAmPm != null) TxtStartAmPm.Text = "AM";
-            if (TxtEndTime != null) TxtEndTime.Text = "05:00";
-            if (TxtEndAmPm != null) TxtEndAmPm.Text = "PM";
-            if (TxtGracePeriod != null) TxtGracePeriod.Text = "10";
-            _currentEditingRule = null;
-        }
-
-        #endregion
 
         #region Shifts API Methods
 
